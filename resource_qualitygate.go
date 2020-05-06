@@ -45,7 +45,10 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	qualityGate := QualityGate{Name: qualityGateName}
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(qualityGate)
-	resp, err := http.Post(sonarURL+"/api/qualitygates/create", contentType, buffer)
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", sonarURL+"/api/qualitygates/create", buffer)
+	req.SetBasicAuth("admin", "admin")
+	resp, err := client.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
@@ -72,8 +75,14 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	resp, err := http.Get(sonarURL + "/api/qualitygates/show/" + d.Id())
-
+	qualityGateName := d.Get("name").(string)
+	qualityGate := QualityGate{Name: qualityGateName}
+	buffer := new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(qualityGate)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", sonarURL+"/api/qualitygates/show", buffer)
+	req.SetBasicAuth("admin", "admin")
+	resp, err := client.Do(req)
 	if err != nil {
 		log.WithError(err).Error("qualityGateRead")
 		return err
@@ -101,7 +110,10 @@ func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	qualityGate := QualityGate{Name: qualityGateName}
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(qualityGate)
-	resp, err := http.Post(sonarURL+"/api/qualitygates/destroy", contentType, buffer)
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", sonarURL+"/api/qualitygates/destroy", buffer)
+	req.SetBasicAuth("admin", "admin")
+	resp, err := client.Do(req)
 	if err != nil {
 		log.WithError(err).Error("qualityGateDelete")
 		return err
