@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	sonarURL    = "127.0.0.1:9000"
+	sonarURL    = "http://127.0.0.1:9000"
 	contentType = "application/json"
 )
 
