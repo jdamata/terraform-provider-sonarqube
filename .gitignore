@@ -16,5 +16,5 @@
 #
 #
 terraform-provider-sonarqube
-.terraform
+.terraform**
 terraform.tfstate
