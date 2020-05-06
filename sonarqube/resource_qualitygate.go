@@ -10,15 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	sonarURL    = "http://127.0.0.1:9000"
-	contentType = "application/json"
-)
-
 // Returns the resource represented by this file.
 func qualityGate() *schema.Resource {
 	return &schema.Resource{
-		// Operations required by every Terraform resource.
 		Create: qualityGateCreate,
 		Read:   qualityGateRead,
 		// Update: qualityGateUpdate,
@@ -41,11 +35,11 @@ func qualityGate() *schema.Resource {
 }
 
 func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
+	client := m.(*ProviderConfiguration).httpClient
 	qualityGateName := d.Get("name").(string)
 	qualityGate := QualityGate{Name: qualityGateName}
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(qualityGate)
-	client := &http.Client{}
 	req, err := http.NewRequest("POST", sonarURL+"/api/qualitygates/create", buffer)
 	req.SetBasicAuth("admin", "admin")
 	resp, err := client.Do(req)
