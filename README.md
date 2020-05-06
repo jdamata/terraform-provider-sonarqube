@@ -1,4 +1,4 @@
-# sonarqube-terraform-provider
+# terraform-provider-sonarqube
 Terraform provider for managing Sonarqube configuration
 
 
