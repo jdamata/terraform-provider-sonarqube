@@ -6,4 +6,7 @@ Terraform provider for managing Sonarqube configuration
 Start local sonarqube server
 ```bash
 docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
+make
+terraform init
+terraform plan
 ```
