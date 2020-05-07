@@ -16,7 +16,6 @@ func qualityGate() *schema.Resource {
 	return &schema.Resource{
 		Create: qualityGateCreate,
 		Read:   qualityGateRead,
-		// Update: qualityGateUpdate,
 		Delete: qualityGateDelete,
 		Importer: &schema.ResourceImporter{
 			State: qualityGateImport,
@@ -57,10 +56,10 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 		return errors.New(responseBody)
 	}
 
-	qualityGateResponse, err := getQualityGateResponse(resp)
+	qualityGateResponse := CreateQualityGateResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
-		return err
 	}
 
 	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
@@ -92,14 +91,14 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 		return errors.New(responseBody)
 	}
 
-	qualityGateResponse, err := getQualityGateResponse(resp)
+	qualityGateReadResponse := GetQualityGate{}
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
-		return err
 	}
 
-	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
-	d.Set("name", qualityGateResponse.Name)
+	d.SetId(strconv.FormatInt(qualityGateReadResponse.ID, 10))
+	d.Set("name", qualityGateReadResponse.Name)
 	return nil
 }
 
@@ -141,14 +140,4 @@ func qualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.Reso
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
-}
-
-func getQualityGateResponse(resp *http.Response) (QualityGateResponse, error) {
-	qualityGateResponse := QualityGateResponse{}
-	err := json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
-	if err != nil {
-		log.WithError(err).Error("getQualityGateResponse")
-		return qualityGateResponse, err
-	}
-	return qualityGateResponse, nil
 }

@@ -9,12 +9,16 @@ provider "sonarqube" {
     url = "http://127.0.0.1:9000"
 }
 
-resource "sonarqube_qualitygate" "test" {
-    name = "test"
+resource "sonarqube_qualitygate" "main" {
+    name = "example"
+}
+
+output "guality-gate-id" {
+    value = sonarqube_qualitygate.main.id
 }
 
 output "guality-gate-name" {
-    value = sonarqube_qualitygate.test.name
+    value = sonarqube_qualitygate.main.name
 }
 ```
 
@@ -33,6 +37,6 @@ The following attributes are exported:
 Quality Gates can be imported using their numeric value
 
 ```terraform
-terraform import sonarqube_qualitygate.test 11
+terraform import sonarqube_qualitygate.main 11
 ```
 
