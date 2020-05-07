@@ -18,15 +18,13 @@ func qualityGateCondition() *schema.Resource {
 		Read:   qualityGateConditionRead,
 		Update: qualityGateConditionUpdate,
 		Delete: qualityGateConditionDelete,
-		Importer: &schema.ResourceImporter{
-			State: qualityGateConditionImport,
-		},
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"gateid": {
 				Type:     schema.TypeInt,
 				Required: true,
+				ForceNew: true,
 			},
 			"error": {
 				Type:     schema.TypeInt,
@@ -36,16 +34,21 @@ func qualityGateCondition() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"op": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func qualityGateConditionCreate(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/create_condition?gateId=%v&error=%v&metric=%s",
+	url := fmt.Sprintf("%s/api/qualitygates/create_condition?gateId=%v&error=%v&metric=%s&op=%s",
 		m.(*ProviderConfiguration).sonarURL,
 		d.Get("gateid").(int),
 		d.Get("error").(int),
 		d.Get("metric").(string),
+		d.Get("op").(string),
 	)
 	req, err := http.NewRequest("POST", url, http.NoBody)
 	if err != nil {
@@ -77,9 +80,9 @@ func qualityGateConditionCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/show?id=%s",
+	url := fmt.Sprintf("%s/api/qualitygates/show?id=%v",
 		m.(*ProviderConfiguration).sonarURL,
-		d.Id(),
+		d.Get("gateid").(int),
 	)
 	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
@@ -110,9 +113,10 @@ func qualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
 	for _, value := range qualityGateConditionResponse.Conditions {
 		if d.Id() == strconv.FormatInt(value.ID, 10) {
 			d.SetId(strconv.FormatInt(value.ID, 10))
-			d.Set("gateid", value.ID)
+			// d.Set("gateid", value.ID)
 			d.Set("error", value.Error)
 			d.Set("metric", value.Metric)
+			d.Set("op", value.OP)
 		}
 	}
 
@@ -120,17 +124,19 @@ func qualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateConditionUpdate(d *schema.ResourceData, m interface{}) error {
-	id, err := strconv.Atoi(d.Id())
+	conditionID, err := strconv.Atoi(d.Id())
 	if err != nil {
 		log.WithError(err).Error("resourcequalityGateConditionUpdate")
 		return err
 	}
 
-	url := fmt.Sprintf("%s/api/qualitygates/update_condition?id=%v&error=%v&metric=%s",
+	url := fmt.Sprintf("%s/api/qualitygates/update_condition?gateid=%v&id=%v&error=%v&metric=%s&op=%v",
 		m.(*ProviderConfiguration).sonarURL,
-		id,
-		d.Get("error").(int64),
+		d.Get("gateid").(int),
+		conditionID,
+		d.Get("error").(int),
 		d.Get("metric").(string),
+		d.Get("op").(string),
 	)
 	req, err := http.NewRequest("POST", url, http.NoBody)
 	if err != nil {
@@ -185,11 +191,4 @@ func qualityGateConditionDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return nil
-}
-
-func qualityGateConditionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if err := qualityGateConditionRead(d, meta); err != nil {
-		return nil, err
-	}
-	return []*schema.ResourceData{d}, nil
 }
