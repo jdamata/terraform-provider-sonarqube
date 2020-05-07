@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	log "github.com/sirupsen/logrus"
@@ -58,17 +59,17 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
 	}
-	d.SetId(string(qualityGateResponse.ID))
-	/*
-	 * Why return nil?
-	 * Please take a look at the rules for update the state in Terraform defined here:
-	 * https://www.terraform.io/docs/extend/writing-custom-providers.html#error-handling-amp-partial-state
-	 */
+
+	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
 	return nil
 }
 
 func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	req, err := http.NewRequest("GET", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/show", http.NoBody)
+	url := fmt.Sprintf("%s/api/qualitygates/show?name=%s",
+		m.(*ProviderConfiguration).sonarURL,
+		d.Get("name").(string),
+	)
+	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
 		return err
@@ -94,12 +95,22 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("name", qualityGateResponse.Name)
+	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
 	return nil
 }
 
 func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
-	req, err := http.NewRequest("POST", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/destroy", http.NoBody)
+	id, err := strconv.Atoi(d.Id())
+	if err != nil {
+		log.WithError(err).Error("resourceQualityGateDelete")
+		return err
+	}
+
+	url := fmt.Sprintf("%s/api/qualitygates/destroy?id=%v",
+		m.(*ProviderConfiguration).sonarURL,
+		id,
+	)
+	req, err := http.NewRequest("POST", url, http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
