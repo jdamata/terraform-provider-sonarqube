@@ -5,14 +5,33 @@ package sonarqube
  * otherwise the JSON serialization will fail.
  */
 
-// QualityGateResponse for unmarshalling response body
-type QualityGateResponse struct {
+// GetQualityGate for unmarshalling response body of quality gate get
+type GetQualityGate struct {
+	ID         int64                                `json:"id"`
+	Name       string                               `json:"name"`
+	Conditions []CreateQualityGateConditionResponse `json:"conditions"`
+	IsBuiltIn  bool                                 `json:"isBuiltIn"`
+	Actions    QualityGateActions                   `json:"actions"`
+}
+
+// QualityGateActions used in GetQualityGate unmarshalling
+type QualityGateActions struct {
+	Rename            bool `json:"rename"`
+	SetAsDefault      bool `json:"setAsDefault"`
+	Copy              bool `json:"copy"`
+	AssociateProjects bool `json:"associateProjects"`
+	Delete            bool `json:"delete"`
+	ManageConditions  bool `json:"manageConditions"`
+}
+
+// CreateQualityGateResponse for unmarshalling response body
+type CreateQualityGateResponse struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
 }
 
-// QualityGateConditionResponse for unmarshalling response body
-type QualityGateConditionResponse struct {
+// CreateQualityGateConditionResponse for unmarshalling response body of condition create
+type CreateQualityGateConditionResponse struct {
 	ID      int64  `json:"id"`
 	Metric  string `json:"metric"`
 	OP      string `json:"op"`

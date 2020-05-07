@@ -14,28 +14,31 @@ resource "sonarqube_qualitygate" "main" {
 }
 
 resource "sonarqube_qualitygate_condition" "main" {
-    error = 10
-    gateId = sonarqube_qualitygate.main.id
+    gateid = sonarqube_qualitygate.main.id
     metric = "vulnerabilities"
-    op = "GT"
+    error = 10
 }
 ```
 
 ## Argument Reference
 The following arguments are supported:
 
-- name - (Required) The name of the Quality Gate to create. Maximum length 100
+- gateid - (Required) The id of the Quality Gate
+- metric - (Required) Condition metric. Only metric of the following types are allowed: INT, MILLISEC, RATING, WORK_DUR, FLOAT, PERCENT and LEVEL. Following metrics are forbidden: alert_status, security_hotspots and new_security_hotspots
+- error - (Required) Condition error threshold
 
 ## Attributes Reference
 The following attributes are exported:
 
-- name - Name of the Sonarqube Quality Gate
 - id - ID of the Sonarqube Quality Gate
+- metric - Condition metric
+- error - Condition error threshold
+- warning - Condition warning threshold
 
 ## Import 
-Quality Gates can be imported using their numeric value
+Quality Gates Conditions can be imported using their numeric value
 
 ```terraform
-terraform import sonarqube_qualitygate.main 11
+terraform import sonarqube_qualitygate_condition.main 11
 ```
 
