@@ -16,6 +16,12 @@ resource "sonarqube_qualitygate" "test" {
 }
 ```
 
+## Docs
+[Provider configuration](docs/provider.md)
+
+Resources:
+- [sonarqube_qualitygate](docs/sonarqube_qualitygate.md)
+
 ## Development
 ```bash
 docker run -d --name sonarqube -p 9000:9000 sonarqube:latest

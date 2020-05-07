@@ -18,6 +18,9 @@ func qualityGate() *schema.Resource {
 		Read:   qualityGateRead,
 		// Update: qualityGateUpdate,
 		Delete: qualityGateDelete,
+		Importer: &schema.ResourceImporter{
+			State: qualityGateImport,
+		},
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -60,14 +63,14 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
+	d.SetId(qualityGateResponse.Name)
 	return nil
 }
 
 func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 	url := fmt.Sprintf("%s/api/qualitygates/show?name=%s",
 		m.(*ProviderConfiguration).sonarURL,
-		d.Get("name").(string),
+		d.Id(),
 	)
 	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
@@ -95,7 +98,8 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
+	d.SetId(qualityGateResponse.Name)
+	d.Set("name", qualityGateResponse.Name)
 	return nil
 }
 
@@ -130,6 +134,13 @@ func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return nil
+}
+
+func qualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	if err := qualityGateRead(d, meta); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
 
 func getQualityGateResponse(resp *http.Response) (QualityGateResponse, error) {
