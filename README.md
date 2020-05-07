@@ -2,7 +2,7 @@
 Terraform provider for managing Sonarqube configuration
 
 ## Usage
-You will first need to download the binary from the [Releases](https://github.com/jdamata/terraform-provider-sonarqube/releases/latest) page and place it in: ~/.terraform.d/plugins or %APPDATA%\terraform.d\plugins
+You will first need to download the binary from the [Releases](https://github.com/jdamata/terraform-provider-sonarqube/releases/latest) page and place it in: ```~/.terraform.d/plugins``` or ```%APPDATA%\terraform.d\plugins```
 
 ```terraform
 provider "sonarqube" {
