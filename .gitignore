@@ -18,3 +18,4 @@
 terraform-provider-sonarqube
 .terraform**
 terraform.tfstate
+crash.log

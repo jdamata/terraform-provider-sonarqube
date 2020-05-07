@@ -14,17 +14,20 @@ func Provider() terraform.ResourceProvider {
 	sonarqubeProvider = &schema.Provider{
 		// Provider configuration
 		Schema: map[string]*schema.Schema{
-			"user": &schema.Schema{
+			"user": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_USER", "SONARQUBE_USER"}, nil),
+				Required:    true,
 			},
-			"pass": &schema.Schema{
+			"pass": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_PASS", "SONARQUBE_PASS"}, nil),
+				Required:    true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_URL", "SONARQUBE_URL"}, nil),
+				Required:    true,
 			},
 		},
 		// Add the resources supported by this provider to this map.
@@ -36,7 +39,7 @@ func Provider() terraform.ResourceProvider {
 	return sonarqubeProvider
 }
 
-//ProviderConfiguration contains the formatted credentials for comminication with the sonarqube api
+//ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
 	httpClient *http.Client
 	sonarURL   string

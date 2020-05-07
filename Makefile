@@ -7,4 +7,4 @@ all:
 	go build -o terraform-provider-sonarqube
 
 clean:
-	rm -f terraform-provider-sonarqube
+	rm -rf terraform-provider-sonarqube .terraform terraform.tfstate crash.log

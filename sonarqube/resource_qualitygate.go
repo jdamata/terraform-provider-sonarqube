@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -19,31 +20,29 @@ func qualityGate() *schema.Resource {
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"organization": &schema.Schema{
+			"organization": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "default",
 				ForceNew: true,
 			},
 		},
 	}
 }
 
-func buildQualityGateStruct(d *schema.ResourceData) QualityGate {
-	qualityGateName := d.Get("name").(string)
-	qualityGate := QualityGate{Name: qualityGateName}
-	return qualityGate
-}
-
 func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
-	qualityGate := buildQualityGateStruct(d)
-	buffer := encodeObject(qualityGate)
-
-	req, err := http.NewRequest("POST", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/create", buffer)
+	url := fmt.Sprintf("%s/api/qualitygates/create?name=%s&organization=%s",
+		m.(*ProviderConfiguration).sonarURL,
+		d.Get("name").(string),
+		d.Get("organization").(string),
+	)
+	log.Info(url)
+	req, err := http.NewRequest("POST", url, http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
@@ -77,10 +76,7 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	qualityGate := buildQualityGateStruct(d)
-	buffer := encodeObject(qualityGate)
-
-	req, err := http.NewRequest("GET", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/show", buffer)
+	req, err := http.NewRequest("GET", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/show", http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
 		return err
@@ -111,10 +107,7 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
-	qualityGate := buildQualityGateStruct(d)
-	buffer := encodeObject(qualityGate)
-
-	req, err := http.NewRequest("POST", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/destroy", buffer)
+	req, err := http.NewRequest("POST", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/destroy", http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
