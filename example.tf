@@ -8,6 +8,6 @@ resource "sonarqube_qualitygate" "test" {
     name = "test"
 }
 
-output "guality-gate-name" {
-    value = sonarqube_qualitygate.test.name
+output "guality-gate-id" {
+    value = sonarqube_qualitygate.test.id
 }

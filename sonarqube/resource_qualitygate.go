@@ -63,12 +63,12 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(qualityGateResponse.Name)
+	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
 	return nil
 }
 
 func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/show?name=%s",
+	url := fmt.Sprintf("%s/api/qualitygates/show?id=%s",
 		m.(*ProviderConfiguration).sonarURL,
 		d.Id(),
 	)
@@ -98,7 +98,7 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(qualityGateResponse.Name)
+	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
 	d.Set("name", qualityGateResponse.Name)
 	return nil
 }

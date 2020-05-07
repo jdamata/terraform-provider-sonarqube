@@ -27,11 +27,12 @@ The following arguments are supported:
 The following attributes are exported:
 
 - name - Name of the Sonarqube Quality Gate
+- id - ID of the Sonarqube Quality Gate
 
 ## Import 
-Quality Gates can be imported using their numeric name
+Quality Gates can be imported using their numeric value
 
 ```terraform
-terraform import sonarqube_qualitygate.test test
+terraform import sonarqube_qualitygate.test 11
 ```
 
