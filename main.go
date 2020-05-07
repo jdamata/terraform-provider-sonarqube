@@ -8,7 +8,7 @@ import (
 func main() {
 	plugin.Serve(
 		&plugin.ServeOpts{
-			ProviderFunc: sonarqube.Provider
-		}
+			ProviderFunc: sonarqube.Provider,
+		},
 	)
 }

@@ -4,10 +4,14 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func Provider() *schema.Provider {
-	return &schema.Provider{
+var sonarqubeProvider *schema.Provider
+
+// Provider for sonarqube
+func Provider() terraform.ResourceProvider {
+	sonarqubeProvider = &schema.Provider{
 		// Provider configuration
 		Schema: map[string]*schema.Schema{
 			"user": &schema.Schema{
@@ -29,6 +33,7 @@ func Provider() *schema.Provider {
 		},
 		ConfigureFunc: providerConfigure,
 	}
+	return sonarqubeProvider
 }
 
 //ProviderConfiguration contains the formatted credentials for comminication with the sonarqube api

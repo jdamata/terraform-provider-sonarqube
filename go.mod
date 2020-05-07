@@ -1,4 +1,4 @@
-module github.com/jdamata/sonarqube-terraform-provider
+module github.com/jdamata/terraform-provider-sonarqube
 
 go 1.13
 
@@ -8,12 +8,12 @@ require (
 	github.com/aws/aws-sdk-go v1.30.21 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/golang/protobuf v1.4.1 // indirect
-	github.com/hashicorp/go-getter v1.4.1 // indirect
 	github.com/hashicorp/go-hclog v0.12.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/go-plugin v1.2.2 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.4.0 // indirect
+	github.com/hashicorp/terraform v0.12.24
 	github.com/hashicorp/terraform-plugin-sdk v1.11.0
 	github.com/hashicorp/terraform-svchost v0.0.0-20191119180714-d2e4933b9136 // indirect
 	github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d // indirect
@@ -24,7 +24,6 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/sirupsen/logrus v1.6.0
-	github.com/terraform-providers/terraform-provider-datadog v1.9.0 // indirect
 	github.com/ulikunitz/xz v0.5.7 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/zclconf/go-cty v1.4.0 // indirect
