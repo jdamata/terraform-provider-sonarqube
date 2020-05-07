@@ -1,4 +1,4 @@
-package main
+package sonarqube
 
 /*
  * Make sure the fields are public (First letter Uppercase),

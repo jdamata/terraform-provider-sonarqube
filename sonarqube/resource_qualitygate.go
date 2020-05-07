@@ -1,4 +1,4 @@
-package main
+package sonarqube
 
 import (
 	"encoding/json"
