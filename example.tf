@@ -4,14 +4,6 @@ provider "sonarqube" {
     url = "http://127.0.0.1:9000"
 }
 
-resource "sonarqube_qualitygate" "test" {
-    name = "test"
-}
-
-output "guality-gate-id" {
-    value = sonarqube_qualitygate.test.id
-}
-
-output "guality-gate-name" {
-    value = sonarqube_qualitygate.test.name
+resource "sonarqube_qualitygate" "main" {
+    name = "example"
 }

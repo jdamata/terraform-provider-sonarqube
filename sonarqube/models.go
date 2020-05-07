@@ -5,13 +5,17 @@ package sonarqube
  * otherwise the JSON serialization will fail.
  */
 
-// QualityGate struct for enconding the request body
-type QualityGate struct {
-	Name string `json:"name"`
-}
-
 // QualityGateResponse for unmarshalling response body
 type QualityGateResponse struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+}
+
+// QualityGateConditionResponse for unmarshalling response body
+type QualityGateConditionResponse struct {
+	ID      int64  `json:"id"`
+	Metric  string `json:"metric"`
+	OP      string `json:"op"`
+	Error   string `json:"error"`
+	Warning string `json:"warning"`
 }

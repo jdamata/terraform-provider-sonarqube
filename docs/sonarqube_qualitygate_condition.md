@@ -1,5 +1,5 @@
-# sonarqube_qualitygate
-Provides a Sonarqube Quality Gate resource. This can be used to create and manage Sonarqube Quality Gates.
+# sonarqube_qualitygate_condition
+Provides a Sonarqube Quality Gate Condition resource. This can be used to create and manage Sonarqube Quality Gate conditions.
 
 ## Example: create a quality gate
 ```terraform
@@ -13,12 +13,11 @@ resource "sonarqube_qualitygate" "main" {
     name = "example"
 }
 
-output "guality-gate-id" {
-    value = sonarqube_qualitygate.main.id
-}
-
-output "guality-gate-name" {
-    value = sonarqube_qualitygate.main.name
+resource "sonarqube_qualitygate_condition" "main" {
+    error = 10
+    gateId = sonarqube_qualitygate.main.id
+    metric = "vulnerabilities"
+    op = "GT"
 }
 ```
 

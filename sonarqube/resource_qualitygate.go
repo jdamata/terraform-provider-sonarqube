@@ -16,7 +16,6 @@ func qualityGate() *schema.Resource {
 	return &schema.Resource{
 		Create: qualityGateCreate,
 		Read:   qualityGateRead,
-		// Update: qualityGateUpdate,
 		Delete: qualityGateDelete,
 		Importer: &schema.ResourceImporter{
 			State: qualityGateImport,
