@@ -11,3 +11,7 @@ resource "sonarqube_qualitygate" "test" {
 output "guality-gate-id" {
     value = sonarqube_qualitygate.test.id
 }
+
+output "guality-gate-name" {
+    value = sonarqube_qualitygate.test.name
+}
