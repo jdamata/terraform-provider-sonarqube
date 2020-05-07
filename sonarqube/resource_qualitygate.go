@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -34,15 +33,24 @@ func qualityGate() *schema.Resource {
 	}
 }
 
-func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(*ProviderConfiguration).httpClient
+func buildQualityGateStruct(d *schema.ResourceData) QualityGate {
 	qualityGateName := d.Get("name").(string)
 	qualityGate := QualityGate{Name: qualityGateName}
-	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(qualityGate)
-	req, err := http.NewRequest("POST", sonarURL+"/api/qualitygates/create", buffer)
-	req.SetBasicAuth("admin", "admin")
-	resp, err := client.Do(req)
+	return qualityGate
+}
+
+func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
+	qualityGate := buildQualityGateStruct(d)
+	buffer := encodeObject(qualityGate)
+
+	req, err := http.NewRequest("POST", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/create", buffer)
+	if err != nil {
+		log.WithError(err).Error("resourceQualityGateCreate")
+		return err
+	}
+
+	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
+	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
@@ -59,7 +67,7 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
 	}
-	d.SetId(qualityGateResponse.Id)
+	d.SetId(qualityGateResponse.ID)
 	/*
 	 * Why return nil?
 	 * Please take a look at the rules for update the state in Terraform defined here:
@@ -69,16 +77,19 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	qualityGateName := d.Get("name").(string)
-	qualityGate := QualityGate{Name: qualityGateName}
-	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(qualityGate)
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", sonarURL+"/api/qualitygates/show", buffer)
-	req.SetBasicAuth("admin", "admin")
-	resp, err := client.Do(req)
+	qualityGate := buildQualityGateStruct(d)
+	buffer := encodeObject(qualityGate)
+
+	req, err := http.NewRequest("GET", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/show", buffer)
 	if err != nil {
-		log.WithError(err).Error("qualityGateRead")
+		log.WithError(err).Error("resourceQualityGateRead")
+		return err
+	}
+
+	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
+	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
+	if err != nil {
+		log.WithError(err).Error("resourceQualityGateRead")
 		return err
 	}
 
@@ -91,7 +102,7 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 
 	qualityGateResponse, err := getQualityGateResponse(resp)
 	if err != nil {
-		log.WithError(err).Error("qualityGateRead")
+		log.WithError(err).Error("resourceQualityGateRead")
 		return err
 	}
 
@@ -100,16 +111,19 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
-	qualityGateName := d.Get("name").(string)
-	qualityGate := QualityGate{Name: qualityGateName}
-	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(qualityGate)
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", sonarURL+"/api/qualitygates/destroy", buffer)
-	req.SetBasicAuth("admin", "admin")
-	resp, err := client.Do(req)
+	qualityGate := buildQualityGateStruct(d)
+	buffer := encodeObject(qualityGate)
+
+	req, err := http.NewRequest("POST", m.(*ProviderConfiguration).sonarURL+"/api/qualitygates/destroy", buffer)
 	if err != nil {
-		log.WithError(err).Error("qualityGateDelete")
+		log.WithError(err).Error("resourceQualityGateDelete")
+		return err
+	}
+
+	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
+	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
+	if err != nil {
+		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
 	}
 

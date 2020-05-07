@@ -5,12 +5,14 @@ package main
  * otherwise the JSON serialization will fail.
  */
 
+// QualityGate struct for enconding the request body
 type QualityGate struct {
 	Name         string `json:"name"`
 	Organization string `json:"organization"`
 }
 
+// QualityGateResponse for unmarshalling response body
 type QualityGateResponse struct {
-	Id   string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
