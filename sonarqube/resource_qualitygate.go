@@ -25,23 +25,15 @@ func qualityGate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"organization": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "default",
-				ForceNew: true,
-			},
 		},
 	}
 }
 
 func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/create?name=%s&organization=%s",
+	url := fmt.Sprintf("%s/api/qualitygates/create?name=%s",
 		m.(*ProviderConfiguration).sonarURL,
 		d.Get("name").(string),
-		d.Get("organization").(string),
 	)
-	log.Info(url)
 	req, err := http.NewRequest("POST", url, http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
@@ -56,7 +48,7 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusOK {
 		responseBody := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
@@ -66,7 +58,7 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
 	}
-	d.SetId(qualityGateResponse.ID)
+	d.SetId(string(qualityGateResponse.ID))
 	/*
 	 * Why return nil?
 	 * Please take a look at the rules for update the state in Terraform defined here:

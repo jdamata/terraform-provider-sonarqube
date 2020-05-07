@@ -7,12 +7,11 @@ package sonarqube
 
 // QualityGate struct for enconding the request body
 type QualityGate struct {
-	Name         string `json:"name"`
-	Organization string `json:"organization"`
+	Name string `json:"name"`
 }
 
 // QualityGateResponse for unmarshalling response body
 type QualityGateResponse struct {
-	ID   string `json:"id"`
+	ID   int64  `json:"id"`
 	Name string `json:"name"`
 }
