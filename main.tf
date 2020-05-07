@@ -7,3 +7,7 @@ provider "sonarqube" {
 resource "sonarqube_qualitygate" "test" {
     name = "test"
 }
+
+output "guality-gate-name" {
+    value = sonarqube_qualitygate.test.name
+}
