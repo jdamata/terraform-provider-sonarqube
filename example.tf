@@ -5,14 +5,14 @@ provider "sonarqube" {
     scheme = "http"
 }
 
-resource "sonarqube_qualitygate" "main" {
-    name = "my_qualitygate"
-}
-
 resource "sonarqube_project" "main" {
     name       = "Project 1"
     project    = "my_project"
     visibility = "public" 
+}
+
+resource "sonarqube_qualitygate" "main" {
+    name = "my_qualitygate"
 }
 
 resource "sonarqube_qualitygate_condition" "main" {

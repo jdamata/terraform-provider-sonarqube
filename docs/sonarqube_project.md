@@ -18,7 +18,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 The following attributes are exported:
-
+- project - (Required) Key of the project
 
 ## Import 
 Projects can be imported using their project key
