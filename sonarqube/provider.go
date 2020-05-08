@@ -50,21 +50,21 @@ func Provider() terraform.ResourceProvider {
 
 //ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
-	httpClient *http.Client
-	url        url.URL
+	httpClient   *http.Client
+	sonarQubeURL url.URL
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	client := &http.Client{}
 
-	url := url.URL{
+	sonarQubeURL := url.URL{
 		Scheme: d.Get("scheme").(string),
 		Host:   d.Get("host").(string),
 		User:   url.UserPassword(d.Get("user").(string), d.Get("pass").(string)),
 	}
 
 	return &ProviderConfiguration{
-		httpClient: client,
-		url:        url,
+		httpClient:   client,
+		sonarQubeURL: sonarQubeURL,
 	}, nil
 }

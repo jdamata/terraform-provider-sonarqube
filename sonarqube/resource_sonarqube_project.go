@@ -43,16 +43,16 @@ func resourceSonarqubeProject() *schema.Resource {
 }
 
 func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error {
-	url := m.(*ProviderConfiguration).url
-	url.Path = "api/projects/create"
-	url.ForceQuery = true
-	url.RawQuery = fmt.Sprintf("name=%s&project=%s&visibility=%s",
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/projects/create"
+	sonarQubeURL.ForceQuery = true
+	sonarQubeURL.RawQuery = fmt.Sprintf("name=%s&project=%s&visibility=%s",
 		d.Get("name").(string),
 		d.Get("project").(string),
 		d.Get("visibility").(string),
 	)
 
-	req, err := http.NewRequest("POST", url.String(), http.NoBody)
+	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeProjectCreate")
 		return err
@@ -80,14 +80,14 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
-	url := m.(*ProviderConfiguration).url
-	url.Path = "api/projects/search"
-	url.ForceQuery = true
-	url.RawQuery = fmt.Sprintf("projects=%s",
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/projects/search"
+	sonarQubeURL.ForceQuery = true
+	sonarQubeURL.RawQuery = fmt.Sprintf("projects=%s",
 		d.Id(),
 	)
 
-	req, err := http.NewRequest("GET", url.String(), http.NoBody)
+	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeProjectRead")
 		return err
@@ -124,13 +124,13 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error {
-	url := m.(*ProviderConfiguration).url
-	url.Path = "api/projects/delete"
-	url.ForceQuery = true
-	url.RawQuery = fmt.Sprintf("projects=%s",
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/projects/delete"
+	sonarQubeURL.ForceQuery = true
+	sonarQubeURL.RawQuery = fmt.Sprintf("projects=%s",
 		d.Id(),
 	)
-	req, err := http.NewRequest("POST", url.String(), http.NoBody)
+	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeProjectDelete")
 		return err

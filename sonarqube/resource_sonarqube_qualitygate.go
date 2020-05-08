@@ -33,14 +33,14 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 }
 
 func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
-	url := m.(*ProviderConfiguration).url
-	url.Path = "api/qualitygates/create"
-	url.ForceQuery = true
-	url.RawQuery = fmt.Sprintf("name=%s",
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/create"
+	sonarQubeURL.ForceQuery = true
+	sonarQubeURL.RawQuery = fmt.Sprintf("name=%s",
 		d.Get("name").(string),
 	)
 
-	req, err := http.NewRequest("POST", url.String(), http.NoBody)
+	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
@@ -68,14 +68,14 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
-	url := m.(*ProviderConfiguration).url
-	url.Path = "api/qualitygates/show"
-	url.ForceQuery = true
-	url.RawQuery = fmt.Sprintf("id=%s",
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/show"
+	sonarQubeURL.ForceQuery = true
+	sonarQubeURL.RawQuery = fmt.Sprintf("id=%s",
 		d.Id(),
 	)
 
-	req, err := http.NewRequest("GET", url.String(), http.NoBody)
+	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
 		return err
@@ -111,14 +111,14 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	url := m.(*ProviderConfiguration).url
-	url.Path = "api/qualitygates/destroy"
-	url.ForceQuery = true
-	url.RawQuery = fmt.Sprintf("id=%v",
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/destroy"
+	sonarQubeURL.ForceQuery = true
+	sonarQubeURL.RawQuery = fmt.Sprintf("id=%v",
 		id,
 	)
 
-	req, err := http.NewRequest("POST", url.String(), http.NoBody)
+	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
