@@ -15,6 +15,11 @@ resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
 }
 
+resource "sonarqube_qualitygate_project_association" "main" {
+    gateid     = sonarqube_qualitygate.main.id
+    projectkey = sonarqube_project.main.project
+}
+
 resource "sonarqube_qualitygate_condition" "main" {
     gateid = sonarqube_qualitygate.main.id
     metric = "vulnerabilities"

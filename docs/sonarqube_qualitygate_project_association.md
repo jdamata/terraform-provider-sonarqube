@@ -8,12 +8,14 @@ resource "sonarqube_qualitygate" "main" {
 }
 
 resource "sonarqube_project" "main" {
-    name = "my_project"
+    name       = "SonarQube"
+    project    = "my_project"
+    visibility = "public" 
 }
 
 resource "sonarqube_qualitygate_project_association" "main" {
-    gateid = sonarqube_qualitygate.main.id
-    projectkey = ""
+    gateid     = sonarqube_qualitygate.main.id
+    projectkey = sonarqube_project.main.project
 }
 ```
 

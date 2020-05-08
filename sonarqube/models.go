@@ -53,12 +53,12 @@ type Project struct {
 
 // GetProject for unmarshalling response body from getting project details
 type GetProject struct {
-	Paging     ProjectPaging       `json:"paging"`
+	Paging     Paging              `json:"paging"`
 	Components []ProjectComponents `json:"components"`
 }
 
 // ProjectPaging used in GetProject
-type ProjectPaging struct {
+type Paging struct {
 	PageIndex int64 `json:"pageIndex"`
 	PageSize  int64 `json:"pageSize"`
 	Total     int64 `json:"total"`
@@ -73,4 +73,17 @@ type ProjectComponents struct {
 	Visibility       string `json:"visibility"`
 	LastAnalysisDate string `json:"lastAnalysisDate"`
 	Revision         string `json:"revision"`
+}
+
+// GetQualityGateAssociation for unmarshalling response body from getting quality gate association
+type GetQualityGateAssociation struct {
+	Paging  Paging                              `json:"paging"`
+	Results []GetQualityGateAssociationProjects `json:"results"`
+}
+
+// GetQualityGateAssociationProjects used in GetQualityGateAssociation
+type GetQualityGateAssociationProjects struct {
+	Name     string `json:"name"`
+	Key      string `json:"key"`
+	Selected bool   `json:"selected"`
 }

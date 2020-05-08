@@ -39,9 +39,10 @@ func Provider() terraform.ResourceProvider {
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
-			"sonarqube_project":               resourceSonarqubeProject(),
-			"sonarqube_qualitygate":           resourceSonarqubeQualityGate(),
-			"sonarqube_qualitygate_condition": resourceSonarqubeQualityGateCondition(),
+			"sonarqube_project":                         resourceSonarqubeProject(),
+			"sonarqube_qualitygate":                     resourceSonarqubeQualityGate(),
+			"sonarqube_qualitygate_condition":           resourceSonarqubeQualityGateCondition(),
+			"sonarqube_qualitygate_project_association": resourceSonarqubeQualityGateProjectAssociation(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
