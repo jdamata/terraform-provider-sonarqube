@@ -17,5 +17,5 @@ The following arguments are supported:
 
 - user - (Required) Sonarqube user. This can also be set via the SONARQUBE_USER environment variable.
 - pass - (Required) Sonarqube pass. This can also be set via the SONARQUBE_PASS environment variable.
-- url - (Required) Sonarqube url. This can be also be set via the SONARQUBE_URL environment variable.
+- host - (Required) Sonarqube url. This can be also be set via the SONARQUBE_HOST environment variable.
 - scheme - (Required) Http scheme to use. Either http or https. This can be also be set via the SONARQUBE_SCHEME environment variable.
