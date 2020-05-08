@@ -14,7 +14,7 @@ type GetQualityGate struct {
 	Actions    QualityGateActions                   `json:"actions"`
 }
 
-// QualityGateActions used in GetQualityGate unmarshalling
+// QualityGateActions used in GetQualityGate
 type QualityGateActions struct {
 	Rename            bool `json:"rename"`
 	SetAsDefault      bool `json:"setAsDefault"`
@@ -24,17 +24,53 @@ type QualityGateActions struct {
 	ManageConditions  bool `json:"manageConditions"`
 }
 
-// CreateQualityGateResponse for unmarshalling response body
+// CreateQualityGateResponse for unmarshalling response body of quality gate creation
 type CreateQualityGateResponse struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
 }
 
-// CreateQualityGateConditionResponse for unmarshalling response body of condition create
+// CreateQualityGateConditionResponse for unmarshalling response body of condition creation
 type CreateQualityGateConditionResponse struct {
 	ID      int64  `json:"id"`
 	Metric  string `json:"metric"`
 	OP      string `json:"op"`
 	Error   string `json:"error"`
 	Warning string `json:"warning"`
+}
+
+// CreateProjectResponse for unmarshalling response body of project creation
+type CreateProjectResponse struct {
+	Project Project `json:"project"`
+}
+
+// Project used in CreateProjectResponse
+type Project struct {
+	Key       string `json:"key"`
+	Name      string `json:"name"`
+	Qualifier string `json:"qualifier"`
+}
+
+// GetProject for unmarshalling response body from getting project details
+type GetProject struct {
+	Paging     ProjectPaging       `json:"paging"`
+	Components []ProjectComponents `json:"components"`
+}
+
+// ProjectPaging used in GetProject
+type ProjectPaging struct {
+	PageIndex int64 `json:"pageIndex"`
+	PageSize  int64 `json:"pageSize"`
+	Total     int64 `json:"total"`
+}
+
+// ProjectComponents used in GetProject
+type ProjectComponents struct {
+	Organization     string `json:"organization"`
+	Key              string `json:"key"`
+	Name             string `json:"name"`
+	Qualifier        string `json:"qualifier"`
+	Visibility       string `json:"visibility"`
+	LastAnalysisDate string `json:"lastAnalysisDate"`
+	Revision         string `json:"revision"`
 }

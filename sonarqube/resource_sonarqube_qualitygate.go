@@ -12,13 +12,13 @@ import (
 )
 
 // Returns the resource represented by this file.
-func qualityGate() *schema.Resource {
+func resourceSonarqubeQualityGate() *schema.Resource {
 	return &schema.Resource{
-		Create: qualityGateCreate,
-		Read:   qualityGateRead,
-		Delete: qualityGateDelete,
+		Create: resourceSonarqubeQualityGateCreate,
+		Read:   resourceSonarqubeQualityGateRead,
+		Delete: resourceSonarqubeQualityGateDelete,
 		Importer: &schema.ResourceImporter{
-			State: qualityGateImport,
+			State: resourceSonarqubeQualityGateImport,
 		},
 
 		// Define the fields of this schema.
@@ -32,18 +32,19 @@ func qualityGate() *schema.Resource {
 	}
 }
 
-func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/create?name=%s",
-		m.(*ProviderConfiguration).sonarURL,
+func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
+	url := m.(*ProviderConfiguration).url
+	url.Path = "api/qualitygates/create"
+	url.ForceQuery = true
+	url.RawQuery = fmt.Sprintf("name=%s",
 		d.Get("name").(string),
 	)
-	req, err := http.NewRequest("POST", url, http.NoBody)
+
+	req, err := http.NewRequest("POST", url.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
 	}
-
-	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
 	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
@@ -66,18 +67,19 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/show?id=%s",
-		m.(*ProviderConfiguration).sonarURL,
+func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
+	url := m.(*ProviderConfiguration).url
+	url.Path = "api/qualitygates/show"
+	url.ForceQuery = true
+	url.RawQuery = fmt.Sprintf("id=%s",
 		d.Id(),
 	)
-	req, err := http.NewRequest("GET", url, http.NoBody)
+
+	req, err := http.NewRequest("GET", url.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
 		return err
 	}
-
-	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
 	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
@@ -102,24 +104,25 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	id, err := strconv.Atoi(d.Id())
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
 	}
 
-	url := fmt.Sprintf("%s/api/qualitygates/destroy?id=%v",
-		m.(*ProviderConfiguration).sonarURL,
+	url := m.(*ProviderConfiguration).url
+	url.Path = "api/qualitygates/destroy"
+	url.ForceQuery = true
+	url.RawQuery = fmt.Sprintf("id=%v",
 		id,
 	)
-	req, err := http.NewRequest("POST", url, http.NoBody)
+
+	req, err := http.NewRequest("POST", url.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
 	}
-
-	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
 	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
@@ -135,8 +138,8 @@ func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func qualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if err := qualityGateRead(d, meta); err != nil {
+func resourceSonarqubeQualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeQualityGateRead(d, meta); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil

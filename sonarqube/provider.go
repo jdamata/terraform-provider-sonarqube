@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -24,16 +25,23 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_PASS", "SONARQUBE_PASS"}, nil),
 				Required:    true,
 			},
-			"url": {
+			"host": {
 				Type:        schema.TypeString,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_URL", "SONARQUBE_URL"}, nil),
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_HOST", "SONARQUBE_HOST"}, nil),
 				Required:    true,
+			},
+			"scheme": {
+				Type:        schema.TypeString,
+				Default:     "https",
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_SCHEME", "SONARQUBE_SCHEME"}, nil),
+				Optional:    true,
 			},
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
-			"sonarqube_qualitygate":           qualityGate(),
-			"sonarqube_qualitygate_condition": qualityGateCondition(),
+			"sonarqube_project":               resourceSonarqubeProject(),
+			"sonarqube_qualitygate":           resourceSonarqubeQualityGate(),
+			"sonarqube_qualitygate_condition": resourceSonarqubeQualityGateCondition(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -43,21 +51,20 @@ func Provider() terraform.ResourceProvider {
 //ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
 	httpClient *http.Client
-	sonarURL   string
-	sonarUser  string
-	sonarPass  string
+	url        url.URL
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	client := &http.Client{}
-	user := d.Get("user").(string)
-	pass := d.Get("pass").(string)
-	url := d.Get("url").(string)
+
+	url := url.URL{
+		Scheme: d.Get("scheme").(string),
+		Host:   d.Get("host").(string),
+		User:   url.UserPassword(d.Get("user").(string), d.Get("pass").(string)),
+	}
 
 	return &ProviderConfiguration{
 		httpClient: client,
-		sonarURL:   url,
-		sonarUser:  user,
-		sonarPass:  pass,
+		url:        url,
 	}, nil
 }
