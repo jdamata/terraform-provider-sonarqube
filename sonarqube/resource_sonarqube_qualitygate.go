@@ -3,8 +3,8 @@ package sonarqube
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -12,13 +12,13 @@ import (
 )
 
 // Returns the resource represented by this file.
-func qualityGate() *schema.Resource {
+func resourceSonarqubeQualityGate() *schema.Resource {
 	return &schema.Resource{
-		Create: qualityGateCreate,
-		Read:   qualityGateRead,
-		Delete: qualityGateDelete,
+		Create: resourceSonarqubeQualityGateCreate,
+		Read:   resourceSonarqubeQualityGateRead,
+		Delete: resourceSonarqubeQualityGateDelete,
 		Importer: &schema.ResourceImporter{
-			State: qualityGateImport,
+			State: resourceSonarqubeQualityGateImport,
 		},
 
 		// Define the fields of this schema.
@@ -32,18 +32,20 @@ func qualityGate() *schema.Resource {
 	}
 }
 
-func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/create?name=%s",
-		m.(*ProviderConfiguration).sonarURL,
-		d.Get("name").(string),
-	)
-	req, err := http.NewRequest("POST", url, http.NoBody)
+func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/create"
+	sonarQubeURL.ForceQuery = true
+	query := url.Values{
+		"name": []string{d.Get("name").(string)},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
+
+	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
 		return err
 	}
-
-	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
 	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate")
@@ -66,18 +68,20 @@ func qualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func qualityGateRead(d *schema.ResourceData, m interface{}) error {
-	url := fmt.Sprintf("%s/api/qualitygates/show?id=%s",
-		m.(*ProviderConfiguration).sonarURL,
-		d.Id(),
-	)
-	req, err := http.NewRequest("GET", url, http.NoBody)
+func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/show"
+	sonarQubeURL.ForceQuery = true
+	query := url.Values{
+		"id": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
+
+	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
 		return err
 	}
-
-	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
 	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead")
@@ -102,24 +106,20 @@ func qualityGateRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
-	id, err := strconv.Atoi(d.Id())
+func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/destroy"
+	sonarQubeURL.ForceQuery = true
+	query := url.Values{
+		"id": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
+
+	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
 		return err
 	}
-
-	url := fmt.Sprintf("%s/api/qualitygates/destroy?id=%v",
-		m.(*ProviderConfiguration).sonarURL,
-		id,
-	)
-	req, err := http.NewRequest("POST", url, http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceQualityGateDelete")
-		return err
-	}
-
-	req.SetBasicAuth(m.(*ProviderConfiguration).sonarUser, m.(*ProviderConfiguration).sonarPass)
 	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete")
@@ -135,8 +135,8 @@ func qualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func qualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if err := qualityGateRead(d, meta); err != nil {
+func resourceSonarqubeQualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeQualityGateRead(d, meta); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil

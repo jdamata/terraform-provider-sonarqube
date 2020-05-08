@@ -10,7 +10,7 @@ all:
 run: 
 	go build -o terraform-provider-sonarqube
 	terraform init
-	terraform plan
+	terraform apply --auto-approve
 
 clean:
 	rm -rf terraform-provider-sonarqube .terraform terraform.tfstate crash.log terraform.tfstate.backup

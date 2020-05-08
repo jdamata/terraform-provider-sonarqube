@@ -13,8 +13,10 @@ Consult the docs below for more details.
 [Provider configuration](docs/provider.md)
 
 Resources:
+- [sonarqube_project](docs/sonarqube_project.md)
 - [sonarqube_qualitygate](docs/sonarqube_qualitygate.md)
 - [sonarqube_qualitygate_condition](docs/sonarqube_qualitygate_condition.md)
+- [sonarqube_qualitygate_project_association](docs/sonarqube_qualitygate_project_association.md)
 
 ## Development
 ```bash

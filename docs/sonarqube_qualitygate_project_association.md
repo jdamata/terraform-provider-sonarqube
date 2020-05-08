@@ -1,5 +1,5 @@
-# sonarqube_qualitygate_condition
-Provides a Sonarqube Quality Gate Condition resource. This can be used to create and manage Sonarqube Quality Gate conditions.
+# sonarqube_qualitygate_project_association
+Provides a Sonarqube Quality Gate Project association resource. This can be used to associate a Quality Gate to a Project
 
 ## Example: create a quality gate
 ```terraform
@@ -7,11 +7,15 @@ resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
 }
 
-resource "sonarqube_qualitygate_condition" "main" {
-    gateid = sonarqube_qualitygate.main.id
-    metric = "vulnerabilities"
-    error  = 10
-    op     = "GT"
+resource "sonarqube_project" "main" {
+    name       = "SonarQube"
+    project    = "my_project"
+    visibility = "public" 
+}
+
+resource "sonarqube_qualitygate_project_association" "main" {
+    gateid     = sonarqube_qualitygate.main.id
+    projectkey = sonarqube_project.main.project
 }
 ```
 
