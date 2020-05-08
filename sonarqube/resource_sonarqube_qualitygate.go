@@ -3,8 +3,8 @@ package sonarqube
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -36,9 +36,10 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("name=%s",
-		d.Get("name").(string),
-	)
+	query := url.Values{
+		"name": []string{d.Get("name").(string)},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -71,9 +72,10 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("id=%s",
-		d.Id(),
-	)
+	query := url.Values{
+		"id": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -105,18 +107,13 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
-	id, err := strconv.Atoi(d.Id())
-	if err != nil {
-		log.WithError(err).Error("resourceQualityGateDelete")
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/destroy"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("id=%v",
-		id,
-	)
+	query := url.Values{
+		"id": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {

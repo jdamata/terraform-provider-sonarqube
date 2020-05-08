@@ -3,8 +3,8 @@ package sonarqube
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -46,12 +46,13 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create_condition"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("gateId=%v&error=%v&metric=%s&op=%s",
-		d.Get("gateid").(int),
-		d.Get("error").(int),
-		d.Get("metric").(string),
-		d.Get("op").(string),
-	)
+	query := url.Values{
+		"gateId": []string{strconv.Itoa(d.Get("gateid").(int))},
+		"error":  []string{strconv.Itoa(d.Get("error").(int))},
+		"metric": []string{d.Get("metric").(string)},
+		"op":     []string{d.Get("op").(string)},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -84,9 +85,10 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("id=%v",
-		d.Get("gateid").(int),
-	)
+	query := url.Values{
+		"id": []string{strconv.Itoa(d.Get("gateid").(int))},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -126,22 +128,17 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 }
 
 func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m interface{}) error {
-	conditionID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionUpdate")
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/update_condition"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("gateid=%v&id=%v&error=%v&metric=%s&op=%v",
-		d.Get("gateid").(int),
-		conditionID,
-		d.Get("error").(int),
-		d.Get("metric").(string),
-		d.Get("op").(string),
-	)
+	query := url.Values{
+		"gateid": []string{strconv.Itoa(d.Get("gateid").(int))},
+		"id":     []string{d.Id()},
+		"error":  []string{strconv.Itoa(d.Get("error").(int))},
+		"metric": []string{d.Get("metric").(string)},
+		"op":     []string{d.Get("op").(string)},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -164,18 +161,14 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 }
 
 func resourceSonarqubeQualityGateConditionDelete(d *schema.ResourceData, m interface{}) error {
-	id, err := strconv.Atoi(d.Id())
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionDelete")
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/delete_condition"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("id=%v",
-		id,
-	)
+	query := url.Values{
+		"id": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
+
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourcequalityGateConditionDelete")

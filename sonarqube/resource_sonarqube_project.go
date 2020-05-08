@@ -3,8 +3,8 @@ package sonarqube
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	log "github.com/sirupsen/logrus"
@@ -46,11 +46,12 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/create"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("name=%s&project=%s&visibility=%s",
-		d.Get("name").(string),
-		d.Get("project").(string),
-		d.Get("visibility").(string),
-	)
+	query := url.Values{
+		"name":       []string{d.Get("name").(string)},
+		"project":    []string{d.Get("project").(string)},
+		"visibility": []string{d.Get("visibility").(string)},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -83,9 +84,10 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/search"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("projects=%s",
-		d.Id(),
-	)
+	query := url.Values{
+		"project": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -127,9 +129,10 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/delete"
 	sonarQubeURL.ForceQuery = true
-	sonarQubeURL.RawQuery = fmt.Sprintf("projects=%s",
-		d.Id(),
-	)
+	query := url.Values{
+		"project": []string{d.Id()},
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeProjectDelete")
