@@ -23,16 +23,4 @@ resource "sonarqube_qualitygate_project_association" "main" {
 The following arguments are supported:
 
 - gateid - (Required) The id of the Quality Gate
-- metric - (Required) Condition metric. Only metric of the following types are allowed: INT, MILLISEC, RATING, WORK_DUR, FLOAT, PERCENT and LEVEL. Following metrics are forbidden: alert_status, security_hotspots and new_security_hotspots
-- error - (Required) Condition error threshold
-- op - (Required) Condition operator. Possible values are: LT and GT
-
-## Attributes Reference
-The following attributes are exported:
-
-- id - ID of the Sonarqube Quality Gate
-- metric - Condition metric
-- error - Condition error threshold
-- warning - Condition warning threshold
-- op - Condition operator
-
+- projectkey - (Required) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.
