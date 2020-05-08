@@ -1,7 +1,7 @@
 # sonarqube_qualitygate_condition
 Provides a Sonarqube Quality Gate Condition resource. This can be used to create and manage Sonarqube Quality Gate conditions.
 
-## Example: create a quality gate
+## Example: create a quality gate condition
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"

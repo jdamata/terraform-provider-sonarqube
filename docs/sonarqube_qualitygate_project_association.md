@@ -1,7 +1,7 @@
 # sonarqube_qualitygate_project_association
 Provides a Sonarqube Quality Gate Project association resource. This can be used to associate a Quality Gate to a Project
 
-## Example: create a quality gate
+## Example: create a quality gate project association
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"

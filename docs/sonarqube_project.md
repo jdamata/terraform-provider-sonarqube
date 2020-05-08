@@ -1,13 +1,14 @@
 # sonarqube_project
 Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.
 
-## Example: create a quality gate
+## Example: create a project
 ```terraform
 resource "sonarqube_project" "main" {
     name       = "SonarQube"
     project    = "my_project"
     visibility = "public" 
 }
+```
 
 ## Argument Reference
 The following arguments are supported:
