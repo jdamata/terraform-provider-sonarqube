@@ -38,7 +38,6 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/select"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"gateId":     []string{d.Get("gateid").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
@@ -69,7 +68,6 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/search"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"gateId": []string{d.Get("gateid").(string)},
 	}
@@ -116,7 +114,6 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/deselect"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"gateId":     []string{d.Get("gateid").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},

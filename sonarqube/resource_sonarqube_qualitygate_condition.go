@@ -45,7 +45,6 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create_condition"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"gateId": []string{strconv.Itoa(d.Get("gateid").(int))},
 		"error":  []string{strconv.Itoa(d.Get("error").(int))},
@@ -84,7 +83,6 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"id": []string{strconv.Itoa(d.Get("gateid").(int))},
 	}
@@ -130,7 +128,6 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/update_condition"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"gateid": []string{strconv.Itoa(d.Get("gateid").(int))},
 		"id":     []string{d.Id()},
@@ -163,7 +160,6 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 func resourceSonarqubeQualityGateConditionDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/delete_condition"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"id": []string{d.Id()},
 	}

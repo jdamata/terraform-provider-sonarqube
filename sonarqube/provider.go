@@ -59,9 +59,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	client := &http.Client{}
 
 	sonarQubeURL := url.URL{
-		Scheme: d.Get("scheme").(string),
-		Host:   d.Get("host").(string),
-		User:   url.UserPassword(d.Get("user").(string), d.Get("pass").(string)),
+		Scheme:     d.Get("scheme").(string),
+		Host:       d.Get("host").(string),
+		User:       url.UserPassword(d.Get("user").(string), d.Get("pass").(string)),
+		ForceQuery: true,
 	}
 
 	return &ProviderConfiguration{

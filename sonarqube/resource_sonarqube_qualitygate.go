@@ -35,7 +35,6 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"name": []string{d.Get("name").(string)},
 	}
@@ -71,7 +70,6 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"id": []string{d.Id()},
 	}
@@ -109,7 +107,6 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/destroy"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"id": []string{d.Id()},
 	}

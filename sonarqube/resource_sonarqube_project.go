@@ -45,7 +45,6 @@ func resourceSonarqubeProject() *schema.Resource {
 func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/create"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"name":       []string{d.Get("name").(string)},
 		"project":    []string{d.Get("project").(string)},
@@ -83,7 +82,6 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/search"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"project": []string{d.Id()},
 	}
@@ -128,7 +126,6 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/delete"
-	sonarQubeURL.ForceQuery = true
 	query := url.Values{
 		"project": []string{d.Id()},
 	}
