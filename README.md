@@ -18,8 +18,17 @@ Resources:
 - [sonarqube_qualitygate_condition](docs/sonarqube_qualitygate_condition.md)
 - [sonarqube_qualitygate_project_association](docs/sonarqube_qualitygate_project_association.md)
 
+TODO:
+- plugins
+- quality profiles
+- rules
+- settings
+- user_groups
+- users
+- webhooks
+
 ## Development
 ```bash
-docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
+docker run -d -p 9000:9000 sonarqube:latest
 make run
 ```
