@@ -20,7 +20,6 @@ Resources:
 - [sonarqube_qualitygate_project_association](docs/sonarqube_qualitygate_project_association.md)
 
 TODO:
-- plugins
 - quality profiles
 - rules
 - settings
