@@ -5,6 +5,11 @@ package sonarqube
  * otherwise the JSON serialization will fail.
  */
 
+// Version for unmarshalling
+type Version struct {
+	PageIndex int64 `json:"pageIndex"`
+}
+
 // GetQualityGate for unmarshalling response body of quality gate get
 type GetQualityGate struct {
 	ID         int64                                `json:"id"`

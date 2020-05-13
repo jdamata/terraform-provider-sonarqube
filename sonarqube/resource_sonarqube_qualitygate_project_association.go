@@ -2,7 +2,6 @@ package sonarqube
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -38,27 +37,19 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/select"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId":     []string{d.Get("gateid").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationCreate")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationCreate")
-		return err
-	}
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubeQualityGateProjectAssociationCreate",
+	)
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
 	id := fmt.Sprintf("%v/%v", d.Get("gateid").(string), d.Get("projectkey").(string))
 	d.SetId(id)
@@ -68,33 +59,24 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/search"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId": []string{d.Get("gateid").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationRead")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationRead")
-		return err
-	}
-
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"GET",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourceSonarqubeQualityGateProjectAssociationRead",
+	)
 	defer resp.Body.Close()
-	log.WithField("status code", resp.StatusCode).Info("Response from server")
-	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
+	// Decode response into struct
 	qualityGateAssociationReadResponse := GetQualityGateAssociation{}
-	err = json.NewDecoder(resp.Body).Decode(&qualityGateAssociationReadResponse)
+	err := json.NewDecoder(resp.Body).Decode(&qualityGateAssociationReadResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationRead")
+		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct")
 	}
 
 	// ID is in format <gateid>/<projectkey>. This splits the id into gateid and projectkey
@@ -114,27 +96,19 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/deselect"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId":     []string{d.Get("gateid").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationDelete")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationDelete")
-		return err
-	}
+	}.Encode()
 
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubeQualityGateProjectAssociationDelete",
+	)
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
 	return nil
 }

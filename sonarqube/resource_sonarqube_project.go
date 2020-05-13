@@ -2,7 +2,6 @@ package sonarqube
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -45,34 +44,26 @@ func resourceSonarqubeProject() *schema.Resource {
 func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/create"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"name":       []string{d.Get("name").(string)},
 		"project":    []string{d.Get("project").(string)},
 		"visibility": []string{d.Get("visibility").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectCreate")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectCreate")
-		return err
-	}
-
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourceSonarqubeProjectCreate",
+	)
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
+	// Decode response into struct
 	projectResponse := CreateProjectResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&projectResponse)
+	err := json.NewDecoder(resp.Body).Decode(&projectResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectCreate")
+		log.WithError(err).Error("resourceSonarqubeProjectCreate: Failed to decode json into struct")
 	}
 
 	d.SetId(projectResponse.Project.Key)
@@ -82,37 +73,31 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/search"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"project": []string{d.Id()},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectRead")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectRead")
-		return err
-	}
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"GET",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourceSonarqubeProjectRead",
+	)
 
 	defer resp.Body.Close()
-	log.WithField("status code", resp.StatusCode).Info("Response from server")
-	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
+	// Decode response into struct
 	projectReadResponse := GetProject{}
-	err = json.NewDecoder(resp.Body).Decode(&projectReadResponse)
+	err := json.NewDecoder(resp.Body).Decode(&projectReadResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectRead")
+		log.WithError(err).Error("resourceSonarqubeProjectRead: Failed to decode json into struct")
 	}
 
+	// Loop over all projects to see if the project we need exists.
 	for _, value := range projectReadResponse.Components {
 		if d.Id() == value.Key {
+			// If it does, set the values of that project
 			d.SetId(value.Key)
 			d.Set("name", value.Name)
 			d.Set("key", value.Key)
@@ -126,27 +111,19 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/delete"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"project": []string{d.Id()},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectDelete")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectDelete")
-		return err
-	}
+	}.Encode()
+
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubeProjectDelete",
+	)
 
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
-
 	return nil
 }
 
