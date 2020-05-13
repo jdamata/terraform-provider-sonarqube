@@ -50,18 +50,21 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 		"visibility": []string{d.Get("visibility").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourceSonarqubeProjectCreate",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	projectResponse := CreateProjectResponse{}
-	err := json.NewDecoder(resp.Body).Decode(&projectResponse)
+	err = json.NewDecoder(resp.Body).Decode(&projectResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeProjectCreate: Failed to decode json into struct")
 	}
@@ -77,19 +80,21 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		"project": []string{d.Id()},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourceSonarqubeProjectRead",
 	)
-
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	projectReadResponse := GetProject{}
-	err := json.NewDecoder(resp.Body).Decode(&projectReadResponse)
+	err = json.NewDecoder(resp.Body).Decode(&projectReadResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeProjectRead: Failed to decode json into struct")
 	}
@@ -115,20 +120,23 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 		"project": []string{d.Id()},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
 		"resourceSonarqubeProjectDelete",
 	)
-
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
+
 	return nil
 }
 
-func resourceSonarqubeProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeProjectRead(d, meta); err != nil {
+func resourceSonarqubeProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeProjectRead(d, m); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil

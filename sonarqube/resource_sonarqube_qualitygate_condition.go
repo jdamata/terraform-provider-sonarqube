@@ -51,18 +51,21 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 		"op":     []string{d.Get("op").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourcequalityGateConditionCreate",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	qualityGateConditionResponse := CreateQualityGateConditionResponse{}
-	err := json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
 	if err != nil {
 		log.WithError(err).Error("getQualityGateConditionResponse: Failed to decode json into struct")
 	}
@@ -78,19 +81,21 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 		"id": []string{strconv.Itoa(d.Get("gateid").(int))},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourcequalityGateConditionRead",
 	)
-
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	getQualityGateConditionResponse := GetQualityGate{}
-	err := json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
+	err = json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
 	if err != nil {
 		log.WithError(err).Error("getQualityGateConditionResponse: Failed to decode json into struct")
 	}
@@ -119,13 +124,16 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 		"op":     []string{d.Get("op").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourcequalityGateConditionUpdate",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	return resourceSonarqubeQualityGateConditionRead(d, m)
@@ -138,13 +146,16 @@ func resourceSonarqubeQualityGateConditionDelete(d *schema.ResourceData, m inter
 		"id": []string{d.Id()},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourcequalityGateConditionDelete",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	return nil
