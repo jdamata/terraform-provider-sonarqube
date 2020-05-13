@@ -26,3 +26,7 @@ resource "sonarqube_qualitygate_condition" "main" {
     error  = 12
     op     = "GT"
 }
+
+resource "sonarqube_plugin" "main" {
+    key = "cloudformation"
+}

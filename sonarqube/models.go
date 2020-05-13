@@ -92,3 +92,27 @@ type GetQualityGateAssociationProjects struct {
 	Key      string `json:"key"`
 	Selected bool   `json:"selected"`
 }
+
+// GetInstalledPlugins for unmarshalling response body from geting installed plugins
+type GetInstalledPlugins struct {
+	Plugins []Plugin `json:"plugins"`
+}
+
+// Plugin used in GetInstalledPlugins
+type Plugin struct {
+	Key                string `json:"key"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	Version            string `json:"version"`
+	License            string `json:"license"`
+	OrganizationName   string `json:"organizationName"`
+	OrganizationURL    string `json:"organizationUrl"`
+	EditionBundled     bool   `json:"editionBundled"`
+	HomepageURL        string `json:"homepageUrl"`
+	IssueTrackerURL    string `json:"issueTrackerUrl"`
+	Filename           string `json:"filename"`
+	Hash               string `json:"hash"`
+	SonarLintSupported bool   `json:"sonarLintSupported"`
+	DocumentationPath  bool   `json:"documentationPath"`
+	UpdatedAt          int    `json:"updatedAt"`
+}

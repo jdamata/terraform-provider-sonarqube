@@ -42,13 +42,16 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 		"projectKey": []string{d.Get("projectkey").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
 		"resourceSonarqubeQualityGateProjectAssociationCreate",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	id := fmt.Sprintf("%v/%v", d.Get("gateid").(string), d.Get("projectkey").(string))
@@ -63,18 +66,21 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 		"gateId": []string{d.Get("gateid").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourceSonarqubeQualityGateProjectAssociationRead",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	qualityGateAssociationReadResponse := GetQualityGateAssociation{}
-	err := json.NewDecoder(resp.Body).Decode(&qualityGateAssociationReadResponse)
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateAssociationReadResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct")
 	}
@@ -101,13 +107,16 @@ func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData
 		"projectKey": []string{d.Get("projectkey").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
 		"resourceSonarqubeQualityGateProjectAssociationDelete",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	return nil

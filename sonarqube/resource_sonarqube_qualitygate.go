@@ -38,18 +38,21 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 		"name": []string{d.Get("name").(string)},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourceQualityGateCreate",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	qualityGateResponse := CreateQualityGateResponse{}
-	err := json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateCreate: Failed to decode json into struct")
 	}
@@ -65,18 +68,21 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 		"id": []string{d.Id()},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourceQualityGateRead",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	qualityGateReadResponse := GetQualityGate{}
-	err := json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateRead: Failed to decode json into struct")
 	}
@@ -93,18 +99,21 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 		"id": []string{d.Id()},
 	}.Encode()
 
-	resp := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		*m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
 		"resourceQualityGateDelete",
 	)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	qualityGateReadResponse := GetQualityGate{}
-	err := json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
+	err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
 	if err != nil {
 		log.WithError(err).Error("resourceQualityGateDelete: Failed to decode json into struct")
 	}
@@ -112,8 +121,8 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func resourceSonarqubeQualityGateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeQualityGateRead(d, meta); err != nil {
+func resourceSonarqubeQualityGateImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeQualityGateRead(d, m); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
