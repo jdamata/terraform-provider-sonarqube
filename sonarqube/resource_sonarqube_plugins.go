@@ -81,6 +81,7 @@ func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 		if d.Id() == value.Key {
 			// If it does, set the values of that project
 			d.SetId(value.Key)
+			d.Set("key", value.Key)
 		}
 	}
 
