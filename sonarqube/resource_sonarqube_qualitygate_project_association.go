@@ -56,7 +56,7 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
+		responseBody, _ := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
 
@@ -87,7 +87,7 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 	defer resp.Body.Close()
 	log.WithField("status code", resp.StatusCode).Info("Response from server")
 	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
+		responseBody, _ := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
 
@@ -132,7 +132,7 @@ func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
+		responseBody, _ := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
 

@@ -2,7 +2,6 @@ package sonarqube
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -45,35 +44,27 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create_condition"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId": []string{strconv.Itoa(d.Get("gateid").(int))},
 		"error":  []string{strconv.Itoa(d.Get("error").(int))},
 		"metric": []string{d.Get("metric").(string)},
 		"op":     []string{d.Get("op").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionCreate")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionCreate")
-		return err
-	}
-
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourcequalityGateConditionCreate",
+	)
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
+	// Decode response into struct
 	qualityGateConditionResponse := CreateQualityGateConditionResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
+	err := json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
 	if err != nil {
-		log.WithError(err).Error("getQualityGateConditionResponse")
+		log.WithError(err).Error("getQualityGateConditionResponse: Failed to decode json into struct")
 	}
 
 	d.SetId(strconv.FormatInt(qualityGateConditionResponse.ID, 10))
@@ -83,33 +74,25 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"id": []string{strconv.Itoa(d.Get("gateid").(int))},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionRead")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionRead")
-		return err
-	}
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"GET",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourcequalityGateConditionRead",
+	)
 
 	defer resp.Body.Close()
-	log.WithField("status code", resp.StatusCode).Info("Response from server")
-	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
+	// Decode response into struct
 	getQualityGateConditionResponse := GetQualityGate{}
-	err = json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
+	err := json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
 	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionRead")
+		log.WithError(err).Error("getQualityGateConditionResponse: Failed to decode json into struct")
 	}
 
 	for _, value := range getQualityGateConditionResponse.Conditions {
@@ -128,31 +111,22 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/update_condition"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateid": []string{strconv.Itoa(d.Get("gateid").(int))},
 		"id":     []string{d.Id()},
 		"error":  []string{strconv.Itoa(d.Get("error").(int))},
 		"metric": []string{d.Get("metric").(string)},
 		"op":     []string{d.Get("op").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionUpdate")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionUpdate")
-		return err
-	}
-
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourcequalityGateConditionUpdate",
+	)
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
 	return resourceSonarqubeQualityGateConditionRead(d, m)
 }
@@ -160,27 +134,18 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 func resourceSonarqubeQualityGateConditionDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/delete_condition"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"id": []string{d.Id()},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
-	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionDelete")
-		return err
-	}
-	resp, err := m.(*ProviderConfiguration).httpClient.Do(req)
-	if err != nil {
-		log.WithError(err).Error("resourcequalityGateConditionDelete")
-		return err
-	}
-
+	resp := httpRequestHelper(
+		*m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourcequalityGateConditionDelete",
+	)
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
-		return errors.New(responseBody)
-	}
 
 	return nil
 }

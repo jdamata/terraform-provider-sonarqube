@@ -53,7 +53,7 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
+		responseBody, _ := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
 
@@ -89,7 +89,7 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	defer resp.Body.Close()
 	log.WithField("status code", resp.StatusCode).Info("Response from server")
 	if resp.StatusCode != http.StatusOK {
-		responseBody := getResponseBodyAsString(resp)
+		responseBody, _ := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
 
@@ -125,7 +125,7 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusNoContent {
-		responseBody := getResponseBodyAsString(resp)
+		responseBody, _ := getResponseBodyAsString(resp)
 		return errors.New(responseBody)
 	}
 
