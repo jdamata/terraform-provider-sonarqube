@@ -1,21 +1,10 @@
 package sonarqube
 
 import (
-	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 )
-
-// Deprecate this
-func getResponseBodyAsString(resp *http.Response) (string, error) {
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithField("status code", resp.StatusCode).WithError(err).Error("getResponseBodyAsString")
-		return "", err
-	}
-	return string(bodyBytes), nil
-}
 
 func httpRequestHelper(client http.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) http.Response {
 	// Prepare request
