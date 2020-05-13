@@ -38,11 +38,10 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/select"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId":     []string{d.Get("gateid").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -68,10 +67,9 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/search"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId": []string{d.Get("gateid").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
 	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -114,11 +112,11 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/deselect"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"gateId":     []string{d.Get("gateid").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
+
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
 		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationDelete")

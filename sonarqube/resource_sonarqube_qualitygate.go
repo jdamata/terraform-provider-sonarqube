@@ -35,10 +35,9 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"name": []string{d.Get("name").(string)},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -70,10 +69,9 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"id": []string{d.Id()},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
 	req, err := http.NewRequest("GET", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
@@ -107,10 +105,9 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/destroy"
-	query := url.Values{
+	sonarQubeURL.RawQuery = url.Values{
 		"id": []string{d.Id()},
-	}
-	sonarQubeURL.RawQuery = query.Encode()
+	}.Encode()
 
 	req, err := http.NewRequest("POST", sonarQubeURL.String(), http.NoBody)
 	if err != nil {
