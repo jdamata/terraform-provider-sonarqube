@@ -62,6 +62,33 @@ type GetProject struct {
 	Components []ProjectComponents `json:"components"`
 }
 
+// User struct
+type User struct {
+	Login       string   `json:"login"`
+	Name        string   `json:"name"`
+	Email       string   `json:"email"`
+	Permissions []string `json:"permissions"`
+}
+
+// GetUser for unmarshalling response body where users are retured
+type GetUser struct {
+	Paging Paging `json:"paging"`
+	Users  []User `json:"users"`
+}
+
+// Group struct
+type Group struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Permissions []string `json:"permissions"`
+}
+
+// GetGroup for unmarshalling response body where users are retured
+type GetGroup struct {
+	Paging Paging  `json:"paging"`
+	Groups []Group `json:"groups"`
+}
+
 // ProjectPaging used in GetProject
 type Paging struct {
 	PageIndex int64 `json:"pageIndex"`

@@ -1,0 +1,280 @@
+package sonarqube
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/satori/uuid"
+)
+
+// Returns the resource represented by this file.
+func resourceSonarqubePermissions() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceSonarqubePermissionsCreate,
+		Read:   resourceSonarqubePermissionsRead,
+		Delete: resourceSonarqubePermissionsDelete,
+
+		// Define the fields of this schema.
+		Schema: map[string]*schema.Schema{
+			"login_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"login_name", "group_name"},
+			},
+			"group_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"login_name", "group_name"},
+			},
+			"project_key": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+			"permissions": {
+				Type:     schema.TypeList,
+				MinItems: 1,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+		},
+	}
+}
+
+func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) error {
+
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	permissions := expandPermissions(d)
+
+	// build the base query
+	RawQuery := url.Values{}
+
+	// if the permissions should be applied to a project
+	// we append the project_key to the request
+	if projectKey, ok := d.GetOk("project_key"); ok {
+		RawQuery.Add("projectKey", projectKey.(string))
+	}
+
+	// we use different API endpoints and request params
+	// based on the target principal type (group or user)
+	if _, ok := d.GetOk("login_name"); ok {
+
+		// permission target is USER
+		sonarQubeURL.Path = "api/permissions/add_user"
+		RawQuery.Add("login", d.Get("login_name").(string))
+
+	} else {
+
+		// permission target is GROUP
+		sonarQubeURL.Path = "api/permissions/add_group"
+		RawQuery.Add("groupName", d.Get("group_name").(string))
+	}
+
+	// loop through all permissions that should be applied
+	for _, permission := range *&permissions {
+		CurrentRawQuery := RawQuery
+		CurrentRawQuery.Del("permission")
+		CurrentRawQuery.Add("permission", permission)
+		sonarQubeURL.RawQuery = CurrentRawQuery.Encode()
+
+		resp, err := httpRequestHelper(
+			*m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubePermissionsCreate",
+		)
+		if err != nil {
+			return fmt.Errorf("Error creating Sonarqube permission: %+v", err)
+		}
+		defer resp.Body.Close()
+	}
+
+	// generate a unique ID
+	d.SetId(uuid.NewV4().String())
+	return resourceSonarqubePermissionsRead(d, m)
+}
+
+func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+
+	// build the base query
+	RawQuery := url.Values{
+		// set the page size to 100
+		"ps": []string{"100"},
+	}
+
+	// if the permissions should be applied to a project
+	// we append the project_key to the request
+	if projectKey, ok := d.GetOk("project_key"); ok {
+		RawQuery.Add("projectKey", projectKey.(string))
+	}
+
+	// we use different API endpoints and request params
+	// based on the target principal type (group or user)
+	if _, ok := d.GetOk("login_name"); ok {
+		// permission target is USER
+		sonarQubeURL.Path = "api/permissions/users"
+		sonarQubeURL.RawQuery = RawQuery.Encode()
+
+		resp, err := httpRequestHelper(
+			*m.(*ProviderConfiguration).httpClient,
+			"GET",
+			sonarQubeURL.String(),
+			http.StatusOK,
+			"resourceSonarqubePermissionsRead",
+		)
+		if err != nil {
+			return fmt.Errorf("Error reading Sonarqube permissions: %+v", err)
+		}
+		defer resp.Body.Close()
+
+		// Decode response into struct
+		users := GetUser{}
+		err = json.NewDecoder(resp.Body).Decode(&users)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+		}
+
+		// Loop over all groups to see if the group we need exists.
+		readSuccess := false
+		loginName := d.Get("login_name").(string)
+		for _, value := range users.Users {
+			if strings.EqualFold(value.Login, loginName) {
+				d.Set("login_name", value.Login)
+				d.Set("permissions", flattenPermissions(&value.Permissions))
+				readSuccess = true
+			}
+		}
+
+		if !readSuccess {
+			d.SetId("")
+			return fmt.Errorf("resourceSonarqubePermissionsRead: Unable to find user permissions for user: %s", loginName)
+		}
+
+	} else {
+		// permission target is GROUP
+		sonarQubeURL.Path = "api/permissions/groups"
+		sonarQubeURL.RawQuery = RawQuery.Encode()
+
+		resp, err := httpRequestHelper(
+			*m.(*ProviderConfiguration).httpClient,
+			"GET",
+			sonarQubeURL.String(),
+			http.StatusOK,
+			"resourceSonarqubePermissionsRead",
+		)
+		if err != nil {
+			return fmt.Errorf("Error reading Sonarqube permissions: %+v", err)
+		}
+		defer resp.Body.Close()
+
+		// Decode response into struct
+		groups := GetGroup{}
+		err = json.NewDecoder(resp.Body).Decode(&groups)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+		}
+
+		// Loop over all groups to see if the group we need exists.
+		readSuccess := false
+		groupName := d.Get("group_name").(string)
+		for _, value := range groups.Groups {
+			if strings.EqualFold(value.Name, groupName) {
+				d.Set("group_name", value.Name)
+				d.Set("permissions", flattenPermissions(&value.Permissions))
+				readSuccess = true
+			}
+		}
+
+		if !readSuccess {
+			d.SetId("")
+			return fmt.Errorf("resourceSonarqubePermissionsRead: Unable to find group permissions for group: %s", groupName)
+		}
+	}
+
+	return nil
+}
+
+func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	permissions := expandPermissions(d)
+
+	// build the base query
+	RawQuery := url.Values{}
+
+	// if the permissions should be applied to a project
+	// we append the project_key to the request
+	if projectKey, ok := d.GetOk("project_key"); ok {
+		RawQuery.Add("projectKey", projectKey.(string))
+	}
+
+	// we use different API endpoints and request params
+	// based on the target principal type (group or user)
+	if _, ok := d.GetOk("login_name"); ok {
+		// permission target is USER
+		sonarQubeURL.Path = "api/permissions/remove_user"
+		RawQuery.Add("login", d.Get("login_name").(string))
+		sonarQubeURL.RawQuery = RawQuery.Encode()
+
+	} else {
+		// permission target is GROUP
+		sonarQubeURL.Path = "api/permissions/remove_group"
+		RawQuery.Add("groupName", d.Get("group_name").(string))
+		sonarQubeURL.RawQuery = RawQuery.Encode()
+	}
+
+	// loop through all permissions that should be applied
+	for _, permission := range *&permissions {
+		CurrentRawQuery := RawQuery
+		CurrentRawQuery.Del("permission")
+		CurrentRawQuery.Add("permission", permission)
+		sonarQubeURL.RawQuery = CurrentRawQuery.Encode()
+
+		resp, err := httpRequestHelper(
+			*m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubePermissionsDelete",
+		)
+		if err != nil {
+			return fmt.Errorf("Error creating Sonarqube permission: %+v", err)
+		}
+		defer resp.Body.Close()
+	}
+
+	return nil
+}
+
+func expandPermissions(d *schema.ResourceData) []string {
+	expandedPermissions := make([]string, 0)
+	flatPermissions := d.Get("permissions").([]interface{})
+	for _, permission := range flatPermissions {
+		expandedPermissions = append(expandedPermissions, permission.(string))
+	}
+
+	return expandedPermissions
+}
+
+func flattenPermissions(input *[]string) []interface{} {
+	flatPermissions := make([]interface{}, 0)
+	if input == nil {
+		return flatPermissions
+	}
+
+	for _, permission := range *input {
+		flatPermissions = append(flatPermissions, permission)
+	}
+
+	return flatPermissions
+}
