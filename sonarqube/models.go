@@ -62,19 +62,40 @@ type GetProject struct {
 	Components []ProjectComponents `json:"components"`
 }
 
+// User struct
+type User struct {
+	Login       string   `json:"login"`
+	Name        string   `json:"name"`
+	Email       string   `json:"email"`
+	Permissions []string `json:"permissions"`
+}
+
+// GetUser for unmarshalling response body where users are retured
+type GetUser struct {
+	Paging Paging `json:"paging"`
+	Users  []User `json:"users"`
+}
+
 // CreateGroupResponse for unmarshalling response body of group creation
 type CreateGroupResponse struct {
 	Group Group `json:"group"`
 }
 
-// Group used in CreateGroupResponse
+// Group struct
 type Group struct {
-	ID           int    `json:"id"`
-	Organization string `json:"organization"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	MembersCount int    `json:"membersCount"`
-	IsDefault    bool   `json:"default"`
+	ID           int      `json:"id,omitempty"`
+	Organization string   `json:"organization,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	MembersCount int      `json:"membersCount,omitempty"`
+	IsDefault    bool     `json:"default,omitempty"`
+	Permissions  []string `json:"permissions,omitempty"`
+}
+
+// GroupPermission struct
+type GroupPermission struct {
+	Name        string   `json:"name,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
 }
 
 // GetGroup for unmarshalling response body from getting group details
@@ -83,6 +104,13 @@ type GetGroup struct {
 	Groups []Group `json:"groups"`
 }
 
+// GetGroupPermissions struct
+type GetGroupPermissions struct {
+	Paging Paging            `json:"paging"`
+	Groups []GroupPermission `json:"groups"`
+}
+
+// ProjectPaging used in GetProject
 // Paging used in /search API endpoints
 type Paging struct {
 	PageIndex int64 `json:"pageIndex"`
