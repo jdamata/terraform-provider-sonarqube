@@ -13,6 +13,7 @@ Consult the docs below for more details.
 [Provider configuration](docs/provider.md)
 
 Resources:
+- [sonarqube_group](docs/sonarqube_group.md)
 - [sonarqube_plugin](docs/sonarqube_plugin.md)
 - [sonarqube_project](docs/sonarqube_project.md)
 - [sonarqube_qualitygate](docs/sonarqube_qualitygate.md)
@@ -23,7 +24,6 @@ TODO:
 - quality profiles
 - rules
 - settings
-- user_groups
 - users
 - webhooks
 
