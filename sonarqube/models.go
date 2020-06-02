@@ -62,7 +62,28 @@ type GetProject struct {
 	Components []ProjectComponents `json:"components"`
 }
 
-// ProjectPaging used in GetProject
+// CreateGroupResponse for unmarshalling response body of group creation
+type CreateGroupResponse struct {
+	Group Group `json:"group"`
+}
+
+// Group used in CreateGroupResponse
+type Group struct {
+	ID           int    `json:"id"`
+	Organization string `json:"organization"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	MembersCount int    `json:"membersCount"`
+	IsDefault    bool   `json:"default"`
+}
+
+// GetGroup for unmarshalling response body from getting group details
+type GetGroup struct {
+	Paging Paging  `json:"paging"`
+	Groups []Group `json:"groups"`
+}
+
+// Paging used in /search API endpoints
 type Paging struct {
 	PageIndex int64 `json:"pageIndex"`
 	PageSize  int64 `json:"pageSize"`
