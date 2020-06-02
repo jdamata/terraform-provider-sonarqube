@@ -76,7 +76,6 @@ type GetUser struct {
 	Users  []User `json:"users"`
 }
 
-// GetGroup for unmarshalling response body where users are retured
 // CreateGroupResponse for unmarshalling response body of group creation
 type CreateGroupResponse struct {
 	Group Group `json:"group"`
@@ -93,10 +92,22 @@ type Group struct {
 	Permissions  []string `json:"permissions,omitempty"`
 }
 
+// GroupPermission struct
+type GroupPermission struct {
+	Name        string   `json:"name,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+}
+
 // GetGroup for unmarshalling response body from getting group details
 type GetGroup struct {
 	Paging Paging  `json:"paging"`
 	Groups []Group `json:"groups"`
+}
+
+// GetGroupPermissions struct
+type GetGroupPermissions struct {
+	Paging Paging            `json:"paging"`
+	Groups []GroupPermission `json:"groups"`
 }
 
 // ProjectPaging used in GetProject

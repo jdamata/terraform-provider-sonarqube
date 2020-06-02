@@ -179,7 +179,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		defer resp.Body.Close()
 
 		// Decode response into struct
-		groups := GetGroup{}
+		groups := GetGroupPermissions{}
 		err = json.NewDecoder(resp.Body).Decode(&groups)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
