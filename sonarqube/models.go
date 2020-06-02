@@ -76,20 +76,31 @@ type GetUser struct {
 	Users  []User `json:"users"`
 }
 
-// Group struct
-type Group struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Permissions []string `json:"permissions"`
+// GetGroup for unmarshalling response body where users are retured
+// CreateGroupResponse for unmarshalling response body of group creation
+type CreateGroupResponse struct {
+	Group Group `json:"group"`
 }
 
-// GetGroup for unmarshalling response body where users are retured
+// Group struct
+type Group struct {
+	ID           int      `json:"id,omitempty"`
+	Organization string   `json:"organization,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	MembersCount int      `json:"membersCount,omitempty"`
+	IsDefault    bool     `json:"default,omitempty"`
+	Permissions  []string `json:"permissions,omitempty"`
+}
+
+// GetGroup for unmarshalling response body from getting group details
 type GetGroup struct {
 	Paging Paging  `json:"paging"`
 	Groups []Group `json:"groups"`
 }
 
 // ProjectPaging used in GetProject
+// Paging used in /search API endpoints
 type Paging struct {
 	PageIndex int64 `json:"pageIndex"`
 	PageSize  int64 `json:"pageSize"`
