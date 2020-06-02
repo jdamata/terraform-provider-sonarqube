@@ -30,3 +30,13 @@ resource "sonarqube_qualitygate_condition" "main" {
 resource "sonarqube_plugin" "main" {
     key = "cloudformation"
 }
+
+resource "sonarqube_group" "project_users" {
+    name        = "Project-Users"
+    description = "This is a group"
+}
+
+resource "sonarqube_permissions" "my_global_admins" {
+    group_name  = sonarqube_group.project_users.name
+    permissions = ["admin"]
+}
