@@ -14,6 +14,7 @@ Consult the docs below for more details.
 
 Resources:
 - [sonarqube_group](docs/sonarqube_group.md)
+- [sonarqube_permissions](docs/sonarqube_permissions.md)
 - [sonarqube_plugin](docs/sonarqube_plugin.md)
 - [sonarqube_project](docs/sonarqube_project.md)
 - [sonarqube_qualitygate](docs/sonarqube_qualitygate.md)
