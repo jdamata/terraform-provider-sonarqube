@@ -110,7 +110,25 @@ type GetGroupPermissions struct {
 	Groups []GroupPermission `json:"groups"`
 }
 
-// ProjectPaging used in GetProject
+// CreatePermissionTemplateResponse struct
+type CreatePermissionTemplateResponse struct {
+	PermissionTemplate PermissionTemplate `json:"permissionTemplate"`
+}
+
+// GetPermissionTemplates struct
+type GetPermissionTemplates struct {
+	Paging              Paging               `json:"paging"`
+	PermissionTemplates []PermissionTemplate `json:"permissionTemplates"`
+}
+
+// PermissionTemplate struct
+type PermissionTemplate struct {
+	ID                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	Description       string `json:"description,omitempty"`
+	ProjectKeyPattern string `json:"projectKeyPattern,omitempty"`
+}
+
 // Paging used in /search API endpoints
 type Paging struct {
 	PageIndex int64 `json:"pageIndex"`
