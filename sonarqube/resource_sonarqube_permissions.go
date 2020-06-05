@@ -33,9 +33,16 @@ func resourceSonarqubePermissions() *schema.Resource {
 				ExactlyOneOf: []string{"login_name", "group_name"},
 			},
 			"project_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"template_id"},
+			},
+			"template_id": {
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"project_key"},
 			},
 			"permissions": {
 				Type:     schema.TypeList,
@@ -66,17 +73,29 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 
 	// we use different API endpoints and request params
 	// based on the target principal type (group or user)
+	// and if its a direct or template permission
 	if _, ok := d.GetOk("login_name"); ok {
-
-		// permission target is USER
-		sonarQubeURL.Path = "api/permissions/add_user"
+		// user permission
 		RawQuery.Add("login", d.Get("login_name").(string))
-
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template user permission
+			sonarQubeURL.Path = "api/permissions/add_user_to_template"
+			RawQuery.Add("templateId", templateID.(string))
+		} else {
+			// direct user permission
+			sonarQubeURL.Path = "api/permissions/add_user"
+		}
 	} else {
-
-		// permission target is GROUP
-		sonarQubeURL.Path = "api/permissions/add_group"
+		// group permission
 		RawQuery.Add("groupName", d.Get("group_name").(string))
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template user permission
+			sonarQubeURL.Path = "api/permissions/add_group_to_template"
+			RawQuery.Add("templateId", templateID.(string))
+		} else {
+			// direct user permission
+			sonarQubeURL.Path = "api/permissions/add_group"
+		}
 	}
 
 	// loop through all permissions that should be applied
@@ -121,9 +140,17 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 
 	// we use different API endpoints and request params
 	// based on the target principal type (group or user)
+	// and if its a direct or template permission
 	if _, ok := d.GetOk("login_name"); ok {
 		// permission target is USER
-		sonarQubeURL.Path = "api/permissions/users"
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template user permission
+			sonarQubeURL.Path = "api/permissions/template_users"
+			RawQuery.Add("templateId", templateID.(string))
+		} else {
+			// direct user permission
+			sonarQubeURL.Path = "api/permissions/users"
+		}
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
 		resp, err := httpRequestHelper(
@@ -163,7 +190,14 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 
 	} else {
 		// permission target is GROUP
-		sonarQubeURL.Path = "api/permissions/groups"
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template group permission
+			sonarQubeURL.Path = "api/permissions/template_groups"
+			RawQuery.Add("templateId", templateID.(string))
+		} else {
+			// direct group permission
+			sonarQubeURL.Path = "api/permissions/groups"
+		}
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
 		resp, err := httpRequestHelper(
@@ -192,6 +226,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
 				d.Set("permissions", flattenPermissions(&value.Permissions))
+
 				readSuccess = true
 			}
 		}
@@ -222,13 +257,27 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 	// based on the target principal type (group or user)
 	if _, ok := d.GetOk("login_name"); ok {
 		// permission target is USER
-		sonarQubeURL.Path = "api/permissions/remove_user"
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template user permission
+			sonarQubeURL.Path = "api/permissions/remove_user_from_template"
+			RawQuery.Add("templateId", templateID.(string))
+		} else {
+			// direct user permission
+			sonarQubeURL.Path = "api/permissions/remove_user"
+		}
 		RawQuery.Add("login", d.Get("login_name").(string))
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
 	} else {
 		// permission target is GROUP
-		sonarQubeURL.Path = "api/permissions/remove_group"
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template group permission
+			sonarQubeURL.Path = "api/permissions/remove_group_from_template"
+			RawQuery.Add("templateId", templateID.(string))
+		} else {
+			// direct group permission
+			sonarQubeURL.Path = "api/permissions/remove_group"
+		}
 		RawQuery.Add("groupName", d.Get("group_name").(string))
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 	}

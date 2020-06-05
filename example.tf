@@ -40,3 +40,15 @@ resource "sonarqube_permissions" "my_global_admins" {
     group_name  = sonarqube_group.project_users.name
     permissions = ["admin"]
 }
+
+resource "sonarqube_permission_template" "template" {
+    name                = "Internal-Projects"
+    description         = "These are internal projects"
+    project_key_pattern = "internal.*"
+}
+
+resource "sonarqube_permissions" "internal_admins" {
+    group_name  = "my-internal-admins"
+    template_id = sonarqube_permission_template.template.id
+    permissions = ["admin"]
+}
