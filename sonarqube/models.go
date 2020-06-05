@@ -64,16 +64,23 @@ type GetProject struct {
 
 // User struct
 type User struct {
-	Login       string   `json:"login"`
-	Name        string   `json:"name"`
-	Email       string   `json:"email"`
-	Permissions []string `json:"permissions"`
+	Login       string   `json:"login,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Email       string   `json:"email,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	IsActive    bool     `json:"active,omitempty"`
+	IsLocal     bool     `json:"local,omitempty"`
 }
 
 // GetUser for unmarshalling response body where users are retured
 type GetUser struct {
 	Paging Paging `json:"paging"`
 	Users  []User `json:"users"`
+}
+
+// CreateUserResponse struct
+type CreateUserResponse struct {
+	User User `json:"user"`
 }
 
 // CreateGroupResponse for unmarshalling response body of group creation

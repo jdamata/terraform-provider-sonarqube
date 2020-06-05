@@ -50,6 +50,7 @@ func Provider() terraform.ResourceProvider {
 			"sonarqube_qualitygate":                     resourceSonarqubeQualityGate(),
 			"sonarqube_qualitygate_condition":           resourceSonarqubeQualityGateCondition(),
 			"sonarqube_qualitygate_project_association": resourceSonarqubeQualityGateProjectAssociation(),
+			"sonarqube_user":                            resourceSonarqubeUser(),
 		},
 		ConfigureFunc: configureProvider,
 	}
