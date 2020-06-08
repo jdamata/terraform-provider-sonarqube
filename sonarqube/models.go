@@ -93,6 +93,19 @@ type CreateUserResponse struct {
 	User User `json:"user"`
 }
 
+// GetToken struct
+type GetTokens struct {
+	Login  string  `json:"login,omitempty"`
+	Tokens []Token `json:"userTokens,omitempty"`
+}
+
+// Token struct
+type Token struct {
+	Login string `json:"login,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Token string `json:"token,omitempty"`
+}
+
 // CreateGroupResponse for unmarshalling response body of group creation
 type CreateGroupResponse struct {
 	Group Group `json:"group"`
