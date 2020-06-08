@@ -1,15 +1,17 @@
 package sonarqube
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 )
 
-func httpRequestHelper(client http.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) (http.Response, error) {
+func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) (http.Response, error) {
 	// Prepare request
-	req, err := http.NewRequest(method, sonarqubeURL, http.NoBody)
+	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
 	if err != nil {
 		log.WithError(err).Error(errormsg)
 		// Returning a blank http.Response object must be wrong. What am i suppose to do here??

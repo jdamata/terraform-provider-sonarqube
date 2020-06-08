@@ -45,7 +45,7 @@ func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -75,7 +75,7 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -125,7 +125,7 @@ func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.RawQuery = rawQuery.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -147,7 +147,7 @@ func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,

@@ -51,7 +51,7 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -81,7 +81,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -121,7 +121,7 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
