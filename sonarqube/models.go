@@ -10,6 +10,16 @@ type Version struct {
 	PageIndex int64 `json:"pageIndex"`
 }
 
+// ErrorResponse struct
+type ErrorResponse struct {
+	Errors []ErrorMessage `json:"errors,omitempty"`
+}
+
+// ErrorMessage struct
+type ErrorMessage struct {
+	Message string `json:"msg,omitempty"`
+}
+
 // GetQualityGate for unmarshalling response body of quality gate get
 type GetQualityGate struct {
 	ID         int64                                `json:"id"`
