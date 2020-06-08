@@ -94,15 +94,20 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Loop over all groups to see if the group we need exists.
+	readSuccess := false
 	for _, value := range groupReadResponse.Groups {
 		if d.Id() == strconv.Itoa(value.ID) {
 			// If it does, set the values of that group
 			d.SetId(strconv.Itoa(value.ID))
 			d.Set("name", value.Name)
 			d.Set("description", value.Description)
-		} else {
-			d.SetId("")
+			readSuccess = true
 		}
+	}
+
+	if !readSuccess {
+		// Group not found
+		d.SetId("")
 	}
 
 	return nil

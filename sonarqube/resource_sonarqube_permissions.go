@@ -184,8 +184,8 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		}
 
 		if !readSuccess {
+			// Permission not found
 			d.SetId("")
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Unable to find user permissions for user: %s", loginName)
 		}
 
 	} else {

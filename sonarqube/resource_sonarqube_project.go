@@ -100,6 +100,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Loop over all projects to see if the project we need exists.
+	readSuccess := false
 	for _, value := range projectReadResponse.Components {
 		if d.Id() == value.Key {
 			// If it does, set the values of that project
@@ -107,7 +108,13 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 			d.Set("name", value.Name)
 			d.Set("key", value.Key)
 			d.Set("visibility", value.Visibility)
+			readSuccess = true
 		}
+	}
+
+	if !readSuccess {
+		// Project not found
+		d.SetId("")
 	}
 
 	return nil
