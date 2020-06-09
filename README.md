@@ -21,6 +21,8 @@ Resources:
 - [sonarqube_qualitygate](docs/sonarqube_qualitygate.md)
 - [sonarqube_qualitygate_condition](docs/sonarqube_qualitygate_condition.md)
 - [sonarqube_qualitygate_project_association](docs/sonarqube_qualitygate_project_association.md)
+- [sonarqube_user](docs/sonarqube_user.md)
+- [sonarqube_user_token](docs/sonarqube_user_token.md)
 
 TODO:
 - quality profiles
