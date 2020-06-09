@@ -50,7 +50,7 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -85,7 +85,7 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -150,7 +150,7 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 	sonarQubeURL.RawQuery = rawQuery.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -172,7 +172,7 @@ func resourceSonarqubePermissionTemplateDelete(d *schema.ResourceData, m interfa
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,

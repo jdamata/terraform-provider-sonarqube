@@ -38,7 +38,7 @@ func resourceSonarqubePluginCreate(d *schema.ResourceData, m interface{}) error 
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
@@ -58,7 +58,7 @@ func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.Path = "api/plugins/installed"
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -97,7 +97,7 @@ func resourceSonarqubePluginDelete(d *schema.ResourceData, m interface{}) error 
 
 	log.Error(sonarQubeURL.String())
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,

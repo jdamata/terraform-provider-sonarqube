@@ -10,6 +10,16 @@ type Version struct {
 	PageIndex int64 `json:"pageIndex"`
 }
 
+// ErrorResponse struct
+type ErrorResponse struct {
+	Errors []ErrorMessage `json:"errors,omitempty"`
+}
+
+// ErrorMessage struct
+type ErrorMessage struct {
+	Message string `json:"msg,omitempty"`
+}
+
 // GetQualityGate for unmarshalling response body of quality gate get
 type GetQualityGate struct {
 	ID         int64                                `json:"id"`
@@ -64,16 +74,36 @@ type GetProject struct {
 
 // User struct
 type User struct {
-	Login       string   `json:"login"`
-	Name        string   `json:"name"`
-	Email       string   `json:"email"`
-	Permissions []string `json:"permissions"`
+	Login       string   `json:"login,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Email       string   `json:"email,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	IsActive    bool     `json:"active,omitempty"`
+	IsLocal     bool     `json:"local,omitempty"`
 }
 
 // GetUser for unmarshalling response body where users are retured
 type GetUser struct {
 	Paging Paging `json:"paging"`
 	Users  []User `json:"users"`
+}
+
+// CreateUserResponse struct
+type CreateUserResponse struct {
+	User User `json:"user"`
+}
+
+// GetToken struct
+type GetTokens struct {
+	Login  string  `json:"login,omitempty"`
+	Tokens []Token `json:"userTokens,omitempty"`
+}
+
+// Token struct
+type Token struct {
+	Login string `json:"login,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Token string `json:"token,omitempty"`
 }
 
 // CreateGroupResponse for unmarshalling response body of group creation

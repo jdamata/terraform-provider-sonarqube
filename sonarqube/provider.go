@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	log "github.com/sirupsen/logrus"
@@ -51,6 +52,8 @@ func Provider() terraform.ResourceProvider {
 			"sonarqube_qualitygate":                     resourceSonarqubeQualityGate(),
 			"sonarqube_qualitygate_condition":           resourceSonarqubeQualityGateCondition(),
 			"sonarqube_qualitygate_project_association": resourceSonarqubeQualityGateProjectAssociation(),
+			"sonarqube_user":                            resourceSonarqubeUser(),
+			"sonarqube_user_token":                      resourceSonarqubeUserToken(),
 		},
 		ConfigureFunc: configureProvider,
 	}
@@ -59,12 +62,12 @@ func Provider() terraform.ResourceProvider {
 
 //ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
-	httpClient   *http.Client
+	httpClient   *retryablehttp.Client
 	sonarQubeURL url.URL
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
-	client := &http.Client{}
+	client := retryablehttp.NewClient()
 
 	sonarQubeURL := url.URL{
 		Scheme:     d.Get("scheme").(string),
@@ -74,7 +77,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	// Check that the sonarqube api is available and a supported version
-	err := sonarqubeHealth(*client, sonarQubeURL)
+	err := sonarqubeHealth(client, sonarQubeURL)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -86,10 +89,10 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}, nil
 }
 
-func sonarqubeHealth(client http.Client, sonarqube url.URL) error {
+func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) error {
 	// Make request to sonarqube version endpoint
 	sonarqube.Path = "api/server/version"
-	req, err := http.NewRequest("GET", sonarqube.String(), http.NoBody)
+	req, err := retryablehttp.NewRequest("GET", sonarqube.String(), http.NoBody)
 	if err != nil {
 		log.Error(err)
 		return errors.New("Unable to construct sonarqube version request")

@@ -106,7 +106,7 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 		sonarQubeURL.RawQuery = CurrentRawQuery.Encode()
 
 		resp, err := httpRequestHelper(
-			*m.(*ProviderConfiguration).httpClient,
+			m.(*ProviderConfiguration).httpClient,
 			"POST",
 			sonarQubeURL.String(),
 			http.StatusNoContent,
@@ -154,7 +154,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
 		resp, err := httpRequestHelper(
-			*m.(*ProviderConfiguration).httpClient,
+			m.(*ProviderConfiguration).httpClient,
 			"GET",
 			sonarQubeURL.String(),
 			http.StatusOK,
@@ -184,8 +184,8 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		}
 
 		if !readSuccess {
+			// Permission not found
 			d.SetId("")
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Unable to find user permissions for user: %s", loginName)
 		}
 
 	} else {
@@ -201,7 +201,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
 		resp, err := httpRequestHelper(
-			*m.(*ProviderConfiguration).httpClient,
+			m.(*ProviderConfiguration).httpClient,
 			"GET",
 			sonarQubeURL.String(),
 			http.StatusOK,
@@ -290,7 +290,7 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 		sonarQubeURL.RawQuery = CurrentRawQuery.Encode()
 
 		resp, err := httpRequestHelper(
-			*m.(*ProviderConfiguration).httpClient,
+			m.(*ProviderConfiguration).httpClient,
 			"POST",
 			sonarQubeURL.String(),
 			http.StatusNoContent,

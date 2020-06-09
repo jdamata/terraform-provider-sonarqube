@@ -52,7 +52,7 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -82,7 +82,7 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -125,7 +125,7 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
@@ -147,7 +147,7 @@ func resourceSonarqubeQualityGateConditionDelete(d *schema.ResourceData, m inter
 	}.Encode()
 
 	resp, err := httpRequestHelper(
-		*m.(*ProviderConfiguration).httpClient,
+		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
