@@ -28,7 +28,6 @@ TODO:
 - quality profiles
 - rules
 - settings
-- users
 - webhooks
 
 ## Development
