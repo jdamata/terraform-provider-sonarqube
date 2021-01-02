@@ -2,15 +2,18 @@ export GO111MODULE=on
 export TF_LOG=DEBUG
 SRC=$(shell find . -name '*.go')
 
-.PHONY: all clean release install
+.PHONY: all vet build test
 
-all: 
-	go build -o terraform-provider-sonarqube
+all: vet build
 
-run: 
-	go build -o terraform-provider-sonarqube
-	terraform init
-	terraform apply --auto-approve
+build:
+	go build -a -tags netgo -o terraform-provider-sonarqube
 
-clean:
-	rm -rf terraform-provider-sonarqube .terraform terraform.tfstate crash.log terraform.tfstate.backup
+fmt:
+	go fmt ./...
+
+vet:
+	go vet ./...
+
+test:
+	go test -cover ./...
