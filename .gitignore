@@ -20,3 +20,5 @@ terraform-provider-sonarqube
 terraform.tfstate
 crash.log
 terraform.tfstate.backup
+
+coverage.txt

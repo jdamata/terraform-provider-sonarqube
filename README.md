@@ -1,7 +1,7 @@
 [![Build Status](https://cloud.drone.io/api/badges/jdamata/terraform-provider-sonarqube/status.svg)](https://cloud.drone.io/jdamata/terraform-provider-sonarqube)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jdamata_terraform-provider-sonarqube&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=jdamata_terraform-provider-sonarqube)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jdamata/terraform-provider-sonarqube)](https://goreportcard.com/report/github.com/jdamata/terraform-provider-sonarqube)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jdamata_terraform-provider-sonarqube&metric=coverage)](https://sonarcloud.io/dashboard?id=jdamata_terraform-provider-sonarqube)
+[![codecov](https://codecov.io/gh/jdamata/terraform-provider-sonarqube/branch/master/graph/badge.svg)](https://codecov.io/gh/jdamata/terraform-provider-sonarqube)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
 # terraform-provider-sonarqube
