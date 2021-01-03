@@ -36,7 +36,7 @@ func Provider() *schema.Provider {
 			},
 			"scheme": {
 				Type:        schema.TypeString,
-				Default:     "https",
+				Default:     "http",
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_SCHEME", "SONARQUBE_SCHEME"}, nil),
 				Optional:    true,
 			},

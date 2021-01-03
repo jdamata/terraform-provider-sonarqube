@@ -37,7 +37,6 @@ func testAccPreCheck(t *testing.T) {
 	testSonarHost(t)
 	testSonarUser(t)
 	testSonarPass(t)
-	testSonarScheme(t)
 }
 
 func testSonarUser(t *testing.T) {
@@ -55,12 +54,6 @@ func testSonarPass(t *testing.T) {
 func testSonarHost(t *testing.T) {
 	if v := os.Getenv("SONAR_HOST"); v == "" {
 		t.Fatal("SONAR_HOST must be set for this acceptance test")
-	}
-}
-
-func testSonarScheme(t *testing.T) {
-	if v := os.Getenv("SONAR_SCHEME"); v == "" {
-		t.Fatal("SONAR_SCHEME must be set for this acceptance test")
 	}
 }
 

@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    sonarqube = {
+      version = "~> 0.1"
+      source  = "github.com/jdamata/sonarqube"
+    }
+  }
+}
+
 provider "sonarqube" {
     user   = "admin"
     pass   = "admin" 
@@ -48,7 +57,7 @@ resource "sonarqube_permission_template" "template" {
 }
 
 resource "sonarqube_permissions" "internal_admins" {
-    group_name  = "my-internal-admins"
+    group_name  = "sonar-administrators"
     template_id = sonarqube_permission_template.template.id
     permissions = ["admin"]
 }

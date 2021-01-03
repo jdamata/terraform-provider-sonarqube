@@ -7,19 +7,19 @@ platform:
   arch: amd64
 
 steps:
-- name: vet
+- name: build and vet the provider
   pull: always
-  image: golang:1.13
+  image: golang:1.15
   commands:
-  - make vet
+  - make
   environment:
     GO111MODULE: on
 
-- name: test
+- name: run acceptance tests
   pull: always
-  image: golang:1.13
+  image: golang:1.15
   commands:
-  - make test
+  - make testacc
   environment:
     GO111MODULE: on
 
