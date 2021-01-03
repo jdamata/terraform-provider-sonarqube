@@ -32,7 +32,7 @@ steps:
   image: ubuntu
   commands:
     - apt-get update && apt-get install curl -y
-    - bash <(curl -s https://codecov.io/bash)
+    - bash -c '/bin/bash <(curl -s https://codecov.io/bash)'
   environment:
     CODECOV_TOKEN: 
       from_secret: CODECOV_TOKEN
