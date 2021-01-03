@@ -21,6 +21,7 @@ steps:
   commands:
   - sleep 120
   - make testacc
+  - bash <(curl -s https://codecov.io/bash)
   environment:
     GO111MODULE: on
     SONAR_HOST: sonarqube:9000
