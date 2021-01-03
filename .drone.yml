@@ -9,7 +9,7 @@ platform:
 steps:
 - name: build and vet the provider
   pull: always
-  image: golang:1.15
+  image: golang:1.15-alpine
   commands:
   - make
   environment:
@@ -17,7 +17,7 @@ steps:
 
 - name: run acceptance tests
   pull: always
-  image: golang:1.15
+  image: golang:1.15-alpine
   commands:
   - until nc -z sonarqube 9000; do sleep 5; echo "Waiting for sonarqube to accept connections"; done
   - make testacc
