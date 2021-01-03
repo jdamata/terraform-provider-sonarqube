@@ -19,7 +19,7 @@ steps:
   pull: always
   image: golang:1.15
   commands:
-  - sleep 60 # give sonarqube a minute to start up
+  - until nc -z sonarqube 9000; do sleep 5; echo "Waiting for sonarqube to accept connections"; done
   - make testacc
   environment:
     GO111MODULE: on

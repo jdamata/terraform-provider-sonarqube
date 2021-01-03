@@ -113,7 +113,7 @@ type CreateGroupResponse struct {
 
 // Group struct
 type Group struct {
-	ID           int      `json:"id,omitempty"`
+	ID           string   `json:"id,omitempty"`
 	Organization string   `json:"organization,omitempty"`
 	Name         string   `json:"name,omitempty"`
 	Description  string   `json:"description,omitempty"`
