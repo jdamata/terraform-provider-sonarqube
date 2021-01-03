@@ -93,7 +93,7 @@ type CreateUserResponse struct {
 	User User `json:"user"`
 }
 
-// GetToken struct
+// GetTokens struct
 type GetTokens struct {
 	Login  string  `json:"login,omitempty"`
 	Tokens []Token `json:"userTokens,omitempty"`

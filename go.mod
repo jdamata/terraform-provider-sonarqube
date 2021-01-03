@@ -22,6 +22,8 @@ require (
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/satori/uuid v1.2.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/zclconf/go-cty v1.4.0 // indirect
+	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
 )
