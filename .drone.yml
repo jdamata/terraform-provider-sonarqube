@@ -19,9 +19,13 @@ steps:
   pull: always
   image: golang:1.15
   commands:
+  - sleep 60 # give sonarqube a minute to start up
   - make testacc
   environment:
     GO111MODULE: on
+    SONAR_HOST: sonarqube:9000
+    SONAR_USER: admin
+    SONAR_PASS: admin
 
 services:
 - name: sonarqube
