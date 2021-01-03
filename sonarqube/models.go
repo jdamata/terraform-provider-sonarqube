@@ -169,7 +169,7 @@ type Paging struct {
 // ProjectComponents used in GetProject
 type ProjectComponents struct {
 	Organization     string `json:"organization"`
-	Key              string `json:"key"`
+	ProjectKey       string `json:"key"`
 	Name             string `json:"name"`
 	Qualifier        string `json:"qualifier"`
 	Visibility       string `json:"visibility"`

@@ -28,9 +28,9 @@ func TestAccSonarqubeProject_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeProjectConfig(rnd, "my_project", "public"),
+				Config: testAccSonarqubeProjectConfig(rnd, rnd, "public"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "my_project"),
+					resource.TestCheckResourceAttr(name, "project", rnd),
 					resource.TestCheckResourceAttr(name, "visibility", "public"),
 				),
 			},
