@@ -27,15 +27,13 @@ steps:
     SONAR_USER: admin
     SONAR_PASS: admin
 
-- name: codecov
-  pull: always
-  image: ubuntu
-  commands:
-    - apt-get update && apt-get install curl -y
-    - bash -c '/bin/bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN'
-  environment:
-    CODECOV_TOKEN: 
+- name: coverage
+  image: plugins/codecov
+  settings:
+    token: 
       from_secret: codecov_token
+    files:
+     - coverage.txt
   when:
     branch:
       - master
