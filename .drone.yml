@@ -9,7 +9,7 @@ platform:
 steps:
 - name: build and vet the provider
   pull: always
-  image: golang:1.15-alpine
+  image: golang:1.15-buster
   commands:
   - make
   environment:
@@ -17,8 +17,9 @@ steps:
 
 - name: run acceptance tests
   pull: always
-  image: golang:1.15-alpine
+  image: golang:1.15-buster
   commands:
+  - apt-get update; apt-get install netcat -y
   - until nc -z sonarqube 9000; do sleep 5; echo "Waiting for sonarqube to accept connections"; done
   - make testacc
   environment:
