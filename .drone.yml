@@ -11,7 +11,7 @@ steps:
   pull: always
   image: golang:1.15
   commands:
-  - make
+    - make
   environment:
     GO111MODULE: on
 
@@ -19,14 +19,25 @@ steps:
   pull: always
   image: golang:1.15
   commands:
-  - sleep 120
-  - make testacc
-  - bash <(curl -s https://codecov.io/bash)
+    - sleep 120
+    - make testacc
   environment:
     GO111MODULE: on
     SONAR_HOST: sonarqube:9000
     SONAR_USER: admin
     SONAR_PASS: admin
+
+- name: codecov
+  pull: always
+  image: busybox
+  commands:
+    - bash <(curl -s https://codecov.io/bash)
+  environment:
+    CODECOV_TOKEN: 
+      from_secret: CODECOV_TOKEN
+  when:
+    branch:
+      - master
 
 services:
 - name: sonarqube
@@ -35,7 +46,7 @@ services:
 
 trigger:
   event:
-  - pull_request
-  - push
+    - pull_request
+    - push
   branch:
-  - master
+    - master
