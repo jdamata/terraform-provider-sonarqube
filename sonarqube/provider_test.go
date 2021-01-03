@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -19,6 +20,11 @@ func init() {
 	}
 }
 
+func TestMain(m *testing.M) {
+	acctest.UseBinaryDriver("sonarqube", Provider)
+	resource.TestMain(m)
+}
+
 func TestProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
@@ -29,7 +35,7 @@ func TestProvider_impl(t *testing.T) {
 	var _ terraform.ResourceProvider = Provider()
 }
 
-func testSonarPreCheck(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	testSonarHost(t)
 	testSonarUser(t)
 	testSonarPass(t)
