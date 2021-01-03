@@ -1,0 +1,37 @@
+---
+kind: pipeline
+name: acceptance-tests
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: build and vet the provider
+  pull: always
+  image: golang:1.15
+  commands:
+  - make
+  environment:
+    GO111MODULE: on
+
+- name: run acceptance tests
+  pull: always
+  image: golang:1.15
+  commands:
+  - sleep 120
+  - make testacc
+  environment:
+    GO111MODULE: on
+    SONAR_HOST: sonarqube:9000
+    SONAR_USER: admin
+    SONAR_PASS: admin
+
+services:
+- name: sonarqube
+  pull: default
+  image: sonarqube:latest
+
+trigger:
+  event:
+  - pull_request

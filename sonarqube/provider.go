@@ -8,15 +8,14 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	log "github.com/sirupsen/logrus"
 )
 
 var sonarqubeProvider *schema.Provider
 
 // Provider for sonarqube
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	sonarqubeProvider = &schema.Provider{
 		// Provider configuration
 		Schema: map[string]*schema.Schema{
@@ -37,7 +36,7 @@ func Provider() terraform.ResourceProvider {
 			},
 			"scheme": {
 				Type:        schema.TypeString,
-				Default:     "https",
+				Default:     "http",
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_SCHEME", "SONARQUBE_SCHEME"}, nil),
 				Optional:    true,
 			},

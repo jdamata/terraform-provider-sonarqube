@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -102,11 +102,11 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	// Loop over all projects to see if the project we need exists.
 	readSuccess := false
 	for _, value := range projectReadResponse.Components {
-		if d.Id() == value.Key {
+		if d.Id() == value.ProjectKey {
 			// If it does, set the values of that project
-			d.SetId(value.Key)
+			d.SetId(value.ProjectKey)
 			d.Set("name", value.Name)
-			d.Set("key", value.Key)
+			d.Set("project", value.ProjectKey)
 			d.Set("visibility", value.Visibility)
 			readSuccess = true
 		}

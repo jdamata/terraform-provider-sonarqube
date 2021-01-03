@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Returns the resource represented by this file.
@@ -63,7 +62,7 @@ func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
 	}
 
-	d.SetId(strconv.Itoa(groupResponse.Group.ID))
+	d.SetId(groupResponse.Group.ID)
 	return resourceSonarqubeGroupRead(d, m)
 }
 
@@ -96,9 +95,9 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	// Loop over all groups to see if the group we need exists.
 	readSuccess := false
 	for _, value := range groupReadResponse.Groups {
-		if d.Id() == strconv.Itoa(value.ID) {
+		if d.Id() == value.ID {
 			// If it does, set the values of that group
-			d.SetId(strconv.Itoa(value.ID))
+			d.SetId(value.ID)
 			d.Set("name", value.Name)
 			d.Set("description", value.Description)
 			readSuccess = true

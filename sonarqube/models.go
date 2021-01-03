@@ -93,7 +93,7 @@ type CreateUserResponse struct {
 	User User `json:"user"`
 }
 
-// GetToken struct
+// GetTokens struct
 type GetTokens struct {
 	Login  string  `json:"login,omitempty"`
 	Tokens []Token `json:"userTokens,omitempty"`
@@ -113,7 +113,7 @@ type CreateGroupResponse struct {
 
 // Group struct
 type Group struct {
-	ID           int      `json:"id,omitempty"`
+	ID           string   `json:"id,omitempty"`
 	Organization string   `json:"organization,omitempty"`
 	Name         string   `json:"name,omitempty"`
 	Description  string   `json:"description,omitempty"`
@@ -169,7 +169,7 @@ type Paging struct {
 // ProjectComponents used in GetProject
 type ProjectComponents struct {
 	Organization     string `json:"organization"`
-	Key              string `json:"key"`
+	ProjectKey       string `json:"key"`
 	Name             string `json:"name"`
 	Qualifier        string `json:"qualifier"`
 	Visibility       string `json:"visibility"`
