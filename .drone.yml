@@ -32,10 +32,10 @@ steps:
   image: ubuntu
   commands:
     - apt-get update && apt-get install curl -y
-    - bash -c '/bin/bash <(curl -s https://codecov.io/bash)'
+    - bash -c '/bin/bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN'
   environment:
     CODECOV_TOKEN: 
-      from_secret: CODECOV_TOKEN
+      from_secret: codecov_token
   when:
     branch:
       - master
