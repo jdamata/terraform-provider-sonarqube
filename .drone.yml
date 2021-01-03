@@ -19,7 +19,7 @@ steps:
   pull: always
   image: golang:1.15
   commands:
-    - sleep 120
+    - sleep 60
     - make testacc
   environment:
     GO111MODULE: on
@@ -31,6 +31,7 @@ steps:
   pull: always
   image: ubuntu
   commands:
+    - apt-get update && apt-get install curl -y
     - bash <(curl -s https://codecov.io/bash)
   environment:
     CODECOV_TOKEN: 
