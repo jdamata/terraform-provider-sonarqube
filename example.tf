@@ -9,7 +9,7 @@ terraform {
 
 provider "sonarqube" {
     user   = "admin"
-    pass   = "admin" 
+    pass   = "admin1" 
     host   = "127.0.0.1:9000"
     scheme = "http"
 }
@@ -25,12 +25,12 @@ resource "sonarqube_qualitygate" "main" {
 }
 
 resource "sonarqube_qualitygate_project_association" "main" {
-    gateid     = sonarqube_qualitygate.main.id
+    gatename     = sonarqube_qualitygate.main.name
     projectkey = sonarqube_project.main.project
 }
 
 resource "sonarqube_qualitygate_condition" "main" {
-    gateid = sonarqube_qualitygate.main.id
+    gatename = sonarqube_qualitygate.main.name
     metric = "vulnerabilities"
     error  = 12
     op     = "GT"

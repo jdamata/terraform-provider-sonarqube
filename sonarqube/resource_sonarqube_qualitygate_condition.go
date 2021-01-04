@@ -2,12 +2,12 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 // Returns the resource represented by this file.
@@ -20,8 +20,8 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
-			"gateid": {
-				Type:     schema.TypeInt,
+			"gatename": {
+				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
@@ -45,10 +45,10 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create_condition"
 	sonarQubeURL.RawQuery = url.Values{
-		"gateId": []string{strconv.Itoa(d.Get("gateid").(int))},
-		"error":  []string{strconv.Itoa(d.Get("error").(int))},
-		"metric": []string{d.Get("metric").(string)},
-		"op":     []string{d.Get("op").(string)},
+		"gateName": []string{d.Get("gatename").(string)},
+		"error":    []string{strconv.Itoa(d.Get("error").(int))},
+		"metric":   []string{d.Get("metric").(string)},
+		"op":       []string{d.Get("op").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -67,10 +67,10 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	qualityGateConditionResponse := CreateQualityGateConditionResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
 	if err != nil {
-		log.WithError(err).Error("getQualityGateConditionResponse: Failed to decode json into struct")
+		return fmt.Errorf("getQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
 	}
 
-	d.SetId(strconv.FormatInt(qualityGateConditionResponse.ID, 10))
+	d.SetId(qualityGateConditionResponse.ID)
 	return nil
 }
 
@@ -78,7 +78,7 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
 	sonarQubeURL.RawQuery = url.Values{
-		"id": []string{strconv.Itoa(d.Get("gateid").(int))},
+		"name": []string{d.Get("gatename").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -97,13 +97,13 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 	getQualityGateConditionResponse := GetQualityGate{}
 	err = json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
 	if err != nil {
-		log.WithError(err).Error("getQualityGateConditionResponse: Failed to decode json into struct")
+		return fmt.Errorf("getQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
 	}
 
 	for _, value := range getQualityGateConditionResponse.Conditions {
-		if d.Id() == strconv.FormatInt(value.ID, 10) {
-			d.SetId(strconv.FormatInt(value.ID, 10))
-			d.Set("gateid", getQualityGateConditionResponse.ID)
+		if d.Id() == value.ID {
+			d.SetId(value.ID)
+			d.Set("gatename", getQualityGateConditionResponse.Name)
 			d.Set("error", value.Error)
 			d.Set("metric", value.Metric)
 			d.Set("op", value.OP)
@@ -117,7 +117,6 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/update_condition"
 	sonarQubeURL.RawQuery = url.Values{
-		"gateid": []string{strconv.Itoa(d.Get("gateid").(int))},
 		"id":     []string{d.Id()},
 		"error":  []string{strconv.Itoa(d.Get("error").(int))},
 		"metric": []string{d.Get("metric").(string)},

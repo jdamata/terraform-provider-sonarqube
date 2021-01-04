@@ -2,11 +2,11 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 // Returns the resource represented by this file.
@@ -73,7 +73,7 @@ func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 	getInstalledPlugins := GetInstalledPlugins{}
 	err = json.NewDecoder(resp.Body).Decode(&getInstalledPlugins)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubePluginRead: Failed to decode json into struct")
+		return fmt.Errorf("resourceSonarqubePluginRead: Failed to decode json into struct: %+v", err)
 	}
 
 	// Loop over all projects to see if the project we need exists.
@@ -95,7 +95,6 @@ func resourceSonarqubePluginDelete(d *schema.ResourceData, m interface{}) error 
 		"key": []string{d.Id()},
 	}.Encode()
 
-	log.Error(sonarQubeURL.String())
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
@@ -104,7 +103,7 @@ func resourceSonarqubePluginDelete(d *schema.ResourceData, m interface{}) error 
 		"resourceSonarqubePluginDelete",
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("resourceSonarqubePluginDelete: Failed to delete plugin: %+v", err)
 	}
 	defer resp.Body.Close()
 

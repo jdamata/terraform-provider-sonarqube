@@ -21,3 +21,14 @@ vet:
 # Export these for local testing   -> export SONAR_HOST=localhost:9000 SONAR_USER=admin SONAR_PASS=admin
 testacc:
 	TF_ACC=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+startsonarqube:
+	docker run -d -p 9000:9000 sonarqube:latest
+
+run-example:
+	TF_DEBUG=1
+	terraform init
+	terraform apply --auto-approve
+
+clean-example:
+	rm -rf terraform-provider-sonarqube .terraform terraform.tfstate crash.log terraform.tfstate.backup .terraform.lock.hcl
