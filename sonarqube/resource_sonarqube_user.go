@@ -10,6 +10,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// User struct
+type User struct {
+	Login       string   `json:"login,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Email       string   `json:"email,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	IsActive    bool     `json:"active,omitempty"`
+	IsLocal     bool     `json:"local,omitempty"`
+}
+
+// GetUser for unmarshalling response body where users are retured
+type GetUser struct {
+	Paging Paging `json:"paging"`
+	Users  []User `json:"users"`
+}
+
+// CreateUserResponse struct
+type CreateUserResponse struct {
+	User User `json:"user"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubeUser() *schema.Resource {
 	return &schema.Resource{

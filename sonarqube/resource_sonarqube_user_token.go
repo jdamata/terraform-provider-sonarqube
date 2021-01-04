@@ -9,6 +9,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GetTokens struct
+type GetTokens struct {
+	Login  string  `json:"login,omitempty"`
+	Tokens []Token `json:"userTokens,omitempty"`
+}
+
+// Token struct
+type Token struct {
+	Login string `json:"login,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Token string `json:"token,omitempty"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubeUserToken() *schema.Resource {
 	return &schema.Resource{

@@ -10,6 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GetQualityGateAssociation for unmarshalling response body from getting quality gate association
+type GetQualityGateAssociation struct {
+	Paging  Paging                              `json:"paging"`
+	Results []GetQualityGateAssociationProjects `json:"results"`
+}
+
+// GetQualityGateAssociationProjects used in GetQualityGateAssociation
+type GetQualityGateAssociationProjects struct {
+	Name     string `json:"name"`
+	Key      string `json:"key"`
+	Selected bool   `json:"selected"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 	return &schema.Resource{

@@ -9,6 +9,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GetQualityGate for unmarshalling response body of quality gate get
+type GetQualityGate struct {
+	ID         string                               `json:"string"`
+	Name       string                               `json:"name"`
+	Conditions []CreateQualityGateConditionResponse `json:"conditions"`
+	IsBuiltIn  bool                                 `json:"isBuiltIn"`
+	Actions    QualityGateActions                   `json:"actions"`
+}
+
+// CreateQualityGateConditionResponse for unmarshalling response body of condition creation
+type CreateQualityGateConditionResponse struct {
+	ID      string `json:"id"`
+	Metric  string `json:"metric"`
+	OP      string `json:"op"`
+	Error   string `json:"error"`
+	Warning string `json:"warning"`
+}
+
+// QualityGateActions used in GetQualityGate
+type QualityGateActions struct {
+	Rename            bool `json:"rename"`
+	SetAsDefault      bool `json:"setAsDefault"`
+	Copy              bool `json:"copy"`
+	AssociateProjects bool `json:"associateProjects"`
+	Delete            bool `json:"delete"`
+	ManageConditions  bool `json:"manageConditions"`
+}
+
+// CreateQualityGateResponse for unmarshalling response body of quality gate creation
+type CreateQualityGateResponse struct {
+	ID   string `json:"string"`
+	Name string `json:"name"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityGate() *schema.Resource {
 	return &schema.Resource{

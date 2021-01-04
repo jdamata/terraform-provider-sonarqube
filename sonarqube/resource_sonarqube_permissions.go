@@ -11,6 +11,18 @@ import (
 	"github.com/satori/uuid"
 )
 
+// GetGroupPermissions struct
+type GetGroupPermissions struct {
+	Paging Paging            `json:"paging"`
+	Groups []GroupPermission `json:"groups"`
+}
+
+// GroupPermission struct
+type GroupPermission struct {
+	Name        string   `json:"name,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubePermissions() *schema.Resource {
 	return &schema.Resource{

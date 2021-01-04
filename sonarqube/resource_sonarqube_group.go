@@ -9,6 +9,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GetGroup for unmarshalling response body from getting group details
+type GetGroup struct {
+	Paging Paging  `json:"paging"`
+	Groups []Group `json:"groups"`
+}
+
+// CreateGroupResponse for unmarshalling response body of group creation
+type CreateGroupResponse struct {
+	Group Group `json:"group"`
+}
+
+// Group struct
+type Group struct {
+	ID           string   `json:"id,omitempty"`
+	Organization string   `json:"organization,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	MembersCount int      `json:"membersCount,omitempty"`
+	IsDefault    bool     `json:"default,omitempty"`
+	Permissions  []string `json:"permissions,omitempty"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubeGroup() *schema.Resource {
 	return &schema.Resource{

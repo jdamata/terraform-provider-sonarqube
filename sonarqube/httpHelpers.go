@@ -6,23 +6,37 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
-	log "github.com/sirupsen/logrus"
 )
 
+// ErrorResponse struct
+type ErrorResponse struct {
+	Errors []ErrorMessage `json:"errors,omitempty"`
+}
+
+// ErrorMessage struct
+type ErrorMessage struct {
+	Message string `json:"msg,omitempty"`
+}
+
+// Paging used in /search API endpoints
+type Paging struct {
+	PageIndex int64 `json:"pageIndex"`
+	PageSize  int64 `json:"pageSize"`
+	Total     int64 `json:"total"`
+}
+
+// helper function to make api request to sonarqube
 func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) (http.Response, error) {
 	// Prepare request
 	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
 	if err != nil {
-		log.WithError(err).Error(errormsg)
-		// Returning a blank http.Response object must be wrong. What am i suppose to do here??
-		return http.Response{}, err
+		return http.Response{}, fmt.Errorf("Failed to prepare http request: %v. Request: %v", err, req)
 	}
 
 	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.WithError(err).Error(errormsg)
-		return *resp, err
+		return http.Response{}, fmt.Errorf("Failed to execute http request: %v. Request: %v", err, req)
 	}
 
 	// Check response code
@@ -32,8 +46,7 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 			return *resp, fmt.Errorf("StatusCode: %v does not match expectedResponseCode: %v", resp.StatusCode, expectedResponseCode)
 		}
 
-		// The response body has content, try to decode the error
-		// message
+		// The response body has content, try to decode the error message
 		errorResponse := ErrorResponse{}
 		err = json.NewDecoder(resp.Body).Decode(&errorResponse)
 		if err != nil {

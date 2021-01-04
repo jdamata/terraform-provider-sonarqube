@@ -10,6 +10,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// CreatePermissionTemplateResponse struct
+type CreatePermissionTemplateResponse struct {
+	PermissionTemplate PermissionTemplate `json:"permissionTemplate"`
+}
+
+// GetPermissionTemplates struct
+type GetPermissionTemplates struct {
+	Paging              Paging               `json:"paging"`
+	PermissionTemplates []PermissionTemplate `json:"permissionTemplates"`
+}
+
+// PermissionTemplate struct
+type PermissionTemplate struct {
+	ID                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	Description       string `json:"description,omitempty"`
+	ProjectKeyPattern string `json:"projectKeyPattern,omitempty"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubePermissionTemplate() *schema.Resource {
 	return &schema.Resource{

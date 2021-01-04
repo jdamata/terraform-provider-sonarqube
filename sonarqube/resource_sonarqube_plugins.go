@@ -9,6 +9,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GetInstalledPlugins for unmarshalling response body from geting installed plugins
+type GetInstalledPlugins struct {
+	Plugins []Plugin `json:"plugins"`
+}
+
+// Plugin used in GetInstalledPlugins
+type Plugin struct {
+	Key                 string `json:"key"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	Version             string `json:"version"`
+	License             string `json:"license"`
+	OrganizationName    string `json:"organizationName"`
+	OrganizationURL     string `json:"organizationUrl"`
+	EditionBundled      bool   `json:"editionBundled"`
+	HomepageURL         string `json:"homepageUrl"`
+	IssueTrackerURL     string `json:"issueTrackerUrl"`
+	ImplementationBuild string `json:"implementationBuild"`
+	Filename            string `json:"filename"`
+	Hash                string `json:"hash"`
+	SonarLintSupported  bool   `json:"sonarLintSupported"`
+	DocumentationPath   string `json:"documentationPath"`
+	UpdatedAt           int    `json:"updatedAt"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubePlugin() *schema.Resource {
 	return &schema.Resource{
