@@ -18,7 +18,7 @@ vet:
 	go vet ./...
 
 # Run sonarqube locally via docker -> docker run -d -p 9000:9000 sonarqube:latest
-# Export these for local testing   -> export SONAR_HOST=localhost:9000 SONAR_USER=admin SONAR_PASS=admin
+# Export these for local testing   -> export SONAR_HOST=http://localhost:9000 SONAR_USER=admin SONAR_PASS=admin
 testacc:
 	TF_ACC=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 

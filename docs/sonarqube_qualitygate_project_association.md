@@ -14,7 +14,7 @@ resource "sonarqube_project" "main" {
 }
 
 resource "sonarqube_qualitygate_project_association" "main" {
-    gateid     = sonarqube_qualitygate.main.id
+    gatename   = sonarqube_qualitygate.main.id
     projectkey = sonarqube_project.main.project
 }
 ```
@@ -22,5 +22,5 @@ resource "sonarqube_qualitygate_project_association" "main" {
 ## Argument Reference
 The following arguments are supported:
 
-- gateid - (Required) The id of the Quality Gate
+- gatename - (Required) The name of the Quality Gate
 - projectkey - (Required) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.

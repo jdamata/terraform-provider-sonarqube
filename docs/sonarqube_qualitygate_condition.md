@@ -8,17 +8,17 @@ resource "sonarqube_qualitygate" "main" {
 }
 
 resource "sonarqube_qualitygate_condition" "main" {
-    gateid = sonarqube_qualitygate.main.id
-    metric = "vulnerabilities"
-    error  = 10
-    op     = "GT"
+    gatename = sonarqube_qualitygate.main.id
+    metric   = "vulnerabilities"
+    error    = 10
+    op       = "GT"
 }
 ```
 
 ## Argument Reference
 The following arguments are supported:
 
-- gateid - (Required) The id of the Quality Gate
+- gatename - (Required) The name of the Quality Gate
 - metric - (Required) Condition metric. Only metric of the following types are allowed: INT, MILLISEC, RATING, WORK_DUR, FLOAT, PERCENT and LEVEL. Following metrics are forbidden: alert_status, security_hotspots and new_security_hotspots
 - error - (Required) Condition error threshold
 - op - (Required) Condition operator. Possible values are: LT and GT
