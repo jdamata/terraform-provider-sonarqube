@@ -2,12 +2,11 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 // Returns the resource represented by this file.
@@ -54,10 +53,10 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 	qualityGateResponse := CreateQualityGateResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceQualityGateCreate: Failed to decode json into struct")
+		return fmt.Errorf("resourceQualityGateCreate: Failed to decode json into struct: %+v", err)
 	}
 
-	d.SetId(strconv.FormatInt(qualityGateResponse.ID, 10))
+	d.SetId(qualityGateResponse.Name)
 	return nil
 }
 
@@ -65,7 +64,7 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
 	sonarQubeURL.RawQuery = url.Values{
-		"id": []string{d.Id()},
+		"name": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -76,7 +75,7 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 		"resourceQualityGateRead",
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("resourceQualityGateRead: Failed to call api/qualitygates/show: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -84,10 +83,10 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	qualityGateReadResponse := GetQualityGate{}
 	err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceQualityGateRead: Failed to decode json into struct")
+		return fmt.Errorf("resourceQualityGateRead: Failed to decode json into struct: %+v", err)
 	}
 
-	d.SetId(strconv.FormatInt(qualityGateReadResponse.ID, 10))
+	d.SetId(qualityGateReadResponse.Name)
 	d.Set("name", qualityGateReadResponse.Name)
 	return nil
 }
@@ -96,7 +95,7 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/destroy"
 	sonarQubeURL.RawQuery = url.Values{
-		"id": []string{d.Id()},
+		"name": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -107,16 +106,9 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 		"resourceQualityGateDelete",
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("resourceQualityGateDelete: Failed to delete quality gate: %+v", err)
 	}
 	defer resp.Body.Close()
-
-	// Decode response into struct
-	qualityGateReadResponse := GetQualityGate{}
-	err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
-	if err != nil {
-		log.WithError(err).Error("resourceQualityGateDelete: Failed to decode json into struct")
-	}
 
 	return nil
 }

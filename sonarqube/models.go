@@ -22,7 +22,7 @@ type ErrorMessage struct {
 
 // GetQualityGate for unmarshalling response body of quality gate get
 type GetQualityGate struct {
-	ID         int64                                `json:"id"`
+	ID         string                               `json:"string"`
 	Name       string                               `json:"name"`
 	Conditions []CreateQualityGateConditionResponse `json:"conditions"`
 	IsBuiltIn  bool                                 `json:"isBuiltIn"`
@@ -41,13 +41,13 @@ type QualityGateActions struct {
 
 // CreateQualityGateResponse for unmarshalling response body of quality gate creation
 type CreateQualityGateResponse struct {
-	ID   int64  `json:"id"`
+	ID   string `json:"string"`
 	Name string `json:"name"`
 }
 
 // CreateQualityGateConditionResponse for unmarshalling response body of condition creation
 type CreateQualityGateConditionResponse struct {
-	ID      int64  `json:"id"`
+	ID      string `json:"id"`
 	Metric  string `json:"metric"`
 	OP      string `json:"op"`
 	Error   string `json:"error"`
@@ -197,19 +197,20 @@ type GetInstalledPlugins struct {
 
 // Plugin used in GetInstalledPlugins
 type Plugin struct {
-	Key                string `json:"key"`
-	Name               string `json:"name"`
-	Description        string `json:"description"`
-	Version            string `json:"version"`
-	License            string `json:"license"`
-	OrganizationName   string `json:"organizationName"`
-	OrganizationURL    string `json:"organizationUrl"`
-	EditionBundled     bool   `json:"editionBundled"`
-	HomepageURL        string `json:"homepageUrl"`
-	IssueTrackerURL    string `json:"issueTrackerUrl"`
-	Filename           string `json:"filename"`
-	Hash               string `json:"hash"`
-	SonarLintSupported bool   `json:"sonarLintSupported"`
-	DocumentationPath  bool   `json:"documentationPath"`
-	UpdatedAt          int    `json:"updatedAt"`
+	Key                 string `json:"key"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	Version             string `json:"version"`
+	License             string `json:"license"`
+	OrganizationName    string `json:"organizationName"`
+	OrganizationURL     string `json:"organizationUrl"`
+	EditionBundled      bool   `json:"editionBundled"`
+	HomepageURL         string `json:"homepageUrl"`
+	IssueTrackerURL     string `json:"issueTrackerUrl"`
+	ImplementationBuild string `json:"implementationBuild"`
+	Filename            string `json:"filename"`
+	Hash                string `json:"hash"`
+	SonarLintSupported  bool   `json:"sonarLintSupported"`
+	DocumentationPath   string `json:"documentationPath"`
+	UpdatedAt           int    `json:"updatedAt"`
 }

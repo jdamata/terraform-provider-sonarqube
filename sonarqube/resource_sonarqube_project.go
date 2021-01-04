@@ -2,11 +2,11 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 // Returns the resource represented by this file.
@@ -66,7 +66,7 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	projectResponse := CreateProjectResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&projectResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectCreate: Failed to decode json into struct")
+		return fmt.Errorf("resourceSonarqubeProjectCreate: Failed to decode json into struct: %+v", err)
 	}
 
 	d.SetId(projectResponse.Project.Key)
@@ -96,7 +96,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	projectReadResponse := GetProject{}
 	err = json.NewDecoder(resp.Body).Decode(&projectReadResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeProjectRead: Failed to decode json into struct")
+		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode json into struct: %+v", err)
 	}
 
 	// Loop over all projects to see if the project we need exists.

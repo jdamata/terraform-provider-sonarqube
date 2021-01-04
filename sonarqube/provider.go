@@ -1,13 +1,14 @@
 package sonarqube
 
 import (
-	"encoding/binary"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	log "github.com/sirupsen/logrus"
 )
@@ -112,15 +113,20 @@ func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) error {
 	// Read in the response
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Error(err)
 		return errors.New("Failed to parse response body on GET sonarqube version api")
 	}
 
 	// Convert response to a int.
-	version := binary.BigEndian.Uint64(bodyBytes)
-	if version < 8 {
-		log.Error(err)
-		return errors.New("Unsupported version of sonarqube. Minimum supported version is 8")
+	bodyString := string(bodyBytes)
+	installedVersion, err := version.NewVersion(bodyString)
+	allowedVersion, _ := version.NewVersion("8.4")
+
+	if err != nil {
+		return fmt.Errorf("Failed to convert sonarqube version to a version: %+v", err)
+	}
+
+	if installedVersion.LessThan(allowedVersion) {
+		return fmt.Errorf("Unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", allowedVersion, installedVersion)
 	}
 
 	return nil

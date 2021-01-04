@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 // Returns the resource represented by this file.
@@ -20,7 +19,7 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
-			"gateid": {
+			"gatename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -38,7 +37,7 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/select"
 	sonarQubeURL.RawQuery = url.Values{
-		"gateId":     []string{d.Get("gateid").(string)},
+		"gateName":   []string{d.Get("gatename").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
 	}.Encode()
 
@@ -54,16 +53,16 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 	}
 	defer resp.Body.Close()
 
-	id := fmt.Sprintf("%v/%v", d.Get("gateid").(string), d.Get("projectkey").(string))
+	id := fmt.Sprintf("%v/%v", d.Get("gatename").(string), d.Get("projectkey").(string))
 	d.SetId(id)
 	return nil
 }
 
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/search"
+	sonarQubeURL.Path = "api/qualitygates/show"
 	sonarQubeURL.RawQuery = url.Values{
-		"gateId": []string{d.Get("gateid").(string)},
+		"name": []string{d.Get("gatename").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -82,7 +81,7 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 	qualityGateAssociationReadResponse := GetQualityGateAssociation{}
 	err = json.NewDecoder(resp.Body).Decode(&qualityGateAssociationReadResponse)
 	if err != nil {
-		log.WithError(err).Error("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct")
+		return fmt.Errorf("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct: %+v", err)
 	}
 
 	// ID is in format <gateid>/<projectkey>. This splits the id into gateid and projectkey
@@ -91,7 +90,7 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 
 	for _, value := range qualityGateAssociationReadResponse.Results {
 		if idSlice[1] == value.Key {
-			d.Set("gateid", idSlice[0])
+			d.Set("gatename", idSlice[0])
 			d.Set("projectkey", value.Key)
 		}
 	}
@@ -103,7 +102,7 @@ func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/deselect"
 	sonarQubeURL.RawQuery = url.Values{
-		"gateId":     []string{d.Get("gateid").(string)},
+		"gateName":   []string{d.Get("gatename").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},
 	}.Encode()
 
