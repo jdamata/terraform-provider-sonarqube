@@ -35,6 +35,8 @@ steps:
     files:
      - coverage.txt
   when:
+    event:
+      - push
     branch:
       - master
 
