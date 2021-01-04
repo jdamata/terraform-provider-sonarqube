@@ -7,8 +7,7 @@ The sonarqube provider is used to configure sonarqube. The provider needs to be 
 provider "sonarqube" {
     user   = "admin"
     pass   = "admin" 
-    host   = "127.0.0.1:9000"
-    scheme = "http"
+    host   = "http://127.0.0.1:9000"
 }
 ```
 
@@ -18,4 +17,3 @@ The following arguments are supported:
 - user - (Required) Sonarqube user. This can also be set via the SONARQUBE_USER environment variable.
 - pass - (Required) Sonarqube pass. This can also be set via the SONARQUBE_PASS environment variable.
 - host - (Required) Sonarqube url. This can be also be set via the SONARQUBE_HOST environment variable.
-- scheme - (Required) Http scheme to use. Either http or https. This can be also be set via the SONARQUBE_SCHEME environment variable.

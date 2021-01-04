@@ -10,8 +10,7 @@ terraform {
 provider "sonarqube" {
     user   = "admin"
     pass   = "admin1" 
-    host   = "127.0.0.1:9000"
-    scheme = "http"
+    host   = "http://127.0.0.1:9000"
 }
 
 resource "sonarqube_project" "main" {

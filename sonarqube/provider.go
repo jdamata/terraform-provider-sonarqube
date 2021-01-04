@@ -1,7 +1,6 @@
 package sonarqube
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,7 +9,6 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 var sonarqubeProvider *schema.Provider
@@ -34,12 +32,6 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_HOST", "SONARQUBE_HOST"}, nil),
 				Required:    true,
-			},
-			"scheme": {
-				Type:        schema.TypeString,
-				Default:     "http",
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_SCHEME", "SONARQUBE_SCHEME"}, nil),
-				Optional:    true,
 			},
 		},
 		// Add the resources supported by this provider to this map.
@@ -69,17 +61,21 @@ type ProviderConfiguration struct {
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	client := retryablehttp.NewClient()
 
+	host, err := url.Parse(d.Get("host").(string))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse sonarqube host: %+v", err)
+	}
+
 	sonarQubeURL := url.URL{
-		Scheme:     d.Get("scheme").(string),
-		Host:       d.Get("host").(string),
+		Scheme:     host.Scheme,
+		Host:       host.Host,
 		User:       url.UserPassword(d.Get("user").(string), d.Get("pass").(string)),
 		ForceQuery: true,
 	}
 
 	// Check that the sonarqube api is available and a supported version
-	err := sonarqubeHealth(client, sonarQubeURL)
+	err = sonarqubeHealth(client, sonarQubeURL)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 
@@ -94,26 +90,24 @@ func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) error {
 	sonarqube.Path = "api/server/version"
 	req, err := retryablehttp.NewRequest("GET", sonarqube.String(), http.NoBody)
 	if err != nil {
-		log.Error(err)
-		return errors.New("Unable to construct sonarqube version request")
+		return fmt.Errorf("Unable to construct sonarqube version request: %+v", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error(err)
-		return errors.New("Unable to reach sonarqube")
+		return fmt.Errorf("Unable to reach sonarqube: %+v", err)
 	}
 	defer resp.Body.Close()
 
 	// Check response code
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Sonarqube version api did not return a 200")
+		return fmt.Errorf("Sonarqube version api did not return a 200: %+v", err)
 	}
 
 	// Read in the response
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return errors.New("Failed to parse response body on GET sonarqube version api")
+		return fmt.Errorf("Failed to parse response body on GET sonarqube version api: %+v", err)
 	}
 
 	// Convert response to a int.

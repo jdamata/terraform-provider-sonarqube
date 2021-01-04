@@ -23,7 +23,7 @@ steps:
     - make testacc
   environment:
     GO111MODULE: on
-    SONAR_HOST: sonarqube:9000
+    SONAR_HOST: http://sonarqube:9000
     SONAR_USER: admin
     SONAR_PASS: admin
 
