@@ -18,14 +18,14 @@ func testSweepSonarqubeUserSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeUserLocalConfig(rnd string, name string, email string) string {
+func testAccSonarqubeUserLocalConfig(rnd string, name string, email string, password string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_user" "%[1]s" {
 			login_name = "%[2]s"
 			name       = "%[2]s"
 			email      = "%[3]s"
-			password   = "secret-sauce37!"
-		}`, rnd, name, email)
+			password   = "%[4]s"
+		}`, rnd, name, email, password)
 }
 
 func TestAccSonarqubeUserLocal(t *testing.T) {
@@ -37,14 +37,14 @@ func TestAccSonarqubeUserLocal(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal", "terraform-test@sonarqube.com"),
+				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal", "terraform-test@sonarqube.com", "secret-sauce37!"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserLocal"),
 					resource.TestCheckResourceAttr(name, "email", "terraform-test@sonarqube.com"),
 				),
 			},
 			{
-				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal", "terraform-test2@sonarqube.com"),
+				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal", "terraform-test2@sonarqube.com", "secret-sauce38!"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserLocal"),
 					resource.TestCheckResourceAttr(name, "email", "terraform-test2@sonarqube.com"),
