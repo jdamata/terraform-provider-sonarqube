@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -25,8 +24,8 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"error": {
-				Type:     schema.TypeInt,
+			"threshold": {
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"metric": {
@@ -46,7 +45,7 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	sonarQubeURL.Path = "api/qualitygates/create_condition"
 	sonarQubeURL.RawQuery = url.Values{
 		"gateName": []string{d.Get("gatename").(string)},
-		"error":    []string{strconv.Itoa(d.Get("error").(int))},
+		"error":    []string{d.Get("threshold").(string)},
 		"metric":   []string{d.Get("metric").(string)},
 		"op":       []string{d.Get("op").(string)},
 	}.Encode()
@@ -104,7 +103,7 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 		if d.Id() == value.ID {
 			d.SetId(value.ID)
 			d.Set("gatename", getQualityGateConditionResponse.Name)
-			d.Set("error", value.Error)
+			d.Set("threshold", value.Error)
 			d.Set("metric", value.Metric)
 			d.Set("op", value.OP)
 		}
@@ -118,7 +117,7 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 	sonarQubeURL.Path = "api/qualitygates/update_condition"
 	sonarQubeURL.RawQuery = url.Values{
 		"id":     []string{d.Id()},
-		"error":  []string{strconv.Itoa(d.Get("error").(int))},
+		"error":  []string{d.Get("threshold").(string)},
 		"metric": []string{d.Get("metric").(string)},
 		"op":     []string{d.Get("op").(string)},
 	}.Encode()
