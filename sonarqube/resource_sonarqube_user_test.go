@@ -44,9 +44,9 @@ func TestAccSonarqubeUserLocal(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSonarqubeUserNotLocalConfig(rnd, "testAccSonarqubeUserNotLocal", "terraform-test2@sonarqube.com"),
+				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal", "terraform-test2@sonarqube.com"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserNotLocal"),
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserLocal"),
 					resource.TestCheckResourceAttr(name, "email", "terraform-test2@sonarqube.com"),
 				),
 			},
