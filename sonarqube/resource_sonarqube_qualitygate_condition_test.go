@@ -50,6 +50,14 @@ func TestAccSonarqubeQualitygateConditionBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "op", "GT"),
 				),
 			},
+			{
+				Config: testAccSonarqubeQualitygateConditionBasicConfig(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "11", "GT"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "metric", "vulnerabilities"),
+					resource.TestCheckResourceAttr(name, "threshold", "11"),
+					resource.TestCheckResourceAttr(name, "op", "GT"),
+				),
+			},
 		},
 	})
 }

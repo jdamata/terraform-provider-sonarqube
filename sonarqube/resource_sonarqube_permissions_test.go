@@ -37,6 +37,7 @@ func TestAccSonarqubePermissionGroupName(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_permissions." + rnd
 	permissions := []string{"admin"}
+	updatedPermissions := []string{"admin", "profileadmin"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -46,7 +47,12 @@ func TestAccSonarqubePermissionGroupName(t *testing.T) {
 				Config: testAccSonarqubePermissionGroupNameConfig(rnd, "testAccSonarqubePermissions", permissions),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "group_name", "testAccSonarqubePermissions"),
-					//resource.TestCheckResourceAttr(name, "permissions", generateHCLList(permissions)),
+				),
+			},
+			{
+				Config: testAccSonarqubePermissionGroupNameConfig(rnd, "testAccSonarqubePermissions", updatedPermissions),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "group_name", "testAccSonarqubePermissions"),
 				),
 			},
 		},

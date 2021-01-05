@@ -45,6 +45,14 @@ func TestAccSonarqubePermissionTemplateBasic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccSonarqubePermissionTemplateBasicConfig(rnd, "testAccSonarqubePermissionTemplate", "These are internal projects 2", "internal.*"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePermissionTemplate"),
+					resource.TestCheckResourceAttr(name, "description", "These are internal projects 2"),
+					resource.TestCheckResourceAttr(name, "project_key_pattern", "internal.*"),
+				),
+			},
+			{
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,

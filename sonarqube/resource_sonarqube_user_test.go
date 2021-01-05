@@ -18,13 +18,14 @@ func testSweepSonarqubeUserSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeUserLocalConfig(rnd string, name string) string {
+func testAccSonarqubeUserLocalConfig(rnd string, name string, email string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_user" "%[1]s" {
 			login_name = "%[2]s"
 			name       = "%[2]s"
+			email      = "%[3]s"
 			password   = "secret-sauce37!"
-		}`, rnd, name)
+		}`, rnd, name, email)
 }
 
 func TestAccSonarqubeUserLocal(t *testing.T) {
@@ -36,9 +37,17 @@ func TestAccSonarqubeUserLocal(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal"),
+				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal", "terraform-test@sonarqube.com"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserLocal"),
+					resource.TestCheckResourceAttr(name, "email", "terraform-test@sonarqube.com"),
+				),
+			},
+			{
+				Config: testAccSonarqubeUserNotLocalConfig(rnd, "testAccSonarqubeUserNotLocal", "terraform-test2@sonarqube.com"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserNotLocal"),
+					resource.TestCheckResourceAttr(name, "email", "terraform-test2@sonarqube.com"),
 				),
 			},
 			{
@@ -54,14 +63,14 @@ func TestAccSonarqubeUserLocal(t *testing.T) {
 	})
 }
 
-func testAccSonarqubeUserNotLocalConfig(rnd string, name string) string {
+func testAccSonarqubeUserNotLocalConfig(rnd string, name string, email string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_user" "%[1]s" {
 			login_name = "%[2]s"
 			name       = "%[2]s"
-			email      = "terraform-test@sonarqube.com"
+			email      = "%[3]s"
 			is_local   = false
-	    }`, rnd, name)
+	    }`, rnd, name, email)
 }
 
 func TestAccSonarqubeUserNotLocal(t *testing.T) {
@@ -73,9 +82,10 @@ func TestAccSonarqubeUserNotLocal(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUserNotLocalConfig(rnd, "testAccSonarqubeUserNotLocal"),
+				Config: testAccSonarqubeUserNotLocalConfig(rnd, "testAccSonarqubeUserNotLocal", "terraform-test@sonarqube.com"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserNotLocal"),
+					resource.TestCheckResourceAttr(name, "email", "terraform-test@sonarqube.com"),
 				),
 			},
 			{

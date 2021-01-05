@@ -151,7 +151,7 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 	sonarQubeURL.Path = "api/permissions/update_template"
 
 	rawQuery := url.Values{
-		"templateId": []string{d.Id()},
+		"id": []string{d.Id()},
 	}
 
 	if _, ok := d.GetOk("description"); ok {
