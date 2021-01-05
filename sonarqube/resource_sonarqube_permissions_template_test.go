@@ -19,7 +19,7 @@ func testSweepPermissionTemplateSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubePermissionTemplateConfig(rnd string, name string, description string, projectKeyPattern string) string {
+func testAccSonarqubePermissionTemplateBasicConfig(rnd string, name string, description string, projectKeyPattern string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_permission_template" "%[1]s" {
 		  name                = "%[2]s"
@@ -28,7 +28,7 @@ func testAccSonarqubePermissionTemplateConfig(rnd string, name string, descripti
 		}`, rnd, name, description, projectKeyPattern)
 }
 
-func TestAccSonarqubePermissionTemplate_basic(t *testing.T) {
+func TestAccSonarqubePermissionTemplateBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_permission_template." + rnd
 
@@ -37,7 +37,7 @@ func TestAccSonarqubePermissionTemplate_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubePermissionTemplateConfig(rnd, "testAccSonarqubePermissionTemplate", "These are internal projects", "internal.*"),
+				Config: testAccSonarqubePermissionTemplateBasicConfig(rnd, "testAccSonarqubePermissionTemplate", "These are internal projects", "internal.*"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePermissionTemplate"),
 					resource.TestCheckResourceAttr(name, "description", "These are internal projects"),

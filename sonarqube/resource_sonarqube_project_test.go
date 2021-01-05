@@ -19,7 +19,7 @@ func testSweepSonarqubeProjectSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeProjectConfig(rnd string, name string, project string, visibility string) string {
+func testAccSonarqubeProjectBasicConfig(rnd string, name string, project string, visibility string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_project" "%[1]s" {
 		  name       = "%[2]s"
@@ -29,7 +29,7 @@ func testAccSonarqubeProjectConfig(rnd string, name string, project string, visi
 		`, rnd, name, project, visibility)
 }
 
-func TestAccSonarqubeProject_basic(t *testing.T) {
+func TestAccSonarqubeProjectBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
 
@@ -38,7 +38,7 @@ func TestAccSonarqubeProject_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeProjectConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
 					resource.TestCheckResourceAttr(name, "visibility", "public"),

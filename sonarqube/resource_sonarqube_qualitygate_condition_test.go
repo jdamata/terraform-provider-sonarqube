@@ -19,7 +19,7 @@ func testSweepSonarqubeQualitygateConditionSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualitygateConditionConfig(id string, name string, metric string, threshold string, op string) string {
+func testAccSonarqubeQualitygateConditionBasicConfig(id string, name string, metric string, threshold string, op string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
@@ -34,7 +34,7 @@ func testAccSonarqubeQualitygateConditionConfig(id string, name string, metric s
 		`, id, name, metric, threshold, op)
 }
 
-func TestAccSonarqubeQualitygateCondition_basic(t *testing.T) {
+func TestAccSonarqubeQualitygateConditionBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate_condition." + rnd
 
@@ -43,7 +43,7 @@ func TestAccSonarqubeQualitygateCondition_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateConditionConfig(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "10", "GT"),
+				Config: testAccSonarqubeQualitygateConditionBasicConfig(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "10", "GT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "metric", "vulnerabilities"),
 					resource.TestCheckResourceAttr(name, "threshold", "10"),

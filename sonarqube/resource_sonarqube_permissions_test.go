@@ -33,7 +33,7 @@ func testAccSonarqubePermissionGroupNameConfig(id string, groupName string, perm
 		}`, id, groupName, formattedPermissions)
 }
 
-func TestAccSonarqubePermission_GroupName(t *testing.T) {
+func TestAccSonarqubePermissionGroupName(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_permissions." + rnd
 	permissions := []string{"admin"}
@@ -69,7 +69,7 @@ func testAccSonarqubePermissionLoginNameConfig(id string, loginName string, perm
 		`, id, loginName, formattedPermissions)
 }
 
-func TestAccSonarqubePermission_LoginName(t *testing.T) {
+func TestAccSonarqubePermissionLoginName(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_permissions." + rnd
 	permissions := []string{"gateadmin", "profileadmin"}

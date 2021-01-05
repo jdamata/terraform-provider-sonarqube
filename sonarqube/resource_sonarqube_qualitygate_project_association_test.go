@@ -19,7 +19,7 @@ func testSweepSonarqubeQualitygateProjectAssociationSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualitygateProjectAssociationConfig(rnd string, name string) string {
+func testAccSonarqubeQualitygateProjectAssociationBasicConfig(rnd string, name string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
@@ -37,7 +37,7 @@ func testAccSonarqubeQualitygateProjectAssociationConfig(rnd string, name string
 		}`, rnd, name)
 }
 
-func TestAccSonarqubeQualitygateProjectAssociation_basic(t *testing.T) {
+func TestAccSonarqubeQualitygateProjectAssociationBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate_project_association." + rnd
 
@@ -46,7 +46,7 @@ func TestAccSonarqubeQualitygateProjectAssociation_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateProjectAssociationConfig(rnd, "testAccSonarqubeProjectAssociation"),
+				Config: testAccSonarqubeQualitygateProjectAssociationBasicConfig(rnd, "testAccSonarqubeProjectAssociation"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociation"),
 					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),

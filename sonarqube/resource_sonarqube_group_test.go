@@ -19,7 +19,7 @@ func testSweepSonarqubeGroupSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeGroupConfig(rnd string, name string, description string) string {
+func testAccSonarqubeGroupBasicConfig(rnd string, name string, description string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_group" "%[1]s" {
 		  name        = "%[2]s"
@@ -28,7 +28,7 @@ func testAccSonarqubeGroupConfig(rnd string, name string, description string) st
 		`, rnd, name, description)
 }
 
-func TestAccSonarqubeGroup_basic(t *testing.T) {
+func TestAccSonarqubeGroupBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_group." + rnd
 
@@ -37,7 +37,7 @@ func TestAccSonarqubeGroup_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeGroupConfig(rnd, "testAccSonarqubeGroup", "group description"),
+				Config: testAccSonarqubeGroupBasicConfig(rnd, "testAccSonarqubeGroup", "group description"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeGroup"),
 					resource.TestCheckResourceAttr(name, "description", "group description"),
