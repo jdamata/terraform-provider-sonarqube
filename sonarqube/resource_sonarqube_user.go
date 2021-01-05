@@ -126,7 +126,7 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/users/search"
 	sonarQubeURL.RawQuery = url.Values{
-		"q": []string{d.Get("login_name").(string)},
+		"q": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(

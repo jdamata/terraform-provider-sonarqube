@@ -36,9 +36,18 @@ func TestAccSonarqubeUserLocal(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUser"),
+				Config: testAccSonarqubeUserLocalConfig(rnd, "testAccSonarqubeUserLocal"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUser"),
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserLocal"),
+				),
+			},
+			{
+				ResourceName:            name,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserLocal"),
 				),
 			},
 		},
@@ -64,9 +73,17 @@ func TestAccSonarqubeUserNotLocal(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUserNotLocalConfig(rnd, "testAccSonarqubeUser"),
+				Config: testAccSonarqubeUserNotLocalConfig(rnd, "testAccSonarqubeUserNotLocal"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUser"),
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserNotLocal"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserNotLocal"),
 				),
 			},
 		},

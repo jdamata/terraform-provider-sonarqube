@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -99,8 +100,10 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/user_tokens/search"
+	// split d.Id into login_name and the token name (foo/bar)
+	login := strings.Split(d.Id(), "/")
 	sonarQubeURL.RawQuery = url.Values{
-		"login": []string{d.Get("login_name").(string)},
+		"login": []string{login[0]},
 	}.Encode()
 
 	resp, err := httpRequestHelper(

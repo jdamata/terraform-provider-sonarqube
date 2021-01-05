@@ -44,6 +44,15 @@ func TestAccSonarqubeProjectBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "visibility", "public"),
 				),
 			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "visibility", "public"),
+				),
+			},
 		},
 	})
 }
