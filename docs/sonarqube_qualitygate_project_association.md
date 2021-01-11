@@ -29,5 +29,5 @@ The following arguments are supported:
 Quality Gates Project Associations can be imported using a combination of quality gate name and project key
 
 ```terraform
-terraform import sonarqube_qualityprofile.main my_qualitygate/my_project
+terraform import sonarqube_qualitygate_project_association.main my_qualitygate/my_project
 ```
