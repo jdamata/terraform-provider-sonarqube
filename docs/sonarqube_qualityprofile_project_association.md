@@ -29,7 +29,7 @@ The following arguments are supported:
 - language        - (Required) Quality profile language. Must be one of "cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "ts", "vbnet", "web", "xml"
 
 ## Import 
-Quality Profiles can be imported using a combination of quality profile name and project name
+Quality Profiles Project Associations can be imported using a combination of quality profile name and project name
 
 ```terraform
 terraform import sonarqube_qualityprofile.main my_quality_profile/SonarQube
