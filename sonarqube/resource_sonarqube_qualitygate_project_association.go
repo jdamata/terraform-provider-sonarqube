@@ -73,9 +73,9 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/show"
+	sonarQubeURL.Path = "api/qualitygates/search"
 	sonarQubeURL.RawQuery = url.Values{
-		"name": []string{d.Get("gatename").(string)},
+		"gateName": []string{d.Get("gatename").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
