@@ -54,6 +54,16 @@ func TestAccSonarqubeQualityProfileProjectAssociationBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "language", "js"),
 				),
 			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "quality_profile", "testAccSonarqubeProfileProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProfileProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "language", "js"),
+				),
+			},
 		},
 	})
 }
