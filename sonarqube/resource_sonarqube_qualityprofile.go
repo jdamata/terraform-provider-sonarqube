@@ -33,26 +33,26 @@ type GetQualityProfileList struct {
 // GetQualityProfile for unmarshalling response body of quality gate get
 type GetQualityProfile struct {
 	Key                       string                   `json:"key"`
-	Name                      string                   `json"name"`
-	Language                  string                   `json"language"`
-	LanguageName              string                   `json"languageName"`
-	IsInherited               bool                     `json"isInherited"`
-	IsBuiltIn                 bool                     `json"isBuiltIn"`
-	ActiveRuleCount           int                      `json"activeRuleCount"`
-	ActiveDeprecatedRuleCount int                      `json"activeDeprecatedRuleCount"`
-	IsDefault                 bool                     `json"isDefault"`
-	RuleUpdatedAt             string                   `json"ruleUpdatedAt"`
-	LastUsed                  string                   `json"lastUsed"`
-	Actions                   GetQualityProfileActions `json"actions"`
+	Name                      string                   `json:"name"`
+	Language                  string                   `json:"language"`
+	LanguageName              string                   `json:"languageName"`
+	IsInherited               bool                     `json:"isInherited"`
+	IsBuiltIn                 bool                     `json:"isBuiltIn"`
+	ActiveRuleCount           int                      `json:"activeRuleCount"`
+	ActiveDeprecatedRuleCount int                      `json:"activeDeprecatedRuleCount"`
+	IsDefault                 bool                     `json:"isDefault"`
+	RuleUpdatedAt             string                   `json:"ruleUpdatedAt"`
+	LastUsed                  string                   `json:"lastUsed"`
+	Actions                   GetQualityProfileActions `json:"actions"`
 }
 
 // GetQualityProfileActions for unmarshalling response body of quality gate get
 type GetQualityProfileActions struct {
-	Edit              bool `json"edit"`
-	SetAsDefault      bool `json"setAsDefault"`
-	Copy              bool `json"copy"`
-	Delete            bool `json"delete"`
-	AssociateProjects bool `json"associateProjects"`
+	Edit              bool `json:"edit"`
+	SetAsDefault      bool `json:"setAsDefault"`
+	Copy              bool `json:"copy"`
+	Delete            bool `json:"delete"`
+	AssociateProjects bool `json:"associateProjects"`
 }
 
 // Returns the resource represented by this file.
@@ -61,6 +61,9 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 		Create: resourceSonarqubeQualityProfileCreate,
 		Read:   resourceSonarqubeQualityProfileRead,
 		Delete: resourceSonarqubeQualityProfileDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeQualityProfileImport,
+		},
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -84,7 +87,7 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Description: "Quality profile language",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if isValidLanguage(v) {
+					if !isValidLanguage(v) {
 						errs = append(errs, fmt.Errorf("%q must be a supported language, got: %v", key, v))
 					}
 					return
@@ -184,8 +187,15 @@ func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}
 
 }
 
-func isValidLanguage(category string) bool {
-	switch category {
+func resourceSonarqubeQualityProfileImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeQualityProfileRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
+func isValidLanguage(language string) bool {
+	switch language {
 	case
 		"cs",
 		"css",
