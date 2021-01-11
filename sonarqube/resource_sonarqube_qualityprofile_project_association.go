@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // GetQualityProfileProjectAssociation for unmarshalling response body from getting quality profile association
@@ -41,39 +42,30 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Quality profile name",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					l := len(val.(string))
-					if l > 100 {
-						errs = append(errs, fmt.Errorf("%q must not be longer than 100 characters", key))
-					}
-					return
-				},
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringLenBetween(0, 100),
+				),
 			},
 			"project": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "Project name",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					l := len(val.(string))
-					if l > 100 {
-						errs = append(errs, fmt.Errorf("%q must not be longer than 100 characters", key))
-					}
-					return
-				},
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringLenBetween(0, 100),
+				),
 			},
 			"language": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "Quality profile language",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if !isValidLanguage(v) {
-						errs = append(errs, fmt.Errorf("%q must be a supported language, got: %v", key, v))
-					}
-					return
-				},
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringInSlice(
+						[]string{"cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "ts", "vbnet", "web", "xml"},
+						false,
+					),
+				),
 			},
 		},
 	}
