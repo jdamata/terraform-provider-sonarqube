@@ -20,6 +20,7 @@ The following attributes are exported:
 
 - name - Name of the Sonarqube Quality Profile
 - id   - ID of the Sonarqube Quality Profile
+- key  - ID of the Sonarqube Quality Profile
 
 ## Import 
 Quality Profiles can be imported using their ID
