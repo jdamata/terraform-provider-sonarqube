@@ -24,3 +24,10 @@ The following arguments are supported:
 
 - gatename - (Required) The name of the Quality Gate
 - projectkey - (Required) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.
+
+## Import 
+Quality Gates Project Associations can be imported using a combination of quality gate name and project key
+
+```terraform
+terraform import sonarqube_qualityprofile.main my_qualitygate/my_project
+```

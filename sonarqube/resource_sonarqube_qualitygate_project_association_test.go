@@ -52,6 +52,15 @@ func TestAccSonarqubeQualitygateProjectAssociationBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
 				),
 			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+				),
+			},
 		},
 	})
 }

@@ -29,6 +29,9 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 		Create: resourceSonarqubeQualityGateProjectAssociationCreate,
 		Read:   resourceSonarqubeQualityGateProjectAssociationRead,
 		Delete: resourceSonarqubeQualityGateProjectAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeQualityGateProjectAssociationImport,
+		},
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -72,10 +75,11 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 }
 
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
+	idSlice := strings.Split(d.Id(), "/")
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/show"
+	sonarQubeURL.Path = "api/qualitygates/search"
 	sonarQubeURL.RawQuery = url.Values{
-		"name": []string{d.Get("gatename").(string)},
+		"gateName": []string{idSlice[0]},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -96,10 +100,6 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct: %+v", err)
 	}
-
-	// ID is in format <gateid>/<projectkey>. This splits the id into gateid and projectkey
-	// EG: "1/my_project" >> ["1", "my_project"]
-	idSlice := strings.Split(d.Id(), "/")
 
 	for _, value := range qualityGateAssociationReadResponse.Results {
 		if idSlice[1] == value.Key {
@@ -132,4 +132,11 @@ func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func resourceSonarqubeQualityGateProjectAssociationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeQualityProfileRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
