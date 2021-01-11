@@ -32,5 +32,5 @@ The following arguments are supported:
 Quality Profiles Project Associations can be imported using a combination of quality profile name and project name
 
 ```terraform
-terraform import sonarqube_qualityprofile.main my_quality_profile/SonarQube
+terraform import sonarqube_qualityprofile_project_association.main my_quality_profile/SonarQube
 ```
