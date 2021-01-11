@@ -41,6 +41,15 @@ func resourceSonarqubeRules() *schema.Resource {
 				Description: "Rule severity",
 				Default:     false,
 			},
+			"status": {
+				Type:        schema.TypeString,
+				Description: "Rule status",
+				Default:     "READY",
+			},
+			"type": {
+				Type:        schema.TypeString,
+				Description: "Rule type",
+			},
 		},
 	}
 }
