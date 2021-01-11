@@ -24,8 +24,9 @@ steps:
     - unzip terraform_$${TF_VERSION}_linux_amd64.zip
     - mv terraform /usr/bin/terraform
     - sleep 30
-    - make testacc
+    - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
   environment:
+    TF_ACC: 1
     TF_VERSION: 0.14.3
     GO111MODULE: on
     SONAR_HOST: http://sonarqube:9000

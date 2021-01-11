@@ -80,6 +80,11 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 					return
 				},
 			},
+			"key": {
+				Type:        schema.TypeString,
+				Description: "Quality profile key",
+				Computed:    true,
+			},
 			"language": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -156,6 +161,7 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 			d.SetId(value.Key)
 			d.Set("name", value.Name)
 			d.Set("language", value.Language)
+			d.Set("key", value.Key)
 		}
 	}
 

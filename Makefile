@@ -17,18 +17,9 @@ fmt:
 vet:
 	go vet ./...
 
-# Run sonarqube locally via docker -> docker run -d -p 9000:9000 sonarqube:latest
-# Export these for local testing   -> export SONAR_HOST=http://localhost:9000 SONAR_USER=admin SONAR_PASS=admin
 testacc:
-	TF_ACC=1 go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-
-startsonarqube:
-	docker run -d -p 9000:9000 sonarqube:latest
-
-run-example:
-	TF_DEBUG=1
-	terraform init
-	terraform apply --auto-approve
-
-clean-example:
-	rm -rf terraform-provider-sonarqube .terraform terraform.tfstate crash.log terraform.tfstate.backup .terraform.lock.hcl
+	docker run --name sonarqube -d -p 9000:9000 sonarqube:latest
+	sleep 45
+	TF_ACC=1 SONAR_HOST=http://localhost:9000 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	docker stop sonarqube
+	docker rm sonarqube
