@@ -75,7 +75,7 @@ func resourceSonarqubePluginCreate(d *schema.ResourceData, m interface{}) error 
 	defer resp.Body.Close()
 
 	d.SetId(d.Get("key").(string))
-	return nil
+	return resourceSonarqubePluginRead(d, m)
 }
 
 func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
