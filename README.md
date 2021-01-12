@@ -13,23 +13,6 @@ This is a community provider and is not supported by Hashicorp.
 ## Installation
 This provider has been published to the Terraform Registry at https://registry.terraform.io/providers/jdamata/sonarqube. Please visit the registry for documentation and installation instructions.
 
-## Docs
-[Provider configuration](docs/provider.md)
-
-Resources:
-- [sonarqube_group](docs/sonarqube_group.md)
-- [sonarqube_permissions](docs/sonarqube_permissions.md)
-- [sonarqube_permission_template](docs/sonarqube_permission_template.md)
-- [sonarqube_plugin](docs/sonarqube_plugin.md)
-- [sonarqube_project](docs/sonarqube_project.md)
-- [sonarqube_qualitygate](docs/sonarqube_qualitygate.md)
-- [sonarqube_qualitygate_condition](docs/sonarqube_qualitygate_condition.md)
-- [sonarqube_qualitygate_project_association](docs/sonarqube_qualitygate_project_association.md)
-- [sonarqube_qualityprofile](docs/sonarqube_qualityprofile.md)
-- [sonarqube_qualityprofile_project_association](docs/sonarqube_qualityprofile_project_association.md)
-- [sonarqube_user](docs/sonarqube_user.md)
-- [sonarqube_user_token](docs/sonarqube_user_token.md)
-
 ## Developing the Provider
 
 Working on this provider requires the following:
