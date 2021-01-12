@@ -99,7 +99,7 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	}
 
 	d.SetId(projectResponse.Project.Key)
-	return nil
+	return resourceSonarqubeProjectRead(d, m)
 }
 
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {

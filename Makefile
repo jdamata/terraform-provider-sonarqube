@@ -18,8 +18,8 @@ vet:
 	go vet ./...
 
 testacc:
-	docker run --name sonarqube -d -p 9000:9000 sonarqube:latest
+	docker run --name sonarqube1 -d -p 9001:9000 sonarqube:latest
 	sleep 45
-	TF_ACC=1 SONAR_HOST=http://localhost:9000 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-	docker stop sonarqube
-	docker rm sonarqube
+	-TF_ACC=1 SONAR_HOST=http://localhost:9001 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	docker stop sonarqube1
+	docker rm sonarqube1

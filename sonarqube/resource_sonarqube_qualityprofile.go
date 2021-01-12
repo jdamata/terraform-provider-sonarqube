@@ -126,7 +126,7 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 	}
 
 	d.SetId(qualityProfileResponse.Profile.Key)
-	return nil
+	return resourceSonarqubeQualityProfileRead(d, m)
 }
 
 func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) error {

@@ -36,6 +36,7 @@ func Provider() *schema.Provider {
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
+			"sonarqube_custom_rule":                        resourceSonarqubeCustomRule(),
 			"sonarqube_group":                              resourceSonarqubeGroup(),
 			"sonarqube_permission_template":                resourceSonarqubePermissionTemplate(),
 			"sonarqube_permissions":                        resourceSonarqubePermissions(),
@@ -46,7 +47,6 @@ func Provider() *schema.Provider {
 			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
 			"sonarqube_qualitygate_condition":              resourceSonarqubeQualityGateCondition(),
 			"sonarqube_qualitygate_project_association":    resourceSonarqubeQualityGateProjectAssociation(),
-			"sonarqube_rules":                              resourceSonarqubeRules(),
 			"sonarqube_user":                               resourceSonarqubeUser(),
 			"sonarqube_user_token":                         resourceSonarqubeUserToken(),
 		},

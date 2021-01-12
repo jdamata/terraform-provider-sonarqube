@@ -71,7 +71,7 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 
 	id := fmt.Sprintf("%v/%v", d.Get("gatename").(string), d.Get("projectkey").(string))
 	d.SetId(id)
-	return nil
+	return resourceSonarqubeQualityGateProjectAssociationRead(d, m)
 }
 
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {

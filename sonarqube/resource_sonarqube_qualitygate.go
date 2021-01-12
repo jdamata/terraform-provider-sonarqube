@@ -91,7 +91,7 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	d.SetId(qualityGateResponse.Name)
-	return nil
+	return resourceSonarqubeQualityGateRead(d, m)
 }
 
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {

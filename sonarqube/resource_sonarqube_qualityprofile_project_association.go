@@ -94,7 +94,7 @@ func resourceSonarqubeQualityProfileProjectAssociationCreate(d *schema.ResourceD
 
 	id := fmt.Sprintf("%v/%v", d.Get("quality_profile").(string), d.Get("project").(string))
 	d.SetId(id)
-	return nil
+	return resourceSonarqubeQualityProfileProjectAssociationRead(d, m)
 }
 
 func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceData, m interface{}) error {

@@ -70,7 +70,7 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	}
 
 	d.SetId(qualityGateConditionResponse.ID)
-	return nil
+	return resourceSonarqubeQualityGateConditionRead(d, m)
 }
 
 func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
