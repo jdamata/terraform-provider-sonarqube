@@ -9,6 +9,10 @@ platform:
 trigger:
   event:
     - pull_request
+    - push
+  branch:
+    exclude:
+      - master
 
 steps:
 - name: build and vet the provider
@@ -49,6 +53,13 @@ name: master
 platform:
   os: linux
   arch: amd64
+
+trigger:
+  event:
+    - pull_request
+    - push
+  branch:
+    - master
 
 steps:
 - name: build and vet the provider
@@ -94,10 +105,3 @@ services:
 - name: sonarqube
   pull: default
   image: sonarqube:latest
-
-trigger:
-  event:
-    - pull_request
-    - push
-  branch:
-    - master
