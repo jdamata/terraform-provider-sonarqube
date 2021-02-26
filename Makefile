@@ -1,6 +1,7 @@
 export GO111MODULE=on
 export TF_LOG=DEBUG
 SRC=$(shell find . -name '*.go')
+SONARQUBE_IMAGE?=sonarqube:latest
 
 .PHONY: all vet build test
 
@@ -18,7 +19,7 @@ vet:
 	go vet ./...
 
 testacc:
-	docker run --name sonarqube1 -d -p 9001:9000 sonarqube:latest
+	docker run --name sonarqube1 -d -p 9001:9000 ${SONARQUBE_IMAGE}
 	sleep 45
 	-TF_ACC=1 SONAR_HOST=http://localhost:9001 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 	docker stop sonarqube1
