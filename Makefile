@@ -20,7 +20,7 @@ vet:
 
 testacc:
 	docker run --name sonarqube1 -d -p 9001:9000 ${SONARQUBE_IMAGE}
-	sleep 45
+	sleep 60
 	-TF_ACC=1 SONAR_HOST=http://localhost:9001 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 	docker stop sonarqube1
 	docker rm sonarqube1
