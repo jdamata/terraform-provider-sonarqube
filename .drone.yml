@@ -104,7 +104,6 @@ platform:
 
 trigger:
   event:
-    - pull_request
     - push
   branch:
     - master
