@@ -19,7 +19,7 @@ func testSweepSonarqubeQualitygateProjectAssociationSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualitygateProjectAssociationBasicConfig(rnd string, name string) string {
+func testAccSonarqubeQualitygateProjectAssociationGateName(rnd string, name string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
@@ -28,7 +28,7 @@ func testAccSonarqubeQualitygateProjectAssociationBasicConfig(rnd string, name s
 		resource "sonarqube_project" "%[1]s" {
 			name       = "%[2]s"
 			project    = "%[2]s"
-			visibility = "public" 
+			visibility = "public"
 		}
 
 		resource "sonarqube_qualitygate_project_association" "%[1]s" {
@@ -37,7 +37,7 @@ func testAccSonarqubeQualitygateProjectAssociationBasicConfig(rnd string, name s
 		}`, rnd, name)
 }
 
-func TestAccSonarqubeQualitygateProjectAssociationBasic(t *testing.T) {
+func TestAccSonarqubeQualitygateProjectAssociationGateName(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate_project_association." + rnd
 
@@ -46,19 +46,73 @@ func TestAccSonarqubeQualitygateProjectAssociationBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateProjectAssociationBasicConfig(rnd, "testAccSonarqubeProjectAssociation"),
+				// If sonarqube version is < 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_8(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateProjectAssociationGateName(rnd, "testAccSonarqubeProjectAssociationGateName"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociation"),
-					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociationGateName"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateName"),
+				),
+			},
+			{
+				// If sonarqube version is < 8.0, skip this check
+				SkipFunc:          skipFuncSonarVersion_8(testAccProvider.Meta()),
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociationGateName"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateName"),
+				),
+			},
+		},
+	})
+}
+
+func testAccSonarqubeQualitygateProjectAssociationGateID(rnd string, name string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_qualitygate" "%[1]s" {
+			name = "%[2]s"
+		}
+
+		resource "sonarqube_project" "%[1]s" {
+			name       = "%[2]s"
+			project    = "%[2]s"
+			visibility = "public"
+		}
+
+		resource "sonarqube_qualitygate_project_association" "%[1]s" {
+			gateid     = sonarqube_qualitygate.%[1]s.id
+			projectkey = sonarqube_project.%[1]s.project
+		}`, rnd, name)
+}
+
+func TestAccSonarqubeQualitygateProjectAssociationGateID(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_qualitygate_project_association." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// If sonarqube version is > 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_7(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateProjectAssociationGateID(rnd, "testAccSonarqubeProjectAssociationGateID"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(name, "gateid"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateID"),
 				),
 			},
 			{
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// If sonarqube version is > 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_7(testAccProvider.Meta()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociation"),
-					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttrSet(name, "gateid"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateID"),
 				),
 			},
 		},

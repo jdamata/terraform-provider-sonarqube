@@ -5,9 +5,29 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// CreateQualityGateConditionResponse for unmarshalling response body of condition creation
+type CreateQualityGateConditionResponse struct {
+	ID      string `json:"id"`
+	Metric  string `json:"metric"`
+	OP      string `json:"op"`
+	Error   string `json:"error"`
+	Warning string `json:"warning"`
+}
+
+// CreateQualityGateConditionResponse for unmarshalling response body of condition creation
+type CreateQualityGateConditionResponse_v7 struct {
+	ID      int    `json:"id"`
+	Metric  string `json:"metric"`
+	OP      string `json:"op"`
+	Error   string `json:"error"`
+	Warning string `json:"warning"`
+}
 
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityGateCondition() *schema.Resource {
@@ -21,7 +41,12 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"gatename": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				ForceNew: true,
+			},
+			"gateid": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"threshold": {
@@ -43,12 +68,24 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/create_condition"
-	sonarQubeURL.RawQuery = url.Values{
-		"gateName": []string{d.Get("gatename").(string)},
-		"error":    []string{d.Get("threshold").(string)},
-		"metric":   []string{d.Get("metric").(string)},
-		"op":       []string{d.Get("op").(string)},
-	}.Encode()
+	sonarQubeVersion := m.(*ProviderConfiguration).sonarQubeVersion
+
+	// Sonarqube versions less than 8.0 require gateid instead of gatename
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
+		sonarQubeURL.RawQuery = url.Values{
+			"gateId": []string{d.Get("gateid").(string)},
+			"error":  []string{d.Get("threshold").(string)},
+			"metric": []string{d.Get("metric").(string)},
+			"op":     []string{d.Get("op").(string)},
+		}.Encode()
+	} else {
+		sonarQubeURL.RawQuery = url.Values{
+			"gateName": []string{d.Get("gatename").(string)},
+			"error":    []string{d.Get("threshold").(string)},
+			"metric":   []string{d.Get("metric").(string)},
+			"op":       []string{d.Get("op").(string)},
+		}.Encode()
+	}
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -62,23 +99,43 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 	}
 	defer resp.Body.Close()
 
-	// Decode response into struct
-	qualityGateConditionResponse := CreateQualityGateConditionResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
-	if err != nil {
-		return fmt.Errorf("getQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
+	// Sonarqube versions less than 8.0 require gateid instead of gatename
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
+		// Decode response into struct
+		qualityGateConditionResponse := CreateQualityGateConditionResponse_v7{}
+		err = json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
+		if err != nil {
+			return fmt.Errorf("createQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
+		}
+		d.SetId(strconv.Itoa(qualityGateConditionResponse.ID))
+	} else {
+		// Decode response into struct
+		qualityGateConditionResponse := CreateQualityGateConditionResponse{}
+		err = json.NewDecoder(resp.Body).Decode(&qualityGateConditionResponse)
+		if err != nil {
+			return fmt.Errorf("createQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
+		}
+		d.SetId(qualityGateConditionResponse.ID)
 	}
 
-	d.SetId(qualityGateConditionResponse.ID)
 	return resourceSonarqubeQualityGateConditionRead(d, m)
 }
 
 func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/show"
-	sonarQubeURL.RawQuery = url.Values{
-		"name": []string{d.Get("gatename").(string)},
-	}.Encode()
+	sonarQubeVersion := m.(*ProviderConfiguration).sonarQubeVersion
+
+	// Sonarqube versions less than 8.0 require gateid instead of gatename
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
+		sonarQubeURL.RawQuery = url.Values{
+			"id": []string{d.Get("gateid").(string)},
+		}.Encode()
+	} else {
+		sonarQubeURL.RawQuery = url.Values{
+			"name": []string{d.Get("gatename").(string)},
+		}.Encode()
+	}
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -92,20 +149,38 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 	}
 	defer resp.Body.Close()
 
-	// Decode response into struct
-	getQualityGateConditionResponse := GetQualityGate{}
-	err = json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
-	if err != nil {
-		return fmt.Errorf("getQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
-	}
-
-	for _, value := range getQualityGateConditionResponse.Conditions {
-		if d.Id() == value.ID {
-			d.SetId(value.ID)
-			d.Set("gatename", getQualityGateConditionResponse.Name)
-			d.Set("threshold", value.Error)
-			d.Set("metric", value.Metric)
-			d.Set("op", value.OP)
+	// Sonarqube versions less than 8.0 require gateid instead of gatename
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
+		// Decode response into struct
+		getQualityGateConditionResponse := GetQualityGate_v7{}
+		err = json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
+		if err != nil {
+			return fmt.Errorf("getQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
+		}
+		for _, value := range getQualityGateConditionResponse.Conditions {
+			if d.Id() == strconv.Itoa(value.ID) {
+				d.SetId(strconv.Itoa(value.ID))
+				d.Set("gateid", strconv.Itoa(getQualityGateConditionResponse.ID))
+				d.Set("threshold", value.Error)
+				d.Set("metric", value.Metric)
+				d.Set("op", value.OP)
+			}
+		}
+	} else {
+		// Decode response into struct
+		getQualityGateConditionResponse := GetQualityGate{}
+		err = json.NewDecoder(resp.Body).Decode(&getQualityGateConditionResponse)
+		if err != nil {
+			return fmt.Errorf("getQualityGateConditionResponse: Failed to decode json into struct: %+v", err)
+		}
+		for _, value := range getQualityGateConditionResponse.Conditions {
+			if d.Id() == value.ID {
+				d.SetId(value.ID)
+				d.Set("gatename", getQualityGateConditionResponse.Name)
+				d.Set("threshold", value.Error)
+				d.Set("metric", value.Metric)
+				d.Set("op", value.OP)
+			}
 		}
 	}
 
