@@ -46,13 +46,17 @@ func TestAccSonarqubeQualitygateProjectAssociationGateName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateProjectAssociationGateName(rnd, "testAccSonarqubeProjectAssociationGateName"),
+				// If sonarqube version is < 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_8(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateProjectAssociationGateName(rnd, "testAccSonarqubeProjectAssociationGateName"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociationGateName"),
 					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateName"),
 				),
 			},
 			{
+				// If sonarqube version is < 8.0, skip this check
+				SkipFunc:          skipFuncSonarVersion_8(testAccProvider.Meta()),
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -65,7 +69,7 @@ func TestAccSonarqubeQualitygateProjectAssociationGateName(t *testing.T) {
 	})
 }
 
-/*func testAccSonarqubeQualitygateProjectAssociationGateID(rnd string, name string) string {
+func testAccSonarqubeQualitygateProjectAssociationGateID(rnd string, name string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
@@ -92,7 +96,9 @@ func TestAccSonarqubeQualitygateProjectAssociationGateID(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateProjectAssociationGateID(rnd, "testAccSonarqubeProjectAssociationGateID"),
+				// If sonarqube version is > 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_7(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateProjectAssociationGateID(rnd, "testAccSonarqubeProjectAssociationGateID"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(name, "gateid"),
 					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateID"),
@@ -102,8 +108,8 @@ func TestAccSonarqubeQualitygateProjectAssociationGateID(t *testing.T) {
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// If sonarqube version is > 8.0, this test case will fail because of a missing gateid
-				ExpectError: regexp.MustCompile("Error: API returned an error: No quality gate has been found for name"),
+				// If sonarqube version is > 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_7(testAccProvider.Meta()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(name, "gateid"),
 					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateID"),
@@ -111,4 +117,4 @@ func TestAccSonarqubeQualitygateProjectAssociationGateID(t *testing.T) {
 			},
 		},
 	})
-}*/
+}

@@ -2,7 +2,6 @@ package sonarqube
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -44,7 +43,9 @@ func TestAccSonarqubeQualitygateConditionGateName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateConditionGateName(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "10", "GT"),
+				// If sonarqube version is < 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_8(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateConditionGateName(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "10", "GT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "metric", "vulnerabilities"),
 					resource.TestCheckResourceAttr(name, "threshold", "10"),
@@ -52,7 +53,9 @@ func TestAccSonarqubeQualitygateConditionGateName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSonarqubeQualitygateConditionGateName(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "11", "GT"),
+				// If sonarqube version is < 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_8(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateConditionGateName(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "11", "GT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "metric", "vulnerabilities"),
 					resource.TestCheckResourceAttr(name, "threshold", "11"),
@@ -87,9 +90,9 @@ func TestAccSonarqubeQualitygateConditionGateID(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				// If sonarqube version is <8.0, this test case will fail because of a missing gatenmame
-				ExpectError: regexp.MustCompile("Error: API returned an error: No quality gate has been found for name"),
-				Config:      testAccSonarqubeQualitygateConditionGateID(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "10", "GT"),
+				// If sonarqube version is > 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_7(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateConditionGateID(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "10", "GT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "metric", "vulnerabilities"),
 					resource.TestCheckResourceAttr(name, "threshold", "10"),
@@ -97,9 +100,9 @@ func TestAccSonarqubeQualitygateConditionGateID(t *testing.T) {
 				),
 			},
 			{
-				// If sonarqube version is <8.0, this test case will fail because of a missing gatenmame
-				ExpectError: regexp.MustCompile("Error: API returned an error: No quality gate has been found for name"),
-				Config:      testAccSonarqubeQualitygateConditionGateID(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "11", "GT"),
+				// If sonarqube version is > 8.0, skip this check
+				SkipFunc: skipFuncSonarVersion_7(testAccProvider.Meta()),
+				Config:   testAccSonarqubeQualitygateConditionGateID(rnd, "testAccSonarqubeQualitygateCondition", "vulnerabilities", "11", "GT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "metric", "vulnerabilities"),
 					resource.TestCheckResourceAttr(name, "threshold", "11"),

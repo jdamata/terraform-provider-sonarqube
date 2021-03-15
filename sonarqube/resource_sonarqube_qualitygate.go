@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +18,15 @@ type GetQualityGate struct {
 	Conditions []CreateQualityGateConditionResponse `json:"conditions"`
 	IsBuiltIn  bool                                 `json:"isBuiltIn"`
 	Actions    QualityGateActions                   `json:"actions"`
+}
+
+// GetQualityGate for unmarshalling response body of quality gate get for sonarqube versions less than 8
+type GetQualityGate_v7 struct {
+	ID         int                                     `json:"id"`
+	Name       string                                  `json:"name"`
+	Conditions []CreateQualityGateConditionResponse_v7 `json:"conditions"`
+	IsBuiltIn  bool                                    `json:"isBuiltIn"`
+	Actions    QualityGateActions                      `json:"actions"`
 }
 
 // QualityGateActions used in GetQualityGate
@@ -32,6 +42,12 @@ type QualityGateActions struct {
 // CreateQualityGateResponse for unmarshalling response body of quality gate creation
 type CreateQualityGateResponse struct {
 	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// CreateQualityGateResponse for unmarshalling response body of quality gate creation for sonarqube versions less than 8
+type CreateQualityGateResponse_v7 struct {
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -76,16 +92,21 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 	}
 	defer resp.Body.Close()
 
-	// Decode response into struct
-	qualityGateResponse := CreateQualityGateResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
-	if err != nil {
-		return fmt.Errorf("resourceQualityGateCreate: Failed to decode json into struct: %+v", err)
-	}
-
 	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
-		d.SetId(qualityGateResponse.Name)
+		// Decode response into struct
+		qualityGateResponse := CreateQualityGateResponse_v7{}
+		err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
+		if err != nil {
+			return fmt.Errorf("resourceQualityGateCreate: Failed to decode json into struct: %+v", err)
+		}
+		d.SetId(strconv.Itoa(qualityGateResponse.ID))
 	} else {
+		// Decode response into struct
+		qualityGateResponse := CreateQualityGateResponse{}
+		err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
+		if err != nil {
+			return fmt.Errorf("resourceQualityGateCreate: Failed to decode json into struct: %+v", err)
+		}
 		d.SetId(qualityGateResponse.Name)
 	}
 
@@ -120,17 +141,22 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	}
 	defer resp.Body.Close()
 
-	// Decode response into struct
-	qualityGateReadResponse := GetQualityGate{}
-	err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
-	if err != nil {
-		return fmt.Errorf("resourceQualityGateRead: Failed to decode json into struct: %+v", err)
-	}
-
 	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
-		d.SetId(qualityGateReadResponse.Name)
+		// Decode response into struct
+		qualityGateReadResponse := GetQualityGate_v7{}
+		err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
+		if err != nil {
+			return fmt.Errorf("resourceQualityGateRead: Failed to decode json into struct: %+v", err)
+		}
+		d.SetId(strconv.Itoa(qualityGateReadResponse.ID))
 		d.Set("name", qualityGateReadResponse.Name)
 	} else {
+		// Decode response into struct
+		qualityGateReadResponse := GetQualityGate{}
+		err = json.NewDecoder(resp.Body).Decode(&qualityGateReadResponse)
+		if err != nil {
+			return fmt.Errorf("resourceQualityGateRead: Failed to decode json into struct: %+v", err)
+		}
 		d.SetId(qualityGateReadResponse.Name)
 		d.Set("name", qualityGateReadResponse.Name)
 	}

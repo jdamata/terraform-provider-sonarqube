@@ -17,9 +17,20 @@ type GetGroup struct {
 	Groups []Group `json:"groups"`
 }
 
+// GetGroup for unmarshalling response body from getting group details for sonarqube versions less than 8
+type GetGroup_v7 struct {
+	Paging Paging     `json:"paging"`
+	Groups []Group_v7 `json:"groups"`
+}
+
 // CreateGroupResponse for unmarshalling response body of group creation
 type CreateGroupResponse struct {
 	Group Group `json:"group"`
+}
+
+// CreateGroupResponse for unmarshalling response body of group creation for sonarqube versions less than 8
+type CreateGroupResponse_v7 struct {
+	Group Group_v7 `json:"group"`
 }
 
 // Group struct
@@ -31,17 +42,6 @@ type Group struct {
 	MembersCount int      `json:"membersCount,omitempty"`
 	IsDefault    bool     `json:"default,omitempty"`
 	Permissions  []string `json:"permissions,omitempty"`
-}
-
-// GetGroup for unmarshalling response body from getting group details for sonarqube versions less than 8
-type GetGroup_v7 struct {
-	Paging Paging     `json:"paging"`
-	Groups []Group_v7 `json:"groups"`
-}
-
-// CreateGroupResponse for unmarshalling response body of group creation for sonarqube versions less than 8
-type CreateGroupResponse_v7 struct {
-	Group Group_v7 `json:"group"`
 }
 
 // Group struct for sonarqube versions less than 8
