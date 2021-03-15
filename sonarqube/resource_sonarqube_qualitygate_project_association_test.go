@@ -2,7 +2,6 @@ package sonarqube
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,7 +19,7 @@ func testSweepSonarqubeQualitygateProjectAssociationSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualitygateProjectAssociationBasicGateName(rnd string, name string) string {
+func testAccSonarqubeQualitygateProjectAssociationGateName(rnd string, name string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
@@ -47,29 +46,26 @@ func TestAccSonarqubeQualitygateProjectAssociationGateName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateProjectAssociationBasicGateName(rnd, "testAccSonarqubeProjectAssociation"),
+				Config: testAccSonarqubeQualitygateProjectAssociationGateName(rnd, "testAccSonarqubeProjectAssociationGateName"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociation"),
-					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociationGateName"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateName"),
 				),
 			},
 			{
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// If sonarqube version is <8.0, this test case will fail because of a missing gateid
-				ExpectError: regexp.MustCompile("Error: API returned an error: The 'gateId' parameter is missing"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociation"),
-					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "gatename", "testAccSonarqubeProjectAssociationGateName"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateName"),
 				),
 			},
 		},
 	})
 }
 
-// Test for sonarqube version 7.9
-func testAccSonarqubeQualitygateProjectAssociationBasicGateID(rnd string, name string) string {
+/*func testAccSonarqubeQualitygateProjectAssociationGateID(rnd string, name string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
@@ -78,7 +74,7 @@ func testAccSonarqubeQualitygateProjectAssociationBasicGateID(rnd string, name s
 		resource "sonarqube_project" "%[1]s" {
 			name       = "%[2]s"
 			project    = "%[2]s"
-			visibility = "public" 
+			visibility = "public"
 		}
 
 		resource "sonarqube_qualitygate_project_association" "%[1]s" {
@@ -96,21 +92,23 @@ func TestAccSonarqubeQualitygateProjectAssociationGateID(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateProjectAssociationBasicGateID(rnd, "testAccSonarqubeProjectAssociation"),
+				Config: testAccSonarqubeQualitygateProjectAssociationGateID(rnd, "testAccSonarqubeProjectAssociationGateID"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(name, "gateid"),
-					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateID"),
 				),
 			},
 			{
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// If sonarqube version is > 8.0, this test case will fail because of a missing gateid
+				ExpectError: regexp.MustCompile("Error: API returned an error: No quality gate has been found for name"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(name, "gateid"),
-					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociation"),
+					resource.TestCheckResourceAttr(name, "projectkey", "testAccSonarqubeProjectAssociationGateID"),
 				),
 			},
 		},
 	})
-}
+}*/

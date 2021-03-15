@@ -58,10 +58,10 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/select"
-	sonarVersion := m.(*ProviderConfiguration).sonarVersion
+	sonarQubeVersion := m.(*ProviderConfiguration).sonarQubeVersion
 
 	// Sonarqube versions less than 8.0 require gateid instead of gatename
-	if version, _ := version.NewVersion("8.0"); sonarVersion.LessThanOrEqual(version) {
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
 		sonarQubeURL.RawQuery = url.Values{
 			"gateId":     []string{d.Get("gateid").(string)},
 			"projectKey": []string{d.Get("projectkey").(string)},
@@ -85,7 +85,7 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 	}
 	defer resp.Body.Close()
 
-	if version, _ := version.NewVersion("8.0"); sonarVersion.LessThanOrEqual(version) {
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
 		id := fmt.Sprintf("%v/%v", d.Get("gateid").(string), d.Get("projectkey").(string))
 		d.SetId(id)
 	} else {
@@ -100,10 +100,10 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 	idSlice := strings.Split(d.Id(), "/")
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/search"
-	sonarVersion := m.(*ProviderConfiguration).sonarVersion
+	sonarQubeVersion := m.(*ProviderConfiguration).sonarQubeVersion
 
 	// Sonarqube versions less than 8.0 require gateid instead of gatename
-	if version, _ := version.NewVersion("8.0"); sonarVersion.LessThanOrEqual(version) {
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
 		sonarQubeURL.RawQuery = url.Values{
 			"gateId": []string{idSlice[0]},
 		}.Encode()
@@ -133,7 +133,7 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 	}
 
 	// Sonarqube versions less than 8.0 require gateid instead of gatename
-	if version, _ := version.NewVersion("8.0"); sonarVersion.LessThanOrEqual(version) {
+	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
 		for _, value := range qualityGateAssociationReadResponse.Results {
 			if idSlice[1] == value.Key {
 				d.Set("gateid", idSlice[0])
@@ -155,19 +155,10 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualitygates/deselect"
-	sonarVersion := m.(*ProviderConfiguration).sonarVersion
-
-	// Sonarqube versions less than 8.0 require gateid instead of gatename
-	if version, _ := version.NewVersion("8.0"); sonarVersion.LessThanOrEqual(version) {
-		sonarQubeURL.RawQuery = url.Values{
-			"projectKey": []string{d.Get("projectkey").(string)},
-		}.Encode()
-	} else {
-		sonarQubeURL.RawQuery = url.Values{
-			"gateName":   []string{d.Get("gatename").(string)},
-			"projectKey": []string{d.Get("projectkey").(string)},
-		}.Encode()
-	}
+	sonarQubeURL.RawQuery = url.Values{
+		"gateName":   []string{d.Get("gatename").(string)},
+		"projectKey": []string{d.Get("projectkey").(string)},
+	}.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,

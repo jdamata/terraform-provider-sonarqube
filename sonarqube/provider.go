@@ -56,9 +56,9 @@ func Provider() *schema.Provider {
 
 //ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
-	httpClient   *retryablehttp.Client
-	sonarQubeURL url.URL
-	sonarVersion version.Version
+	httpClient       *retryablehttp.Client
+	sonarQubeURL     url.URL
+	sonarQubeVersion version.Version
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
@@ -83,9 +83,9 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	return &ProviderConfiguration{
-		httpClient:   client,
-		sonarQubeURL: sonarQubeURL,
-		sonarVersion: installedVersion,
+		httpClient:       client,
+		sonarQubeURL:     sonarQubeURL,
+		sonarQubeVersion: installedVersion,
 	}, nil
 }
 
