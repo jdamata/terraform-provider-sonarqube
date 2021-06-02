@@ -9,10 +9,8 @@ platform:
 trigger:
   event:
     - pull_request
-    - push
   branch:
-    exclude:
-      - master
+    - master
 
 steps:
 - name: build and vet the provider
@@ -57,10 +55,8 @@ platform:
 trigger:
   event:
     - pull_request
-    - push
   branch:
-    exclude:
-      - master
+    - master
 
 steps:
 - name: build and vet the provider
