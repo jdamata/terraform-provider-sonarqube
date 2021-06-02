@@ -33,6 +33,10 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_HOST", "SONARQUBE_HOST"}, nil),
 				Required:    true,
 			},
+			"installed_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
@@ -59,7 +63,7 @@ func Provider() *schema.Provider {
 type ProviderConfiguration struct {
 	httpClient       *retryablehttp.Client
 	sonarQubeURL     url.URL
-	sonarQubeVersion version.Version
+	sonarQubeVersion *version.Version
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
@@ -77,56 +81,64 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		ForceQuery: true,
 	}
 
-	// Check that the sonarqube api is available and a supported version
-	installedVersion, err := sonarqubeHealth(client, sonarQubeURL)
-	if err != nil {
-		return nil, err
+	var installedVersion *version.Version
+	if v, ok := d.GetOk("installed_version"); ok {
+		installedVersion, err = version.NewVersion(v.(string))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Check that the sonarqube api is available, get version
+		installedVersion, err = sonarqubeHealth(client, sonarQubeURL)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return &ProviderConfiguration{
+	minimumVersion, _ := version.NewVersion("7.9")
+	if installedVersion.LessThan(minimumVersion) {
+		return nil, fmt.Errorf("Unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
+	}
+
+	config := &ProviderConfiguration{
 		httpClient:       client,
 		sonarQubeURL:     sonarQubeURL,
 		sonarQubeVersion: installedVersion,
-	}, nil
+	}
+	return config, nil
 }
 
-func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) (version.Version, error) {
-	minimumVersion, _ := version.NewVersion("7.9")
-
+func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) (*version.Version, error) {
 	// Make request to sonarqube version endpoint
 	sonarqube.Path = "api/server/version"
 	req, err := retryablehttp.NewRequest("GET", sonarqube.String(), http.NoBody)
 	if err != nil {
-		return version.Version{}, fmt.Errorf("Unable to construct sonarqube version request: %+v", err)
+		return nil, fmt.Errorf("Unable to construct sonarqube version request: %+v", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return version.Version{}, fmt.Errorf("Unable to reach sonarqube: %+v", err)
+		return nil, fmt.Errorf("Unable to reach sonarqube: %+v", err)
 	}
 	defer resp.Body.Close()
 
 	// Check response code
 	if resp.StatusCode != http.StatusOK {
-		return version.Version{}, fmt.Errorf("Sonarqube version api did not return a 200: %+v", err)
+		return nil, fmt.Errorf("Sonarqube version api did not return a 200: %+v", err)
 	}
 
 	// Read in the response
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return version.Version{}, fmt.Errorf("Failed to parse response body on GET sonarqube version api: %+v", err)
+		return nil, fmt.Errorf("Failed to parse response body on GET sonarqube version api: %+v", err)
 	}
 
 	// Convert response to a int.
 	bodyString := string(bodyBytes)
 	installedVersion, err := version.NewVersion(bodyString)
 	if err != nil {
-		return version.Version{}, fmt.Errorf("Failed to convert sonarqube version to a version: %+v", err)
+		return nil, fmt.Errorf("Failed to convert sonarqube version to a version: %+v", err)
 	}
 
-	if installedVersion.LessThan(minimumVersion) {
-		return version.Version{}, fmt.Errorf("Unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
-	}
-
-	return *installedVersion, nil
+	return installedVersion, nil
 }
