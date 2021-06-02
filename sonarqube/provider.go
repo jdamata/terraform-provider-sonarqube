@@ -100,12 +100,11 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("Unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
 	}
 
-	config := &ProviderConfiguration{
+	return &ProviderConfiguration{
 		httpClient:       client,
 		sonarQubeURL:     sonarQubeURL,
 		sonarQubeVersion: installedVersion,
-	}
-	return config, nil
+	}, nil
 }
 
 func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) (*version.Version, error) {
