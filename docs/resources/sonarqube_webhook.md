@@ -1,4 +1,4 @@
-# sonarqube_user
+# sonarqube_webhook
 
 Provides a Sonarqube Webhook resource. This can be used to manage Sonarqube webhooks.
 
