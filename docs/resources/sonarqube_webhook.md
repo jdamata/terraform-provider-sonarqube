@@ -17,7 +17,7 @@ The following arguments are supported:
 
 - name - (Required) The name of the webhook to create. This will be displayed in the Sonarqube administration console.
 - url - (Required) The URL to send event payloads to. This must begin with either `https://` or `http://`.
-- secret 0 (Optional) The secret to send with the event payload.
+- secret - (Optional) The secret to send with the event payload.
 
 
 ## Attributes Reference
