@@ -9,9 +9,7 @@ platform:
 trigger:
   event:
     - pull_request
-  branch:
-    - master
-
+    
 steps:
 - name: build and vet the provider
   pull: always
@@ -55,9 +53,7 @@ platform:
 trigger:
   event:
     - pull_request
-  branch:
-    - master
-
+    
 steps:
 - name: build and vet the provider
   pull: always
@@ -99,8 +95,6 @@ platform:
   arch: amd64
 
 trigger:
-  event:
-    - push
   branch:
     - master
 
