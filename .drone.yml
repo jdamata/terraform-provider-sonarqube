@@ -6,12 +6,6 @@ platform:
   os: linux
   arch: amd64
 
-trigger:
-  event:
-    - pull_request
-  branch:
-    - master
-
 steps:
 - name: build and vet the provider
   pull: always
@@ -51,12 +45,6 @@ name: acceptance-tests-7.9
 platform:
   os: linux
   arch: amd64
-
-trigger:
-  event:
-    - pull_request
-  branch:
-    - master
 
 steps:
 - name: build and vet the provider
