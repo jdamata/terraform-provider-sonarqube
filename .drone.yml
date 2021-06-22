@@ -5,7 +5,11 @@ name: acceptance-tests-latest
 platform:
   os: linux
   arch: amd64
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> master
 steps:
 - name: build and vet the provider
   pull: always
@@ -32,6 +36,19 @@ steps:
     SONAR_HOST: http://sonarqube:9000
     SONAR_USER: admin
     SONAR_PASS: admin
+    
+- name: coverage
+  image: plugins/codecov
+  settings:
+    token: 
+      from_secret: codecov_token
+    files:
+     - coverage.txt
+  when:
+    event:
+      - push
+    branch:
+      - master
 
 services:
 - name: sonarqube
@@ -45,7 +62,11 @@ name: acceptance-tests-7.9
 platform:
   os: linux
   arch: amd64
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> master
 steps:
 - name: build and vet the provider
   pull: always
@@ -77,62 +98,3 @@ services:
 - name: sonarqube
   pull: default
   image: sonarqube:7.9-community
-
----
-kind: pipeline
-name: master
-
-platform:
-  os: linux
-  arch: amd64
-
-trigger:
-  event:
-    - push
-  branch:
-    - master
-
-steps:
-- name: build and vet the provider
-  pull: always
-  image: golang:1.15
-  commands:
-    - make
-  environment:
-    GO111MODULE: on
-
-- name: run acceptance tests
-  pull: always
-  image: golang:1.15
-  commands:
-    - apt-get update && apt-get install unzip -y
-    - wget https://releases.hashicorp.com/terraform/$${TF_VERSION}/terraform_$${TF_VERSION}_linux_amd64.zip
-    - unzip terraform_$${TF_VERSION}_linux_amd64.zip
-    - mv terraform /usr/bin/terraform
-    - sleep 30
-    - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-  environment:
-    TF_ACC: 1
-    TF_VERSION: 0.14.3
-    GO111MODULE: on
-    SONAR_HOST: http://sonarqube:9000
-    SONAR_USER: admin
-    SONAR_PASS: admin
-
-- name: coverage
-  image: plugins/codecov
-  settings:
-    token: 
-      from_secret: codecov_token
-    files:
-     - coverage.txt
-  when:
-    event:
-      - push
-    branch:
-      - master
-
-services:
-- name: sonarqube
-  pull: default
-  image: sonarqube:latest
