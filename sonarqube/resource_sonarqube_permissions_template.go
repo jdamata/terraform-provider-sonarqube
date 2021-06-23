@@ -123,7 +123,6 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 	}
 
 	// Loop over all permission templates to see if the template we look for exists.
-	readSuccess := false
 	for _, value := range permissionTemplateReadResponse.PermissionTemplates {
 		log.Printf("[DEBUG][resourceSonarqubePermissionTemplateRead] Comparing '%s' with '%s'", d.Id(), value.ID)
 		if d.Id() == value.ID {
@@ -133,17 +132,12 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 			d.Set("name", value.Name)
 			d.Set("description", value.Description)
 			d.Set("project_key_pattern", value.ProjectKeyPattern)
-			readSuccess = true
+			return nil
 		}
 	}
 
-	if !readSuccess {
-		// Resource not found
-		log.Printf("[DEBUG][resourceSonarqubePermissionTemplateRead] No permission template with ID '%s' found, removing from state", d.Id())
-		d.SetId("")
-	}
+	return fmt.Errorf("resourceSonarqubePermissionTemplateRead: Failed to find template with ID: %+v", d.Id())
 
-	return nil
 }
 
 func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interface{}) error {

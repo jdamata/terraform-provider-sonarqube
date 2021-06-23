@@ -107,10 +107,11 @@ func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 			// If it does, set the values of that project
 			d.SetId(value.Key)
 			d.Set("key", value.Key)
+			return nil
 		}
 	}
 
-	return nil
+	return fmt.Errorf("resourceSonarqubePluginRead: Failed to find plugin: %+v", d.Id())
 }
 
 func resourceSonarqubePluginDelete(d *schema.ResourceData, m interface{}) error {

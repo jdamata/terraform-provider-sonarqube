@@ -149,7 +149,6 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Loop over all users to see if the current user exists.
-	readSuccess := false
 	for _, value := range userResponse.Users {
 		if d.Id() == value.Login {
 			d.SetId(value.Login)
@@ -157,16 +156,11 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 			d.Set("name", value.Name)
 			d.Set("email", value.Email)
 			d.Set("is_local", value.IsLocal)
-			readSuccess = true
+			return nil
 		}
 	}
 
-	if !readSuccess {
-		// user not found
-		d.SetId("")
-	}
-
-	return nil
+	return fmt.Errorf("resourceSonarqubeUserRead: Failed to find user: %+v", d.Id())
 }
 
 func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {

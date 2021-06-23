@@ -126,27 +126,18 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 	}
 
 	// Loop over all user token to see if the current token exists.
-	readSuccess := false
 	if getTokensResponse.Tokens != nil {
 		for _, value := range getTokensResponse.Tokens {
 			if d.Get("name").(string) == value.Name {
 				d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
 				d.Set("login_name", getTokensResponse.Login)
 				d.Set("name", value.Name)
-				readSuccess = true
+				return nil
 			}
 		}
-	} else {
-		// the user has no tokens
-		d.SetId("")
 	}
 
-	if !readSuccess {
-		// Token not found
-		d.SetId("")
-	}
-
-	return nil
+	return fmt.Errorf("resourceSonarqubeUserTokenCreate: Failed to find user token: %+v", d.Id())
 }
 
 func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) error {

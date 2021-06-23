@@ -138,6 +138,7 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 			if idSlice[1] == value.Key {
 				d.Set("gateid", idSlice[0])
 				d.Set("projectkey", value.Key)
+				return nil
 			}
 		}
 	} else {
@@ -145,11 +146,12 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 			if idSlice[1] == value.Key {
 				d.Set("gatename", idSlice[0])
 				d.Set("projectkey", value.Key)
+				return nil
 			}
 		}
 	}
 
-	return nil
+	return fmt.Errorf("resourceSonarqubeQualityGateProjectAssociationRead: Failed to find project association: %+v", d.Id())
 }
 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
@@ -176,7 +178,7 @@ func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData
 }
 
 func resourceSonarqubeQualityGateProjectAssociationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeQualityProfileRead(d, m); err != nil {
+	if err := resourceSonarqubeQualityGateProjectAssociationRead(d, m); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil

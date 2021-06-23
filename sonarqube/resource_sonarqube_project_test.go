@@ -53,6 +53,22 @@ func TestAccSonarqubeProjectBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "visibility", "public"),
 				),
 			},
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "tf-postfix", "tf-postfix", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "tf-postfix"),
+					resource.TestCheckResourceAttr(name, "visibility", "public"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "tf-postfix"),
+					resource.TestCheckResourceAttr(name, "visibility", "public"),
+				),
+			},
 		},
 	})
 }

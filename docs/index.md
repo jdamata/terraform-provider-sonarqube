@@ -4,6 +4,14 @@ The sonarqube provider is used to configure sonarqube. The provider needs to be 
 
 ## Example Usage
 ```terraform
+terraform {
+  required_providers {
+    sonarqube = {
+      source = "jdamata/sonarqube"
+    }
+  }
+}
+
 provider "sonarqube" {
     user   = "admin"
     pass   = "admin" 
