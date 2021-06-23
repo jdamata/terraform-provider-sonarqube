@@ -5,11 +5,7 @@ name: acceptance-tests-latest
 platform:
   os: linux
   arch: amd64
-<<<<<<< HEAD
-
-=======
     
->>>>>>> master
 steps:
 - name: build and vet the provider
   pull: always
