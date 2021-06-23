@@ -107,9 +107,6 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	// Call api/qualityprofiles/search to return the qualityProfileID
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/qualityprofiles/search"
-	sonarQubeURL.RawQuery = url.Values{
-		"qualityProfile": []string{idSlice[0]},
-	}.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -132,9 +129,11 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	var qualityProfileID string
 	for _, value := range getQualityProfileResponse.Profiles {
-		qualityProfileID = value.Key
-		language = value.Language
-		qualityProfile = value.Name
+		if idSlice[0] == value.Name {
+			qualityProfileID = value.Key
+			language = value.Language
+			qualityProfile = value.Name
+		}
 	}
 
 	// With the qualityProfileID we can check if the project name is associated
@@ -164,6 +163,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	for _, value := range getQualityProfileProjectResponse.Results {
 		if idSlice[1] == value.Name {
+			d.SetId(d.Id())
 			d.Set("project", value.Name)
 			d.Set("quality_profile", qualityProfile)
 			d.Set("language", language)
@@ -201,7 +201,7 @@ func resourceSonarqubeQualityProfileProjectAssociationDelete(d *schema.ResourceD
 }
 
 func resourceSonarqubeQualityProfileProjectAssociationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeQualityProfileRead(d, m); err != nil {
+	if err := resourceSonarqubeQualityProfileProjectAssociationRead(d, m); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil

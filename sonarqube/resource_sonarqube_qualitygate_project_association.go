@@ -178,7 +178,7 @@ func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData
 }
 
 func resourceSonarqubeQualityGateProjectAssociationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeQualityProfileRead(d, m); err != nil {
+	if err := resourceSonarqubeQualityGateProjectAssociationRead(d, m); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
