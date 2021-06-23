@@ -18,9 +18,9 @@ This provider has been published to the Terraform Registry at https://registry.t
 
 Working on this provider requires the following:
 
-* [Terraform](https://www.terraform.io/downloads.html) 0.14+
-* [Go](http://www.golang.org) (version requirements documented in the `go.mod` file)
-* [Docker Engine](https://docs.docker.com/engine/install/) 20.10+ (for running acceptance tests)
+* [Terraform](https://www.terraform.io/downloads.html)
+* [Go](http://www.golang.org)
+* [Docker Engine](https://docs.docker.com/engine/install/)
 
 You will also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `${GOPATH}/bin` to your `$PATH`.
 
