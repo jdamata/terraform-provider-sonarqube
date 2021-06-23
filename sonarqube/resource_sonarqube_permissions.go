@@ -185,19 +185,13 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		}
 
 		// Loop over all groups to see if the group we need exists.
-		readSuccess := false
 		loginName := d.Get("login_name").(string)
 		for _, value := range users.Users {
 			if strings.EqualFold(value.Login, loginName) {
 				d.Set("login_name", value.Login)
 				d.Set("permissions", flattenPermissions(&value.Permissions))
-				readSuccess = true
+				return nil
 			}
-		}
-
-		if !readSuccess {
-			// Permission not found
-			d.SetId("")
 		}
 
 	} else {
@@ -232,24 +226,17 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		}
 
 		// Loop over all groups to see if the group we need exists.
-		readSuccess := false
 		groupName := d.Get("group_name").(string)
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
 				d.Set("permissions", flattenPermissions(&value.Permissions))
-
-				readSuccess = true
+				return nil
 			}
-		}
-
-		if !readSuccess {
-			d.SetId("")
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Unable to find group permissions for group: %s", groupName)
 		}
 	}
 
-	return nil
+	return fmt.Errorf("resourceSonarqubePermissionsRead: Unable to find group permissions for group: %+v", d.Id())
 }
 
 func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) error {

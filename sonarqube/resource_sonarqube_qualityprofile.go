@@ -158,11 +158,11 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 			d.Set("name", value.Name)
 			d.Set("language", value.Language)
 			d.Set("key", value.Key)
+			return nil
 		}
 	}
 
-	return nil
-
+	return fmt.Errorf("resourceSonarqubeQualityProfileRead: Failed to find project: %+v", d.Id())
 }
 
 func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}) error {

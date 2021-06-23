@@ -164,6 +164,7 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 				d.Set("threshold", value.Error)
 				d.Set("metric", value.Metric)
 				d.Set("op", value.OP)
+				return nil
 			}
 		}
 	} else {
@@ -180,11 +181,12 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 				d.Set("threshold", value.Error)
 				d.Set("metric", value.Metric)
 				d.Set("op", value.OP)
+				return nil
 			}
 		}
 	}
 
-	return nil
+	return fmt.Errorf("getQualityGateConditionResponse: Failed to find quality gate condition: %+v", d.Id())
 }
 
 func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m interface{}) error {

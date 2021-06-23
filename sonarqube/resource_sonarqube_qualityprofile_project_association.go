@@ -167,10 +167,11 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 			d.Set("project", value.Name)
 			d.Set("quality_profile", qualityProfile)
 			d.Set("language", language)
+			return nil
 		}
 	}
 
-	return nil
+	return fmt.Errorf("resourceSonarqubeQualityProfileProjectAssociationRead: Failed to find project association: %+v", d.Id())
 
 }
 
