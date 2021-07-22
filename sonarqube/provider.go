@@ -1,7 +1,9 @@
 package sonarqube
 
 import (
+	"crypto/tls"
 	"fmt"
+	"github.com/hashicorp/go-cleanhttp"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -37,6 +39,12 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tls_insecure_skip_verify": {
+				Optional:    true,
+				Type:        schema.TypeBool,
+				Description: "Allows ignoring insecure certificates when set to true. Defaults to false. Disabling TLS verification is dangerous and should only be done for local testing.",
+				Default:     false,
+			},
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
@@ -67,7 +75,13 @@ type ProviderConfiguration struct {
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
+	transport := cleanhttp.DefaultPooledTransport()
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool),
+	}
+
 	client := retryablehttp.NewClient()
+	client.HTTPClient.Transport = transport
 
 	host, err := url.Parse(d.Get("host").(string))
 	if err != nil {
