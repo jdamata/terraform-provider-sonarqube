@@ -50,6 +50,8 @@ services:
 - name: sonarqube
   pull: default
   image: sonarqube:latest
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: true
 
 ---
 kind: pipeline
