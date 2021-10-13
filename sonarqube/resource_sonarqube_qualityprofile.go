@@ -94,6 +94,11 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 					),
 				),
 			},
+			"isDefault": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Is the default profile",
+			},
 		},
 	}
 }
@@ -123,6 +128,27 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 	err = json.NewDecoder(resp.Body).Decode(&qualityProfileResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeQualityProfileCreate: Failed to decode json into struct: %+v", err)
+	}
+
+	if d.Get("isDefault").(bool) {
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+		sonarQubeURL.Path = "api/qualityprofiles/set_default"
+		sonarQubeURL.RawQuery = url.Values{
+			"qualityProfile": []string{d.Get("name").(string)},
+			"language":       []string{d.Get("language").(string)},
+		}.Encode()
+
+		respDefault, errDefault := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusOK,
+			"resourceSonarqubeQualityProfileCreate",
+		)
+		if errDefault != nil {
+			return err
+		}
+		defer respDefault.Body.Close()
 	}
 
 	d.SetId(qualityProfileResponse.Profile.Key)
