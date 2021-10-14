@@ -47,8 +47,9 @@ The following arguments are supported:
 
 - login_name - (Optional) The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`
 - group_name - (Optional) The name of the Group that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `login_name`
-- project_key - (Optional) Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `template_id`
-- template_id - (Optional) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key`
+- project_key - (Optional) Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `template_id & template_name`
+- template_id - (Optional) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_name`
+- template_name - (Optional) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_id`
 - permissions - (Required) A list of permissions that should be applied. Changing this forces a new resource to be created.
 
 **Note:** To prevent unwanted diffs, you should sort the permissions alphabetically.

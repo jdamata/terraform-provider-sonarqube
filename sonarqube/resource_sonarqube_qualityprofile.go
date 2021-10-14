@@ -98,6 +98,7 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Is the default profile",
+				Default:     false,
 			},
 		},
 	}
