@@ -10,13 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type GetRule struct {
-	Rule  []Rule `json:"rules"`
-	Total int    `json:"total"`
-	P     int    `json:"p"`
-	PS    int    `json:"ps"`
-}
-
 type Rule struct {
 	RuleKey     string   `json:"key"`
 	Repo        string   `json:"repo"`
@@ -44,6 +37,13 @@ type Params struct {
 	Desc         string `json:"desc"`
 	DefaultValue int    `json:"defaultValue"`
 	Type         string `json:"type"`
+}
+
+type GetRule struct {
+	Rule  []Rule `json:"rules"`
+	Total int    `json:"total"`
+	P     int    `json:"p"`
+	PS    int    `json:"ps"`
 }
 
 type CreateRuleResponse struct {
@@ -78,6 +78,7 @@ func resourceSonarqubeRule() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Rule name",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringLenBetween(0, 200),
@@ -87,6 +88,9 @@ func resourceSonarqubeRule() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Parameters as semi-colon list of =, for example 'params=key1=v1;key2=v2' (Only for custom rule)",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"prevent_reactivation": {
 				Type:        schema.TypeString,
@@ -125,7 +129,7 @@ func resourceSonarqubeRule() *schema.Resource {
 			},
 			"template_key": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "Key of the template rule in order to create a custom rule (mandatory for custom rule)",
 			},
 			"type": {
