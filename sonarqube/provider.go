@@ -3,10 +3,11 @@ package sonarqube
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/hashicorp/go-cleanhttp"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/hashicorp/go-cleanhttp"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-version"
@@ -61,6 +62,7 @@ func Provider() *schema.Provider {
 			"sonarqube_user":                               resourceSonarqubeUser(),
 			"sonarqube_user_token":                         resourceSonarqubeUserToken(),
 			"sonarqube_webhook":                            resourceSonarqubeWebhook(),
+			"sonarqube_rule":                               resourceSonarqubeRule(),
 		},
 		ConfigureFunc: configureProvider,
 	}
