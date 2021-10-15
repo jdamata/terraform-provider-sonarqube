@@ -99,6 +99,7 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Optional:    true,
 				Description: "Is the default profile",
 				Default:     false,
+				ForceNew:    true,
 			},
 		},
 	}

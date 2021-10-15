@@ -59,6 +59,7 @@ func resourceSonarqubePermissions() *schema.Resource {
 			},
 			"template_name": {
 				Type:          schema.TypeString,
+				ForceNew:      true,
 				Optional:      true,
 				ExactlyOneOf:  []string{"template_name", "template_id"},
 				ConflictsWith: []string{"project_key"},
