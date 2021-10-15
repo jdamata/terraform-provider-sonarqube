@@ -94,7 +94,7 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 					),
 				),
 			},
-			"isDefault": {
+			"default": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Is the default profile",
@@ -132,7 +132,7 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 		return fmt.Errorf("resourceSonarqubeQualityProfileCreate: Failed to decode json into struct: %+v", err)
 	}
 
-	if d.Get("isDefault").(bool) {
+	if d.Get("default").(bool) {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 		sonarQubeURL.Path = "api/qualityprofiles/set_default"
 		sonarQubeURL.RawQuery = url.Values{
