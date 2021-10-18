@@ -94,7 +94,7 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 					),
 				),
 			},
-			"default": {
+			"is_default": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Is the default profile",
@@ -132,25 +132,11 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 		return fmt.Errorf("resourceSonarqubeQualityProfileCreate: Failed to decode json into struct: %+v", err)
 	}
 
-	if d.Get("default").(bool) {
-		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path = "api/qualityprofiles/set_default"
-		sonarQubeURL.RawQuery = url.Values{
-			"qualityProfile": []string{d.Get("name").(string)},
-			"language":       []string{d.Get("language").(string)},
-		}.Encode()
-
-		respDefault, errDefault := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"POST",
-			sonarQubeURL.String(),
-			http.StatusOK,
-			"resourceSonarqubeQualityProfileCreate",
-		)
-		if errDefault != nil {
+	if d.Get("is_default").(bool) {
+		err := setDefaultQualityProfile(d, m, d.Get("is_default").(bool))
+		if err != nil {
 			return err
 		}
-		defer respDefault.Body.Close()
 	}
 
 	d.SetId(qualityProfileResponse.Profile.Key)
@@ -186,6 +172,7 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 			d.Set("name", value.Name)
 			d.Set("language", value.Language)
 			d.Set("key", value.Key)
+			d.Set("isDefault", value.IsDefault)
 			return nil
 		}
 	}
@@ -200,6 +187,12 @@ func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}
 		"qualityProfile": []string{d.Get("name").(string)},
 		"language":       []string{d.Get("language").(string)},
 	}.Encode()
+
+	err := setDefaultQualityProfile(d, m, false)
+
+	if err != nil {
+		return err
+	}
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -222,4 +215,33 @@ func resourceSonarqubeQualityProfileImport(d *schema.ResourceData, m interface{}
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
+}
+
+func setDefaultQualityProfile(d *schema.ResourceData, m interface{}, setDefault bool) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualityprofiles/set_default"
+	if setDefault {
+		sonarQubeURL.RawQuery = url.Values{
+			"qualityProfile": []string{d.Get("name").(string)},
+			"language":       []string{d.Get("language").(string)},
+		}.Encode()
+	} else {
+		sonarQubeURL.RawQuery = url.Values{
+			"qualityProfile": []string{"Sonar way"},
+			"language":       []string{d.Get("language").(string)},
+		}.Encode()
+	}
+
+	respDefault, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"setDefaultQualityProfile",
+	)
+	if err != nil {
+		return err
+	}
+	defer respDefault.Body.Close()
+	return nil
 }

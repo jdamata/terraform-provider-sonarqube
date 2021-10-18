@@ -23,3 +23,6 @@ terraform.tfstate.backup
 terraform.tfstate.*.backup
 
 coverage.txt
+
+# dist directory for local testingg
+dist/
