@@ -101,6 +101,11 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Default:     false,
 				ForceNew:    true,
 			},
+			"parent": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -137,6 +142,10 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 		if err != nil {
 			return err
 		}
+	}
+	err = setParentQualityProfile(d, m)
+	if err != nil {
+		return err
 	}
 
 	d.SetId(qualityProfileResponse.Profile.Key)
@@ -232,7 +241,7 @@ func setDefaultQualityProfile(d *schema.ResourceData, m interface{}, setDefault 
 		}.Encode()
 	}
 
-	respDefault, err := httpRequestHelper(
+	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
@@ -242,6 +251,28 @@ func setDefaultQualityProfile(d *schema.ResourceData, m interface{}, setDefault 
 	if err != nil {
 		return err
 	}
-	defer respDefault.Body.Close()
+	defer resp.Body.Close()
+	return nil
+}
+
+func setParentQualityProfile(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualityprofiles/change_parent"
+	sonarQubeURL.RawQuery = url.Values{
+		"qualityProfile":       []string{d.Get("name").(string)},
+		"language":             []string{d.Get("language").(string)},
+		"parentQualityProfile": []string{d.Get("parent").(string)},
+	}.Encode()
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"setParentQualityProfile",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 	return nil
 }
