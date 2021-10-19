@@ -19,7 +19,9 @@ type GetGroupPermissions struct {
 
 // GroupPermission struct
 type GroupPermission struct {
+	Id          string   `json:"id"`
 	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description"`
 	Permissions []string `json:"permissions,omitempty"`
 }
 
@@ -346,7 +348,9 @@ func flattenPermissions(input *[]string) []interface{} {
 	}
 
 	for _, permission := range *input {
-		flatPermissions = append(flatPermissions, permission)
+		if permission != "applicationcreator" && permission != "portfoliocreator" {
+			flatPermissions = append(flatPermissions, permission)
+		}
 	}
 
 	return flatPermissions
