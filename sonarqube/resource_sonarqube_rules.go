@@ -21,15 +21,15 @@ type Rule struct {
 	Severity    string   `json:"severity"`
 	Status      string   `json:"status"`
 	InternalKey string   `json:"internalKey"`
-	IsTemplate  string   `json:"isTemplate"`
+	IsTemplate  bool     `json:"isTemplate"`
 	Tags        []string `json:"tags"`
 	SysTags     []string `json:"sysTags"`
 	Lang        string   `json:"lang"`
 	LangName    string   `json:"langName"`
 	Scope       string   `json:"scope"`
-	IsExternal  string   `json:"isExternal"`
+	IsExternal  bool     `json:"isExternal"`
 	Type        string   `json:"type"`
-	Params      Params   `json:"params"`
+	Params      []Params `json:"params"`
 }
 
 type Params struct {
@@ -61,7 +61,7 @@ func resourceSonarqubeRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"key": {
+			"custom_key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -151,7 +151,7 @@ func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/rules/create"
 	sonarQubeURL.RawQuery = url.Values{
-		"key":                  []string{d.Get("key").(string)},
+		"custom_key":           []string{d.Get("custom_key").(string)},
 		"markdown_description": []string{d.Get("markdown_description").(string)},
 		"name":                 []string{d.Get("name").(string)},
 		"params":               []string{d.Get("params").(string)},
@@ -188,7 +188,7 @@ func resourceSonarqubeRuleRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/rules/search"
 	sonarQubeURL.RawQuery = url.Values{
-		"key": []string{d.Id()},
+		"rule_key": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -231,7 +231,7 @@ func resourceSonarqubeRuleDelete(d *schema.ResourceData, m interface{}) error {
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusNoContent,
+		http.StatusOK,
 		"resourceSonarqubeRuleDelete",
 	)
 	if err != nil {
@@ -273,5 +273,5 @@ func resourceSonarqubeRuleUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	return resourceSonarqubeQualityGateConditionRead(d, m)
+	return resourceSonarqubeRuleRead(d, m)
 }
