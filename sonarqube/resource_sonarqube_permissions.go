@@ -251,7 +251,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
+				d.Set("permissions", stripPermissions(&value.Permissions))
 				return nil
 			}
 		}
@@ -342,6 +342,19 @@ func expandPermissions(d *schema.ResourceData) []string {
 }
 
 func flattenPermissions(input *[]string) []interface{} {
+	flatPermissions := make([]interface{}, 0)
+	if input == nil {
+		return flatPermissions
+	}
+
+	for _, permission := range *input {
+		flatPermissions = append(flatPermissions, permission)
+	}
+
+	return flatPermissions
+}
+
+func stripPermissions(input *[]string) []interface{} {
 	flatPermissions := make([]interface{}, 0)
 	if input == nil {
 		return flatPermissions
