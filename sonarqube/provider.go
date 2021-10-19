@@ -63,6 +63,7 @@ func Provider() *schema.Provider {
 			"sonarqube_user_token":                         resourceSonarqubeUserToken(),
 			"sonarqube_webhook":                            resourceSonarqubeWebhook(),
 			"sonarqube_rule":                               resourceSonarqubeRule(),
+			"sonarqube_qualityprofile_activate_rule":       resourceSonarqubeQualityProfileRule(),
 		},
 		ConfigureFunc: configureProvider,
 	}
