@@ -45,6 +45,3 @@ jobs:
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - 
-        name: Run code coverage
-        uses: codecov/codecov-action@v2
