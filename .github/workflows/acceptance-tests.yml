@@ -18,15 +18,15 @@ jobs:
         run: make
         env:
           GO111MODULE: on
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.14.3
       - name: run acceptance tests
         run: |
-          wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-          unzip terraform_${TF_VERSION}_linux_amd64.zip
-          mv terraform /usr/bin/terraform
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           TF_ACC: 1
-          TF_VERSION: 0.14.3
           GO111MODULE: on
           SONAR_HOST: http://sonarqube:9000
           SONAR_USER: admin
