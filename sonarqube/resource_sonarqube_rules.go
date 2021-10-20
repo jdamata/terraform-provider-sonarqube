@@ -34,8 +34,8 @@ type Rule struct {
 
 type Params struct {
 	ParmKey      string `json:"key"`
-	Desc         string `json:"desc"`
-	DefaultValue int    `json:"defaultValue"`
+	HtmlDesc     string `json:"htmlDesc"`
+	DefaultValue string `json:"defaultValue"`
 	Type         string `json:"type"`
 }
 

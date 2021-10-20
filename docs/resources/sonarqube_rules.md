@@ -27,6 +27,7 @@ the following arguments are supported
 - markdown_description - (Required) Rule description
 - name - (Required) Rule name
 - params - (Optional) Parameters as semi-colon list of =, for example 'params=key1=v1;key2=v2' (Only for custom rule)
+  - parameter order: expression=value;filePattern=value;message=value
 - prevent_reactivation - (Optional) If set to true and if the rule has been deactivated (status 'REMOVED'), a status 409 will be returned
   - Possible values - true, false, yes, no
 - severity - (Optional) Rule severity
