@@ -354,6 +354,8 @@ func flattenPermissions(input *[]string) []interface{} {
 	return flatPermissions
 }
 
+// The endpoint api/permissions/groups return also the non template permissions this messes with state of the permissions
+// To make sure these don't interfere the extra permissions are ignored
 func stripPermissions(input *[]string) []interface{} {
 	flatPermissions := make([]interface{}, 0)
 	if input == nil {
