@@ -35,3 +35,5 @@ jobs:
     services:
       sonarqube:
         image: sonarqube:7.9-community
+        ports:
+          - 9000:9000

@@ -38,3 +38,5 @@ jobs:
     services:
       sonarqube:
         image: sonarqube:latest
+        ports:
+          - 9000:9000
