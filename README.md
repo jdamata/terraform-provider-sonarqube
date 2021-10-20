@@ -1,6 +1,5 @@
 # terraform-provider-sonarqube
 
-[![Build Status](https://cloud.drone.io/api/badges/jdamata/terraform-provider-sonarqube/status.svg)](https://cloud.drone.io/jdamata/terraform-provider-sonarqube)
 [![release](https://github.com/jdamata/terraform-provider-sonarqube/actions/workflows/release.yaml/badge.svg)](https://github.com/jdamata/terraform-provider-sonarqube/actions/workflows/release.yaml)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jdamata_terraform-provider-sonarqube&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=jdamata_terraform-provider-sonarqube)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jdamata/terraform-provider-sonarqube)](https://goreportcard.com/report/github.com/jdamata/terraform-provider-sonarqube)

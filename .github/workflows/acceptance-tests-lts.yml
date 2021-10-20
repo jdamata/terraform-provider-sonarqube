@@ -1,0 +1,38 @@
+name: acceptance-tests-latest
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  acceptance-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: build and vet the provider
+        run: make
+        env:
+          GO111MODULE: on
+      - name: run acceptance tests
+        run: |
+          apt-get update && apt-get install unzip -y
+          wget https://releases.hashicorp.com/terraform/$${TF_VERSION}/terraform_$${TF_VERSION}_linux_amd64.zip
+          unzip terraform_$${TF_VERSION}_linux_amd64.zip
+          mv terraform /usr/bin/terraform
+          sleep 30
+          go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+        env:
+          TF_ACC: 1
+          TF_VERSION: 0.14.3
+          GO111MODULE: on
+          SONAR_HOST: http://sonarqube:9000
+          SONAR_USER: admin
+          SONAR_PASS: admin
+    services:
+      sonarqube:
+        image: sonarqube:7.9-community
