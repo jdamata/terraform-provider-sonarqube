@@ -13,7 +13,7 @@ import (
 type Actives struct {
 	QProfile string   `json:"qProfile"`
 	Inherit  string   `json:"inherit"`
-	severity string   `json:"severity"`
+	Severity string   `json:"severity"`
 	Params   []Params `json:"params"`
 }
 
