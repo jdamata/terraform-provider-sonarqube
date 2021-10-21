@@ -36,9 +36,16 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "key", "rule", "BLOCKER"),
+				Config: testAccSonarqubeQualityProfileBasicConfig(rnd, "testProfile", "js"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "key"),
+					resource.TestCheckResourceAttr(name, "name", "testProfile"),
+					resource.TestCheckResourceAttr(name, "language", "js"),
+				),
+			},
+			{
+				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "rule", "BLOCKER"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testProfile"),
 					resource.TestCheckResourceAttr(name, "rule", "rule"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
@@ -50,7 +57,6 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", "key"),
 					resource.TestCheckResourceAttr(name, "rule", "rule"),
-					resource.TestCheckResourceAttr(name, "params", "key1=v1"),
 					resource.TestCheckResourceAttr(name, "reset", "false"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
