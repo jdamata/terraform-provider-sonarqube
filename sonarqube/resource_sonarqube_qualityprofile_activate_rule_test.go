@@ -40,7 +40,7 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", "key"),
 					resource.TestCheckResourceAttr(name, "rule", "rule"),
-					resource.TestCheckResourceAttr(name, "severity", "severity"),
+					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
 			},
 			{
