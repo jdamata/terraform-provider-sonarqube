@@ -1,6 +1,6 @@
-# Sonarqube_rules
+# sonarqube_rules
 
-Provides a Sonarqube Rules resource. this can be used to manage Sonarqube rules.
+Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
 
 ## Example: create a rule
 
@@ -21,7 +21,7 @@ resource "sonarqube_rule" "rule" {
 
 ## Argument Reference
 
-the following arguments are supported
+The following arguments are supported
 
 - key - (Required) key of the custom rule should only contain : a-z, 0-9, _ 
 - markdown_description - (Required) Rule description

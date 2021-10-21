@@ -1,4 +1,4 @@
-# Sonarqube_user
+# sonarqube_user
 
 Provides a Sonarqube User resource. This can be used to manage Sonarqube Users.
 

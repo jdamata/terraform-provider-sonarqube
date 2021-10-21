@@ -1,6 +1,6 @@
-# Sonarqube_qualityprofile_activate_rule
+# sonarqube_qualityprofile_activate_rule
 
-Provides a Sonarqube Rules resource. this can be used to manage Sonarqube rules.
+Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
 
 ## Example: activate a rule
 
@@ -34,7 +34,7 @@ resource "sonarqube_qualityprofile_activate_rule" "xml_rule" {
 
 ## Argument Reference
 
-the following arguments are supported
+The following arguments are supported
 
 - key - (Required) Quality Profile key. Can be obtained through api/qualityprofiles/search 
 - params - (Optional) Parameters as semi-colon list of key=value. Ignored if parameter reset is true.
