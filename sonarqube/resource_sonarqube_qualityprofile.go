@@ -12,8 +12,8 @@ import (
 
 // QualityProfile struct
 type QualityProfile struct {
-	IsDefault    bool   `json:"isDefault"`
-	IsInherited  bool   `json:"isInherited"`
+	IsDefault    bool   `json:"isDefault,omitempty"`
+	IsInherited  bool   `json:"isInherited,omitempty"`
 	Language     string `json:"language"`
 	LanguageName string `json:"languageName"`
 	Name         string `json:"name"`
@@ -181,7 +181,7 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 			d.Set("name", value.Name)
 			d.Set("language", value.Language)
 			d.Set("key", value.Key)
-			d.Set("isDefault", value.IsDefault)
+			d.Set("is_default", value.IsDefault)
 			return nil
 		}
 	}
