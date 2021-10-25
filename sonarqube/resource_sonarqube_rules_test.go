@@ -25,7 +25,7 @@ func testAccSonarqubeRuleBasicConfig(rnd string, key string, markdown_descriptio
 			markdown_description = "%[3]s"
 			name = "%[4]s"
 			template_key = "%[5]s"
-			severity = "%[6]s
+			severity = "%[6]s"
 		}`, rnd, key, markdown_description, name, template_key, severity)
 }
 
