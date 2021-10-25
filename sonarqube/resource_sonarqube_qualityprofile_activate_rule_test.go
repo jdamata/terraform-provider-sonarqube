@@ -18,13 +18,24 @@ func testSweeepSonarqibeQualityprofileActivateRuleSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, key string, rule string, severity string) string {
+func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name string, description string, language string, severity string) string {
 	return fmt.Sprintf(`
-		resource "sonarqube_qualityprofile_activate_rule" "%[1]s" {
+		resource "sonarqube_qualityprofile" "%[1]s" {
+			name     = "%[2]s"
+			language = "%[4]s"
+		}
+
+		resource "sonarqube_rule" "%[1]s" {
 			key = "%[2]s"
-			rule = "%[3]s"
-			severity = "%[4]s"
-		}`, rnd, key, rule, severity)
+			markdown_description = "%[3]s"
+			name = "%[2]s"
+		}
+
+		resource "sonarqube_qualityprofile_activate_rule" "%[1]s" {
+			key = "sonarqube_qualityprofile.%[1]s.key"
+			rule = "sonarqube_rule.%[1]s.id"
+			severity = "%[5]s"
+		}`, rnd, name, description, language, severity)
 }
 
 func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
@@ -36,17 +47,12 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualityProfileBasicConfig(rnd, "testProfile", "js"),
+				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "name", "description", "java", "BLOCKER"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testProfile"),
-					resource.TestCheckResourceAttr(name, "language", "js"),
-				),
-			},
-			{
-				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "rule", "BLOCKER"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "testProfile"),
-					resource.TestCheckResourceAttr(name, "rule", "rule"),
+					resource.TestCheckResourceAttr(name, "name", "name"),
+					resource.TestCheckResourceAttr(name, "language", "java"),
+					resource.TestCheckResourceAttr(name, "key", "name"),
+					resource.TestCheckResourceAttr(name, "markdown_description", "description"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
 			},
@@ -55,9 +61,10 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "key"),
-					resource.TestCheckResourceAttr(name, "rule", "rule"),
-					resource.TestCheckResourceAttr(name, "reset", "false"),
+					resource.TestCheckResourceAttr(name, "name", "name"),
+					resource.TestCheckResourceAttr(name, "language", "java"),
+					resource.TestCheckResourceAttr(name, "key", "false"),
+					resource.TestCheckResourceAttr(name, "markdown_description", "description"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
 			},

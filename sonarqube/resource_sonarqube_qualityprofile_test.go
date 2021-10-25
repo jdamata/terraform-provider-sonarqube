@@ -48,7 +48,6 @@ func TestAccSonarqubeQualityProfileBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualityProfile"),
 					resource.TestCheckResourceAttr(name, "language", "js"),
-					resource.TestCheckResourceAttrSet(name, "key"),
 				),
 			},
 		},

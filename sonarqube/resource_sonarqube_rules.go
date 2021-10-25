@@ -129,7 +129,7 @@ func resourceSonarqubeRule() *schema.Resource {
 			},
 			"template_key": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "Key of the template rule in order to create a custom rule (mandatory for custom rule)",
 			},
 			"type": {
