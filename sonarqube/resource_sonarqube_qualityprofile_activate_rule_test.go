@@ -18,13 +18,27 @@ func testSweeepSonarqibeQualityprofileActivateRuleSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, key string, rule string, severity string) string {
+func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name string, language string, severity string, template_key string, type_p string) string {
 	return fmt.Sprintf(`
-		resource "sonarqube_qualityprofile_activate_rule" "%[1]s" {
-			key = "%[2]s"
-			rule = "%[3]s"
+		resource "sonarqube_qualityprofile" "%[1]s" {
+			name     = "%[2]s"
+			language = "%[3]s"
+		}
+
+		resource "sonarqube_rule" "%[1]s" {
+			custom_key = "%[2]s"
+			markdown_description = "%[2]s"
+			name = "%[2]s" 
 			severity = "%[4]s"
-		}`, rnd, key, rule, severity)
+			template_key = "%[5]s"
+			type = "%[6]s"
+		}
+
+		resource "sonarqube_qualityprofile_activate_rule" "%[1]s" {
+			key = "sonarqube_qualityprofile%[2]s"
+			rule = "sonarqube_rule%[3]s"
+			severity = "%[4]s"
+		}`, rnd, name, language, severity, template_key, type_p)
 }
 
 func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
@@ -35,19 +49,15 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
+
 			{
-				Config: testAccSonarqubeQualityProfileBasicConfig(rnd, "testProfile", "js"),
+				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "xml", "BLOCKER", "xml:XPathCheck", "VULNERABILITY"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testProfile"),
-					resource.TestCheckResourceAttr(name, "language", "js"),
-				),
-			},
-			{
-				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "rule", "BLOCKER"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "testProfile"),
-					resource.TestCheckResourceAttr(name, "rule", "rule"),
+					resource.TestCheckResourceAttr(name, "language", "rule"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
+					resource.TestCheckResourceAttr(name, "template_key", "xml:XPathCheck"),
+					resource.TestCheckResourceAttr(name, "type+p", "VULNERABILITY"),
 				),
 			},
 			{
@@ -55,10 +65,11 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "key"),
-					resource.TestCheckResourceAttr(name, "rule", "rule"),
-					resource.TestCheckResourceAttr(name, "reset", "false"),
+					resource.TestCheckResourceAttr(name, "name", "testProfile"),
+					resource.TestCheckResourceAttr(name, "language", "rule"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
+					resource.TestCheckResourceAttr(name, "template_key", "xml:XPathCheck"),
+					resource.TestCheckResourceAttr(name, "type+p", "VULNERABILITY"),
 				),
 			},
 		},
