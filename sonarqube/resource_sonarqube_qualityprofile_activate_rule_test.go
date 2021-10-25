@@ -35,8 +35,8 @@ func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name stri
 		}
 
 		resource "sonarqube_qualityprofile_activate_rule" "%[1]s" {
-			key = "sonarqube_qualityprofile.%[2]s.key"
-			rule = "sonarqube_rule.%[3]s.id"
+			key = "sonarqube_qualityprofile.%[1]s.key"
+			rule = "sonarqube_rule.%[1]s.id"
 			severity = "%[4]s"
 		}`, rnd, name, language, severity, template_key, type_p)
 }
