@@ -43,7 +43,7 @@ func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name stri
 
 func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
-	name := "sonarqube_quality_profile_activate_rule." + rnd
+	name := "sonarqube_qualityprofile_activate_rule." + rnd
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
