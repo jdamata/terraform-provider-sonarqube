@@ -50,7 +50,7 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "key", "BLOCKER"),
+				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "activateRule", "BLOCKER"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(name, "key"),
 					resource.TestCheckResourceAttrSet(name, "rule"),
@@ -58,9 +58,10 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            name,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"key", "reset", "rule", "severity"},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(name, "key"),
 					resource.TestCheckResourceAttrSet(name, "rule"),
