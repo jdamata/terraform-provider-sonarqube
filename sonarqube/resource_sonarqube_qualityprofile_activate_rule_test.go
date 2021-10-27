@@ -18,17 +18,17 @@ func testSweeepSonarqibeQualityprofileActivateRuleSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name string, language string, severity string) string {
+func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name string, key string, severity string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualityprofile" "%[1]s" {
 			name     = "%[2]s"
-			language = "%[3]s"
+			language = "xml"
 		}
 
 		resource "sonarqube_rule" "%[1]s" {
-			custom_key = "%[2]s"
+			custom_key = "%[3]s"
 			markdown_description = "My rule"
-			name = "%[2]s" 
+			name = "%[3]s" 
 			severity = "%[4]s"
 			template_key = "xml:XPathCheck"
 			type = "VULNERABILITY"
@@ -38,7 +38,7 @@ func testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd string, name stri
 			key = sonarqube_qualityprofile.%[1]s.key
 			rule = sonarqube_rule.%[1]s.id
 			severity = "%[4]s"
-		}`, rnd, name, language, severity)
+		}`, rnd, name, key, severity)
 }
 
 func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
@@ -49,13 +49,11 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-
 			{
-				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "xml", "BLOCKER"),
+				Config: testAccSonarqubeQualityprofileActivateRuleBasicConfig(rnd, "testProfile", "key", "BLOCKER"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testProfile"),
-					resource.TestCheckResourceAttr(name, "language", "xml"),
-					resource.TestCheckResourceAttr(name, "custom_key", "testProfile"),
+					resource.TestCheckResourceAttrSet(name, "key"),
+					resource.TestCheckResourceAttrSet(name, "rule"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
 			},
@@ -64,9 +62,8 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testProfile"),
-					resource.TestCheckResourceAttr(name, "language", "xml"),
-					resource.TestCheckResourceAttr(name, "custom_key", "testProfile"),
+					resource.TestCheckResourceAttrSet(name, "key"),
+					resource.TestCheckResourceAttrSet(name, "rule"),
 					resource.TestCheckResourceAttr(name, "severity", "BLOCKER"),
 				),
 			},
