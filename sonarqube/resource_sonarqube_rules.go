@@ -16,20 +16,21 @@ type Rule struct {
 	Name        string   `json:"name"`
 	CreatedAt   string   `json:"createdAt"`
 	UpdatedAt   string   `json:"updatedAt"`
-	HtmlDesc    string   `json:"htmlDesc"`
-	MdDesc      string   `json:"mdDesc"`
+	HtmlDesc    string   `json:"htmlDesc,omitempty"`
+	MdDesc      string   `json:"mdDesc,omitempty"`
 	Severity    string   `json:"severity"`
 	Status      string   `json:"status"`
 	InternalKey string   `json:"internalKey"`
 	IsTemplate  bool     `json:"isTemplate"`
 	Tags        []string `json:"tags"`
+	TemplateKey string   `json:"templateKey,omitempty"`
 	SysTags     []string `json:"sysTags"`
 	Lang        string   `json:"lang"`
 	LangName    string   `json:"langName"`
 	Scope       string   `json:"scope"`
 	IsExternal  bool     `json:"isExternal"`
 	Type        string   `json:"type"`
-	Params      []Params `json:"params"`
+	Params      []Params `json:"params,omitempty"`
 }
 
 type Params struct {
@@ -179,7 +180,7 @@ func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeRuleCreate: Failed to decode json into struct: %+v", err)
 	}
-
+	fmt.Println(ruleCreateResponse.Rule.RuleKey)
 	d.SetId(ruleCreateResponse.Rule.RuleKey)
 	return resourceSonarqubeRuleRead(d, m)
 }
@@ -212,8 +213,12 @@ func resourceSonarqubeRuleRead(d *schema.ResourceData, m interface{}) error {
 	for _, value := range ruleReadResponse.Rule {
 		if d.Id() == value.RuleKey {
 			d.SetId(value.RuleKey)
-			d.Set("name", value.Name)
 			d.Set("markdown_description", value.MdDesc)
+			d.Set("name", value.Name)
+			d.Set("severity", value.Severity)
+			d.Set("template_key", value.TemplateKey)
+			d.Set("status", value.Status)
+			d.Set("type", value.Type)
 			return nil
 		}
 	}
