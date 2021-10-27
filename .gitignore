@@ -26,3 +26,5 @@ coverage.txt
 
 # dist directory for local testingg
 dist/
+
+.vscode/
