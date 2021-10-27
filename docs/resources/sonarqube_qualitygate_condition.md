@@ -21,6 +21,7 @@ The following arguments are supported:
 - gatename - (Required) The name of the Quality Gate
 - metric - (Required) Condition metric. Only metric of the following types are allowed: INT, MILLISEC, RATING, WORK_DUR, FLOAT, PERCENT and LEVEL. Following metrics are forbidden: alert_status, security_hotspots and new_security_hotspots
 - threshold - (Required) Condition error threshold
+    - For ratings: A=1, B=2, C=3, D=4
 - op - (Required) Condition operator. Possible values are: LT and GT
 
 ## Attributes Reference

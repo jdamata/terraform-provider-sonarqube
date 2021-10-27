@@ -19,7 +19,9 @@ type GetGroupPermissions struct {
 
 // GroupPermission struct
 type GroupPermission struct {
+	Id          string   `json:"id"`
 	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description"`
 	Permissions []string `json:"permissions,omitempty"`
 }
 
@@ -48,13 +50,19 @@ func resourceSonarqubePermissions() *schema.Resource {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"template_id"},
+				ConflictsWith: []string{"template_id", "template_name"},
 			},
 			"template_id": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"project_key"},
+				ConflictsWith: []string{"project_key", "template_name"},
+			},
+			"template_name": {
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				ConflictsWith: []string{"project_key", "template_id"},
 			},
 			"permissions": {
 				Type:     schema.TypeList,
@@ -104,6 +112,10 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 			// template user permission
 			sonarQubeURL.Path = "api/permissions/add_group_to_template"
 			RawQuery.Add("templateId", templateID.(string))
+			// name provide instead of id
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			sonarQubeURL.Path = "api/permissions/add_group_to_template"
+			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
 			sonarQubeURL.Path = "api/permissions/add_group"
@@ -159,6 +171,10 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			// template user permission
 			sonarQubeURL.Path = "api/permissions/template_users"
 			RawQuery.Add("templateId", templateID.(string))
+			// name provide instead of id
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			sonarQubeURL.Path = "api/permissions/template_users"
+			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
 			sonarQubeURL.Path = "api/permissions/users"
@@ -200,6 +216,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			// template group permission
 			sonarQubeURL.Path = "api/permissions/template_groups"
 			RawQuery.Add("templateId", templateID.(string))
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			sonarQubeURL.Path = "api/permissions/template_groups"
+			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct group permission
 			sonarQubeURL.Path = "api/permissions/groups"
@@ -230,7 +249,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
+				d.Set("permissions", stripPermissions(&value.Permissions))
 				return nil
 			}
 		}
@@ -260,6 +279,9 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 			// template user permission
 			sonarQubeURL.Path = "api/permissions/remove_user_from_template"
 			RawQuery.Add("templateId", templateID.(string))
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			sonarQubeURL.Path = "api/permissions/remove_user_from_template"
+			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
 			sonarQubeURL.Path = "api/permissions/remove_user"
@@ -273,6 +295,9 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 			// template group permission
 			sonarQubeURL.Path = "api/permissions/remove_group_from_template"
 			RawQuery.Add("templateId", templateID.(string))
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			sonarQubeURL.Path = "api/permissions/remove_group_from_template"
+			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct group permission
 			sonarQubeURL.Path = "api/permissions/remove_group"
@@ -322,6 +347,23 @@ func flattenPermissions(input *[]string) []interface{} {
 
 	for _, permission := range *input {
 		flatPermissions = append(flatPermissions, permission)
+	}
+
+	return flatPermissions
+}
+
+// The endpoint api/permissions/groups return also the non template permissions this messes with state of the permissions
+// To make sure these don't interfere the extra permissions are ignored
+func stripPermissions(input *[]string) []interface{} {
+	flatPermissions := make([]interface{}, 0)
+	if input == nil {
+		return flatPermissions
+	}
+
+	for _, permission := range *input {
+		if permission != "applicationcreator" && permission != "portfoliocreator" {
+			flatPermissions = append(flatPermissions, permission)
+		}
 	}
 
 	return flatPermissions

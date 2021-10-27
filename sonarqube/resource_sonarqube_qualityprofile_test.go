@@ -10,7 +10,7 @@ import (
 func init() {
 	resource.AddTestSweepers("sonarqube_qualityprofile", &resource.Sweeper{
 		Name: "sonarqube_qualityprofile",
-		F:    testSweepSonarqubeQualitygateSweeper,
+		F:    testSweepSonarqubeQualityProfileSweeper,
 	})
 }
 
