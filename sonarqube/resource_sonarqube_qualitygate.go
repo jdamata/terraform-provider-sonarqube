@@ -68,6 +68,13 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"is_default": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Name of the quality gate to set as default",
+				Default:     false,
+				ForceNew:    true,
+			},
 		},
 	}
 }
@@ -106,6 +113,12 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 		err = json.NewDecoder(resp.Body).Decode(&qualityGateResponse)
 		if err != nil {
 			return fmt.Errorf("resourceQualityGateCreate: Failed to decode json into struct: %+v", err)
+		}
+		if d.Get("is_default").(bool) {
+			err := setDefaultQualityGate(d, m, d.Get("is_default").(bool))
+			if err != nil {
+				return err
+			}
 		}
 		d.SetId(qualityGateResponse.Name)
 	}
@@ -159,6 +172,8 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 		}
 		d.SetId(qualityGateReadResponse.Name)
 		d.Set("name", qualityGateReadResponse.Name)
+		// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
+		d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
 	}
 	return nil
 }
@@ -177,6 +192,11 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 		sonarQubeURL.RawQuery = url.Values{
 			"name": []string{d.Id()},
 		}.Encode()
+
+		err := setDefaultQualityGate(d, m, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	resp, err := httpRequestHelper(
@@ -199,4 +219,31 @@ func resourceSonarqubeQualityGateImport(d *schema.ResourceData, m interface{}) (
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
+}
+
+func setDefaultQualityGate(d *schema.ResourceData, m interface{}, setDefault bool) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = "api/qualitygates/set_as_default"
+	if setDefault {
+		sonarQubeURL.RawQuery = url.Values{
+			"name": []string{d.Get("name").(string)},
+		}.Encode()
+	} else {
+		sonarQubeURL.RawQuery = url.Values{
+			"name": []string{"Sonar way"},
+		}.Encode()
+	}
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"setDefaultQualityGate",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
 }

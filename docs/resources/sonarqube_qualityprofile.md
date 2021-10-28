@@ -6,7 +6,7 @@ Provides a Sonarqube Quality Profile resource. This can be used to create and ma
 resource "sonarqube_qualityprofile" "main" {
     name     = "example"
     language = "js"
-    isDefault = false
+    is_default = false
     parent = "sonar way"
 }
 ```
@@ -16,7 +16,7 @@ The following arguments are supported:
 
 - name     - (Required) The name of the Quality Profile to create. Maximum length 100
 - language - (Required) Quality profile language. Must be one of "cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "ts", "vbnet", "web", "xml"
-- isDefault - (Optional) When set to true this will make the added Quality Profile default
+- is_default - (Optional) When set to true this will make the added Quality Profile default
 - parent - (Optional) When a parent is provided the quality profile will inherit it's rules
 
 ## Attributes Reference

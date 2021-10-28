@@ -44,4 +44,4 @@ The following arguments are supported
 
 The following attributes are exported:
 
-- key - the Key of the Rule.
+- key - The Key of the Rule.

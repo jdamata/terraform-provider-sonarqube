@@ -18,11 +18,12 @@ func testSweepSonarqubeQualitygateSweeper(r string) error {
 	return nil
 }
 
-func testAccSonarqubeQualitygateBasicConfig(rnd string, name string) string {
+func testAccSonarqubeQualitygateBasicConfig(rnd string, name string, is_default string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
-		}`, rnd, name)
+			is_default = "%[3]s"
+		}`, rnd, name, is_default)
 }
 
 func TestAccSonarqubeQualitygateBasic(t *testing.T) {
@@ -34,17 +35,20 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateBasicConfig(rnd, "testAccSonarqubeQualitygate"),
+				Config: testAccSonarqubeQualitygateBasicConfig(rnd, "testAccSonarqubeQualitygate", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
+					resource.TestCheckResourceAttr(name, "is_default", "true"),
 				),
 			},
 			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            name,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_default"},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
+					resource.TestCheckResourceAttr(name, "is_default", "true"),
 				),
 			},
 		},
