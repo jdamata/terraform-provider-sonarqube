@@ -42,9 +42,10 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            name,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_default"},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
 					resource.TestCheckResourceAttr(name, "is_default", "true"),

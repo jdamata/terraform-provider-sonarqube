@@ -163,7 +163,6 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 		}
 		d.SetId(strconv.Itoa(qualityGateReadResponse.ID))
 		d.Set("name", qualityGateReadResponse.Name)
-		d.Set("is_default", qualityGateReadResponse.Actions.SetAsDefault)
 	} else {
 		// Decode response into struct
 		qualityGateReadResponse := GetQualityGate{}
