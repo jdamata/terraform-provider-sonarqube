@@ -5,6 +5,7 @@ Provides a Sonarqube Quality Gate resource. This can be used to create and manag
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "example"
+    is_default = true
 }
 ```
 
@@ -12,6 +13,7 @@ resource "sonarqube_qualitygate" "main" {
 The following arguments are supported:
 
 - name - (Required) The name of the Quality Gate to create. Maximum length 100
+- is_default - (Optional) When set to true this will make the added Quality Gate default
 
 ## Attributes Reference
 The following attributes are exported:

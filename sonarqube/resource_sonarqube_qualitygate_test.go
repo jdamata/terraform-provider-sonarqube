@@ -22,6 +22,7 @@ func testAccSonarqubeQualitygateBasicConfig(rnd string, name string) string {
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
+			is_default = false
 		}`, rnd, name)
 }
 
@@ -40,9 +41,10 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            name,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_default"},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
 				),
