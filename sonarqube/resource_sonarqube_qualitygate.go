@@ -172,6 +172,8 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 		}
 		d.SetId(qualityGateReadResponse.Name)
 		d.Set("name", qualityGateReadResponse.Name)
+		// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
+		d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
 	}
 	return nil
 }
@@ -190,11 +192,11 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 		sonarQubeURL.RawQuery = url.Values{
 			"name": []string{d.Id()},
 		}.Encode()
-	}
 
-	err := setDefaultQualityGate(d, m, false)
-	if err != nil {
-		return err
+		err := setDefaultQualityGate(d, m, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	resp, err := httpRequestHelper(

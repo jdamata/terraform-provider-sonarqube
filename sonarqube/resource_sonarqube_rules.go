@@ -180,7 +180,6 @@ func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeRuleCreate: Failed to decode json into struct: %+v", err)
 	}
-	fmt.Println(ruleCreateResponse.Rule.RuleKey)
 	d.SetId(ruleCreateResponse.Rule.RuleKey)
 	return resourceSonarqubeRuleRead(d, m)
 }
