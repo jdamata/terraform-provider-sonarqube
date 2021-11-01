@@ -50,7 +50,7 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Project name",
+				Description: "Project key",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringLenBetween(0, 100),
 				),
@@ -162,9 +162,9 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	}
 
 	for _, value := range getQualityProfileProjectResponse.Results {
-		if idSlice[1] == value.Name {
+		if idSlice[1] == value.Key {
 			d.SetId(d.Id())
-			d.Set("project", value.Name)
+			d.Set("project", value.Key)
 			d.Set("quality_profile", qualityProfile)
 			d.Set("language", language)
 			return nil
