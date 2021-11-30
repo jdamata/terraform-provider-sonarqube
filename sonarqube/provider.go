@@ -69,6 +69,7 @@ func Provider() *schema.Provider {
 			"sonarqube_user":           dataSourceSonarqubeUser(),
 			"sonarqube_project":        dataSourceSonarqubeProject(),
 			"sonarqube_qualityprofile": dataSourceSonarqubeQualityProfile(),
+			"sonarqube_rule":           dataSourceSonarqubeRule(),
 		},
 		ConfigureFunc: configureProvider,
 	}
