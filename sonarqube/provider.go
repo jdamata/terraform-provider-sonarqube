@@ -66,7 +66,8 @@ func Provider() *schema.Provider {
 			"sonarqube_qualityprofile_activate_rule":       resourceSonarqubeQualityProfileRule(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"sonarqube_user": dataSourceSonarqubeUser(),
+			"sonarqube_user":    dataSourceSonarqubeUser(),
+			"sonarqube_project": dataSourceSonarqubeProject(),
 		},
 		ConfigureFunc: configureProvider,
 	}
