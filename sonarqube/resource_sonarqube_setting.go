@@ -45,7 +45,7 @@ func resourceSonarqubeSettings() *schema.Resource {
 			},
 			"value": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "Setting value. To reset a value, please use the reset web service.",
 				// ExactlyOneOf: []string{"value", "values"},
 			},
