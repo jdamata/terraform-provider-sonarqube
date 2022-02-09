@@ -87,7 +87,7 @@ func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) erro
 	defer resp.Body.Close()
 
 	d.SetId(d.Get("key").(string))
-	return resourceSonarqubeRuleRead(d, m)
+	return resourceSonarqubeSettingsRead(d, m)
 }
 
 func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error {
@@ -177,5 +177,5 @@ func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	defer resp.Body.Close()
 
-	return resourceSonarqubeRuleRead(d, m)
+	return resourceSonarqubeSettingsRead(d, m)
 }
