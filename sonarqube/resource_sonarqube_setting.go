@@ -78,7 +78,7 @@ func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) erro
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourceSonarqubeSettingsCreate",
 	)
 	if err != nil {
@@ -138,7 +138,7 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourceSonarqubeSettingsDelete",
 	)
 	if err != nil {
@@ -169,7 +169,7 @@ func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) erro
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourceSonarqubeSettingsUpdate",
 	)
 	if err != nil {
