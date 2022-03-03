@@ -1,6 +1,6 @@
 module github.com/jdamata/terraform-provider-sonarqube
 
-go 1.15
+go 1.16
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
