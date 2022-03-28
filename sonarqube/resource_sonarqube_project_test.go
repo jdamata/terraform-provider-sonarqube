@@ -72,3 +72,29 @@ func TestAccSonarqubeProjectBasic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSonarqubeProjectVisibilityUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "visibility", "public"),
+				),
+			},
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "private"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "visibility", "private"),
+				),
+			},
+		},
+	})
+}

@@ -43,6 +43,7 @@ func resourceSonarqubeProject() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSonarqubeProjectCreate,
 		Read:   resourceSonarqubeProjectRead,
+		Update: resourceSonarqubeProjectUpdate,
 		Delete: resourceSonarqubeProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectImport,
@@ -64,7 +65,6 @@ func resourceSonarqubeProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "public",
-				ForceNew: true,
 			},
 		},
 	}
@@ -142,6 +142,33 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 
 	return fmt.Errorf("resourceSonarqubeProjectRead: Failed to find project: %+v", d.Id())
 
+}
+
+func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
+
+	// handle default updates (api/users/update)
+	if d.HasChange("visibility") {
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+		sonarQubeURL.Path = "api/projects/update_visibility"
+		sonarQubeURL.RawQuery = url.Values{
+			"project":    []string{d.Id()},
+			"visibility": []string{d.Get("visibility").(string)},
+		}.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubeProjectUpdate",
+		)
+		if err != nil {
+			return fmt.Errorf("Error updating Sonarqube project: %+v", err)
+		}
+		defer resp.Body.Close()
+	}
+
+	return resourceSonarqubeProjectRead(d, m)
 }
 
 func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error {
