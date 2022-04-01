@@ -34,8 +34,10 @@ func TestProvider_impl(t *testing.T) {
 
 func testAccPreCheck(t *testing.T) {
 	testSonarHost(t)
-	testSonarUser(t)
-	testSonarPass(t)
+	if v := os.Getenv("SONAR_TOKEN"); v == "" {
+		testSonarUser(t)
+		testSonarPass(t)
+	}
 }
 
 func testSonarUser(t *testing.T) {

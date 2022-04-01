@@ -22,14 +22,24 @@ func Provider() *schema.Provider {
 		// Provider configuration
 		Schema: map[string]*schema.Schema{
 			"user": {
-				Type:        schema.TypeString,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_USER", "SONARQUBE_USER"}, nil),
-				Required:    true,
+				Type:         schema.TypeString,
+				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_USER", "SONARQUBE_USER"}, nil),
+				Optional:     true,
+				RequiredWith: []string{"pass"},
 			},
 			"pass": {
-				Type:        schema.TypeString,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_PASS", "SONARQUBE_PASS"}, nil),
-				Required:    true,
+				Type:         schema.TypeString,
+				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_PASS", "SONARQUBE_PASS"}, nil),
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"user"},
+			},
+			"token": {
+				Type:         schema.TypeString,
+				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_TOKEN", "SONRQUBE_TOKEN"}, nil),
+				Optional:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"pass"},
 			},
 			"host": {
 				Type:        schema.TypeString,
@@ -101,8 +111,13 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	sonarQubeURL := url.URL{
 		Scheme:     host.Scheme,
 		Host:       host.Host,
-		User:       url.UserPassword(d.Get("user").(string), d.Get("pass").(string)),
 		ForceQuery: true,
+	}
+
+	if token, ok := d.GetOk("token"); ok {
+		sonarQubeURL.User = url.UserPassword(token.(string), "")
+	} else {
+		sonarQubeURL.User = url.UserPassword(d.Get("user").(string), d.Get("pass").(string))
 	}
 
 	var installedVersion *version.Version
