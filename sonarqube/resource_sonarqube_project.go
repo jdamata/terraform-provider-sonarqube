@@ -106,7 +106,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/projects/search"
 	sonarQubeURL.RawQuery = url.Values{
-		"project": []string{d.Id()},
+		"projects": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
