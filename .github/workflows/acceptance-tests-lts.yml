@@ -34,6 +34,6 @@ jobs:
           SONAR_PASS: admin
     services:
       sonarqube:
-        image: sonarqube:7.9-community
+        image: sonarqube:8.9-community
         ports:
           - 9000:9000
