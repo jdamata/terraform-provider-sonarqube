@@ -70,7 +70,7 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 		"resourceSonarqubeUserTokenCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error creating Sonarqube user token: %+v", err)
+		return fmt.Errorf("error creating Sonarqube user token: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -114,7 +114,7 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 		"resourceSonarqubeUserTokenRead",
 	)
 	if err != nil {
-		return fmt.Errorf("Error reading Sonarqube user tokens: %+v", err)
+		return fmt.Errorf("error reading Sonarqube user tokens: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -156,7 +156,7 @@ func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) err
 		"resourceSonarqubeUserTokenDelete",
 	)
 	if err != nil {
-		return fmt.Errorf("Error deleting Sonarqube user token: %+v", err)
+		return fmt.Errorf("error deleting Sonarqube user token: %+v", err)
 	}
 	defer resp.Body.Close()
 

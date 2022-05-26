@@ -76,7 +76,7 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 		"resourceSonarqubePermissionTemplateCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error creating Sonarqube permission template: %+v", err)
+		return fmt.Errorf("error creating Sonarqube permission template: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -111,7 +111,7 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 		"resourceSonarqubePermissionTemplateRead",
 	)
 	if err != nil {
-		return fmt.Errorf("Error reading Sonarqube permission templates: %+v", err)
+		return fmt.Errorf("error reading Sonarqube permission templates: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -170,7 +170,7 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 		"resourceSonarqubePermissionTemplateUpdate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error updating Sonarqube permission template: %+v", err)
+		return fmt.Errorf("error updating Sonarqube permission template: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -192,7 +192,7 @@ func resourceSonarqubePermissionTemplateDelete(d *schema.ResourceData, m interfa
 		"resourceSonarqubePermissionTemplateDelete",
 	)
 	if err != nil {
-		return fmt.Errorf("Error deleting Sonarqube permission template: %+v", err)
+		return fmt.Errorf("error deleting Sonarqube permission template: %+v", err)
 	}
 	defer resp.Body.Close()
 

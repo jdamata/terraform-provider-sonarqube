@@ -163,7 +163,7 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 			"resourceSonarqubeProjectUpdate",
 		)
 		if err != nil {
-			return fmt.Errorf("Error updating Sonarqube project: %+v", err)
+			return fmt.Errorf("error updating Sonarqube project: %+v", err)
 		}
 		defer resp.Body.Close()
 	}

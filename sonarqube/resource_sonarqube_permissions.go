@@ -123,7 +123,7 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	// loop through all permissions that should be applied
-	for _, permission := range *&permissions {
+	for _, permission := range permissions {
 		CurrentRawQuery := RawQuery
 		CurrentRawQuery.Del("permission")
 		CurrentRawQuery.Add("permission", permission)
@@ -137,7 +137,7 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 			"resourceSonarqubePermissionsCreate",
 		)
 		if err != nil {
-			return fmt.Errorf("Error creating Sonarqube permission: %+v", err)
+			return fmt.Errorf("error creating Sonarqube permission: %+v", err)
 		}
 		defer resp.Body.Close()
 	}
@@ -189,7 +189,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			"resourceSonarqubePermissionsRead",
 		)
 		if err != nil {
-			return fmt.Errorf("Error reading Sonarqube permissions: %+v", err)
+			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
 		}
 		defer resp.Body.Close()
 
@@ -233,7 +233,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			"resourceSonarqubePermissionsRead",
 		)
 		if err != nil {
-			return fmt.Errorf("Error reading Sonarqube permissions: %+v", err)
+			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
 		}
 		defer resp.Body.Close()
 
@@ -307,7 +307,7 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 	}
 
 	// loop through all permissions that should be applied
-	for _, permission := range *&permissions {
+	for _, permission := range permissions {
 		CurrentRawQuery := RawQuery
 		CurrentRawQuery.Del("permission")
 		CurrentRawQuery.Add("permission", permission)
@@ -321,7 +321,7 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 			"resourceSonarqubePermissionsDelete",
 		)
 		if err != nil {
-			return fmt.Errorf("Error creating Sonarqube permission: %+v", err)
+			return fmt.Errorf("error creating Sonarqube permission: %+v", err)
 		}
 		defer resp.Body.Close()
 	}

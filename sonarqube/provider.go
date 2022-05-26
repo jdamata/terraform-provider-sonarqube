@@ -105,7 +105,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 	host, err := url.Parse(d.Get("host").(string))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse sonarqube host: %+v", err)
+		return nil, fmt.Errorf("failed to parse sonarqube host: %+v", err)
 	}
 
 	sonarQubeURL := url.URL{
@@ -134,9 +134,9 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	minimumVersion, _ := version.NewVersion("7.9")
+	minimumVersion, _ := version.NewVersion("8.9")
 	if installedVersion.LessThan(minimumVersion) {
-		return nil, fmt.Errorf("Unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
+		return nil, fmt.Errorf("unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
 	}
 
 	return &ProviderConfiguration{
@@ -151,31 +151,31 @@ func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) (*version.
 	sonarqube.Path = "api/server/version"
 	req, err := retryablehttp.NewRequest("GET", sonarqube.String(), http.NoBody)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to construct sonarqube version request: %+v", err)
+		return nil, fmt.Errorf("unable to construct sonarqube version request: %+v", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to reach sonarqube: %+v", err)
+		return nil, fmt.Errorf("unable to reach sonarqube: %+v", err)
 	}
 	defer resp.Body.Close()
 
 	// Check response code
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Sonarqube version api did not return a 200: %+v", err)
+		return nil, fmt.Errorf("sonarqube version api did not return a 200: %+v", err)
 	}
 
 	// Read in the response
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse response body on GET sonarqube version api: %+v", err)
+		return nil, fmt.Errorf("failed to parse response body on GET sonarqube version api: %+v", err)
 	}
 
 	// Convert response to a int.
 	bodyString := string(bodyBytes)
 	installedVersion, err := version.NewVersion(bodyString)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to convert sonarqube version to a version: %+v", err)
+		return nil, fmt.Errorf("failed to convert sonarqube version to a version: %+v", err)
 	}
 
 	return installedVersion, nil

@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
-	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -17,36 +15,14 @@ type GetGroup struct {
 	Groups []Group `json:"groups"`
 }
 
-// GetGroup for unmarshalling response body from getting group details for sonarqube versions less than 8
-type GetGroup_v7 struct {
-	Paging Paging     `json:"paging"`
-	Groups []Group_v7 `json:"groups"`
-}
-
 // CreateGroupResponse for unmarshalling response body of group creation
 type CreateGroupResponse struct {
 	Group Group `json:"group"`
 }
 
-// CreateGroupResponse for unmarshalling response body of group creation for sonarqube versions less than 8
-type CreateGroupResponse_v7 struct {
-	Group Group_v7 `json:"group"`
-}
-
 // Group struct
 type Group struct {
 	ID           string   `json:"id,omitempty"`
-	Organization string   `json:"organization,omitempty"`
-	Name         string   `json:"name,omitempty"`
-	Description  string   `json:"description,omitempty"`
-	MembersCount int      `json:"membersCount,omitempty"`
-	IsDefault    bool     `json:"default,omitempty"`
-	Permissions  []string `json:"permissions,omitempty"`
-}
-
-// Group struct for sonarqube versions less than 8
-type Group_v7 struct {
-	ID           int      `json:"id,omitempty"`
 	Organization string   `json:"organization,omitempty"`
 	Name         string   `json:"name,omitempty"`
 	Description  string   `json:"description,omitempty"`
@@ -84,7 +60,6 @@ func resourceSonarqubeGroup() *schema.Resource {
 func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/user_groups/create"
-	sonarQubeVersion := m.(*ProviderConfiguration).sonarQubeVersion
 	sonarQubeURL.RawQuery = url.Values{
 		"name":        []string{d.Get("name").(string)},
 		"description": []string{d.Get("description").(string)},
@@ -98,28 +73,17 @@ func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeGroupCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error creating Sonarqube group: %+v", err)
+		return fmt.Errorf("error creating Sonarqube group: %+v", err)
 	}
 	defer resp.Body.Close()
 
-	// Sonarqube versions less than 8.0 require gateid instead of gatename
-	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
-		// Decode response into struct
-		groupResponse := CreateGroupResponse_v7{}
-		err = json.NewDecoder(resp.Body).Decode(&groupResponse)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
-		}
-		d.SetId(strconv.Itoa(groupResponse.Group.ID))
-	} else {
-		// Decode response into struct
-		groupResponse := CreateGroupResponse{}
-		err = json.NewDecoder(resp.Body).Decode(&groupResponse)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
-		}
-		d.SetId(groupResponse.Group.ID)
+	// Decode response into struct
+	groupResponse := CreateGroupResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&groupResponse)
+	if err != nil {
+		return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
 	}
+	d.SetId(groupResponse.Group.ID)
 
 	return resourceSonarqubeGroupRead(d, m)
 }
@@ -127,7 +91,6 @@ func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/user_groups/search"
-	sonarQubeVersion := m.(*ProviderConfiguration).sonarQubeVersion
 	sonarQubeURL.RawQuery = url.Values{
 		"q": []string{d.Get("name").(string)},
 	}.Encode()
@@ -140,45 +103,25 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeGroupRead",
 	)
 	if err != nil {
-		return fmt.Errorf("Error reading Sonarqube group: %+v", err)
+		return fmt.Errorf("error reading Sonarqube group: %+v", err)
 	}
 	defer resp.Body.Close()
 
-	// Sonarqube versions less than 8.0 require gateid instead of gatename
 	readSuccess := false
-	if version, _ := version.NewVersion("8.0"); sonarQubeVersion.LessThanOrEqual(version) {
-		// Decode response into struct
-		groupReadResponse := GetGroup_v7{}
-		err = json.NewDecoder(resp.Body).Decode(&groupReadResponse)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
-		}
-		// Loop over all groups to see if the group we need exists.
-		for _, value := range groupReadResponse.Groups {
-			if d.Id() == strconv.Itoa(value.ID) {
-				// If it does, set the values of that group
-				d.SetId(strconv.Itoa(value.ID))
-				d.Set("name", value.Name)
-				d.Set("description", value.Description)
-				readSuccess = true
-			}
-		}
-	} else {
-		// Decode response into struct
-		groupReadResponse := GetGroup{}
-		err = json.NewDecoder(resp.Body).Decode(&groupReadResponse)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
-		}
-		// Loop over all groups to see if the group we need exists.
-		for _, value := range groupReadResponse.Groups {
-			if d.Id() == value.ID {
-				// If it does, set the values of that group
-				d.SetId(value.ID)
-				d.Set("name", value.Name)
-				d.Set("description", value.Description)
-				readSuccess = true
-			}
+	// Decode response into struct
+	groupReadResponse := GetGroup{}
+	err = json.NewDecoder(resp.Body).Decode(&groupReadResponse)
+	if err != nil {
+		return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
+	}
+	// Loop over all groups to see if the group we need exists.
+	for _, value := range groupReadResponse.Groups {
+		if d.Id() == value.ID {
+			// If it does, set the values of that group
+			d.SetId(value.ID)
+			d.Set("name", value.Name)
+			d.Set("description", value.Description)
+			readSuccess = true
 		}
 	}
 
@@ -214,7 +157,7 @@ func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeGroupUpdate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error updating Sonarqube group: %+v", err)
+		return fmt.Errorf("error updating Sonarqube group: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -236,7 +179,7 @@ func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeGroupDelete",
 	)
 	if err != nil {
-		return fmt.Errorf("Error deleting Sonarqube group: %+v", err)
+		return fmt.Errorf("error deleting Sonarqube group: %+v", err)
 	}
 	defer resp.Body.Close()
 

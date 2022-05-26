@@ -102,7 +102,7 @@ func resourceSonarqubeUserCreate(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeUserCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error creating Sonarqube user: %+v", err)
+		return fmt.Errorf("error creating Sonarqube user: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -137,7 +137,7 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeUserRead",
 	)
 	if err != nil {
-		return fmt.Errorf("Error reading Sonarqube user: %+v", err)
+		return fmt.Errorf("error reading Sonarqube user: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -182,7 +182,7 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 			"resourceSonarqubeUserUpdate",
 		)
 		if err != nil {
-			return fmt.Errorf("Error updating Sonarqube user: %+v", err)
+			return fmt.Errorf("error updating Sonarqube user: %+v", err)
 		}
 		defer resp.Body.Close()
 	}
@@ -205,7 +205,7 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 			"resourceSonarqubeUserUpdate",
 		)
 		if err != nil {
-			return fmt.Errorf("Error updating Sonarqube user: %+v", err)
+			return fmt.Errorf("error updating Sonarqube user: %+v", err)
 		}
 		defer resp.Body.Close()
 	}
@@ -228,7 +228,7 @@ func resourceSonarqubeUserDelete(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeUserDelete",
 	)
 	if err != nil {
-		return fmt.Errorf("Error deleting (deactivating) Sonarqube user: %+v", err)
+		return fmt.Errorf("error deleting (deactivating) Sonarqube user: %+v", err)
 	}
 	defer resp.Body.Close()
 
