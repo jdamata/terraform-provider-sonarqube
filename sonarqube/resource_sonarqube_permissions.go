@@ -249,7 +249,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
-				d.Set("permissions", stripPermissions(&value.Permissions))
+				d.Set("permissions", flattenPermissions(&value.Permissions))
 				return nil
 			}
 		}
@@ -347,23 +347,6 @@ func flattenPermissions(input *[]string) []interface{} {
 
 	for _, permission := range *input {
 		flatPermissions = append(flatPermissions, permission)
-	}
-
-	return flatPermissions
-}
-
-// The endpoint api/permissions/groups return also the non template permissions this messes with state of the permissions
-// To make sure these don't interfere the extra permissions are ignored
-func stripPermissions(input *[]string) []interface{} {
-	flatPermissions := make([]interface{}, 0)
-	if input == nil {
-		return flatPermissions
-	}
-
-	for _, permission := range *input {
-		if permission != "applicationcreator" && permission != "portfoliocreator" {
-			flatPermissions = append(flatPermissions, permission)
-		}
 	}
 
 	return flatPermissions
