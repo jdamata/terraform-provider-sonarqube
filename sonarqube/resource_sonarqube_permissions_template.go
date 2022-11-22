@@ -55,6 +55,10 @@ func resourceSonarqubePermissionTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"default": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -92,6 +96,24 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 	} else {
 		return fmt.Errorf("resourceSonarqubePermissionTemplateCreate: Create response didn't contain an ID")
 	}
+
+	// If default is set to true, set this permission template as the default.
+	sonarQubeURL.Path = "api/permissions/set_default_template"
+	sonarQubeURL.RawQuery = url.Values{
+		"templateId": []string{permissionTemplateResponse.PermissionTemplate.ID},
+	}.Encode()
+
+	resp, err = httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourceSonarqubePermissionTemplateCreate",
+	)
+	if err != nil {
+		return fmt.Errorf("error setting Sonarqube permission template to default: %+v", err)
+	}
+	defer resp.Body.Close()
 
 	return resourceSonarqubePermissionTemplateRead(d, m)
 }
