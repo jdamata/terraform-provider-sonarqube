@@ -20,6 +20,7 @@ The following arguments are supported:
 - name - (Required) The name of the Permission template to create. Changing this forces a new resource to be created.
 - description - (Optional) Description of the Template.
 - project_key_pattern - (Optional) The project key pattern. Must be a valid Java regular expression.
+- default - (Optional) Set the template as the default. This can only be set for one template.
 
 ## Attributes Reference
 

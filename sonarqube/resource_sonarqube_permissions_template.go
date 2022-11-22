@@ -98,22 +98,12 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 	}
 
 	// If default is set to true, set this permission template as the default.
-	sonarQubeURL.Path = "api/permissions/set_default_template"
-	sonarQubeURL.RawQuery = url.Values{
-		"templateId": []string{permissionTemplateResponse.PermissionTemplate.ID},
-	}.Encode()
-
-	resp, err = httpRequestHelper(
-		m.(*ProviderConfiguration).httpClient,
-		"POST",
-		sonarQubeURL.String(),
-		http.StatusNoContent,
-		"resourceSonarqubePermissionTemplateCreate",
-	)
-	if err != nil {
-		return fmt.Errorf("error setting Sonarqube permission template to default: %+v", err)
+	if d.Get("default").(bool) {
+		err = resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL, d.Id(), m)
+		if err != nil {
+			return err
+		}
 	}
-	defer resp.Body.Close()
 
 	return resourceSonarqubePermissionTemplateRead(d, m)
 }
@@ -196,6 +186,14 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 	}
 	defer resp.Body.Close()
 
+	// If default is set to true, set this permission template as the default.
+	if d.Get("default").(bool) {
+		err = resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL, d.Id(), m)
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceSonarqubePermissionTemplateRead(d, m)
 }
 
@@ -226,4 +224,24 @@ func resourceSonarqubePermissionTemplateImport(d *schema.ResourceData, m interfa
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
+}
+
+func resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL url.URL, templateID string, m interface{}) error {
+	sonarQubeURL.Path = "api/permissions/set_default_template"
+	sonarQubeURL.RawQuery = url.Values{
+		"templateId": []string{templateID},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubePermissionTemplateCreate",
+	)
+	if err != nil {
+		return fmt.Errorf("error setting Sonarqube permission template to default: %+v", err)
+	}
+	defer resp.Body.Close()
+	return nil
 }
