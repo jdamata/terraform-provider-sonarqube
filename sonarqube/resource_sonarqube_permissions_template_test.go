@@ -85,9 +85,9 @@ func TestAccSonarqubePermissionTemplateDefaultTemplate(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubePermissionTemplateDefaultTemplate(rnd, "testAccSonarqubePermissionTemplate", "These are internal projects", "internal.*"),
+				Config: testAccSonarqubePermissionTemplateDefaultTemplate(rnd, "testAccSonarqubePermissionTemplateDefault", "These are internal projects", "internal.*"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePermissionTemplate"),
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePermissionTemplateDefault"),
 					resource.TestCheckResourceAttr(name, "description", "These are internal projects"),
 					resource.TestCheckResourceAttr(name, "project_key_pattern", "internal.*"),
 				),

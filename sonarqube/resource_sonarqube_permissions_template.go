@@ -107,7 +107,7 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourceSonarqubePermissionTemplateCreate",
 	)
 	if err != nil {
