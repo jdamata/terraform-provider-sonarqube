@@ -10,8 +10,6 @@ all: fmt vet build
 
 build:
 	go build -a -tags netgo -o terraform-provider-sonarqube
-	mkdir -p ~/.terraform.d/plugins/github.com/jdamata/sonarqube/0.1/linux_amd64/
-	cp terraform-provider-sonarqube ~/.terraform.d/plugins/github.com/jdamata/sonarqube/0.1/linux_amd64/
 
 fmt:
 	go fmt ./...

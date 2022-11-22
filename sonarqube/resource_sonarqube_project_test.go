@@ -94,6 +94,10 @@ func TestAccSonarqubeProjectVisibilityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
 					resource.TestCheckResourceAttr(name, "visibility", "private"),
 				),
+				// This is set to plan only as the admin user does not have the required privileges to make this change.
+				// Requires 'Project administer' permission on the specified project or view
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

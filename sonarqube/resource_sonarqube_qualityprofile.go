@@ -87,12 +87,6 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Quality profile language",
-				ValidateDiagFunc: validation.ToDiagFunc(
-					validation.StringInSlice(
-						[]string{"cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "ts", "vbnet", "web", "xml"},
-						false,
-					),
-				),
 			},
 			"is_default": {
 				Type:        schema.TypeBool,
