@@ -91,6 +91,10 @@ func TestAccSonarqubePermissionTemplateDefaultTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "description", "These are internal projects"),
 					resource.TestCheckResourceAttr(name, "project_key_pattern", "internal.*"),
 				),
+				// Must be set to plan as its not possible to destroy a template that is the current default.
+				// This results in the error: It is not possible to delete the default permission template for projects
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
