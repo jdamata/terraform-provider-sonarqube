@@ -14,12 +14,8 @@ type Setting struct {
 	Value       string        `json:"value"`
 	Values      []string      `json:"values"`
 	Inherited   bool          `json:"inherited"`
-	FieldValues []FieldValues `json:"fieldValues"`
-}
+	FieldValues []map[string]string `json:"fieldValues"`
 
-type FieldValues struct {
-	Boolean string `json:"boolean"`
-	Text    string `json:"text"`
 }
 
 type GetSettings struct {
@@ -45,22 +41,29 @@ func resourceSonarqubeSettings() *schema.Resource {
 			},
 			"value": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:     true,
 				Description: "Setting value. To reset a value, please use the reset web service.",
-				// ExactlyOneOf: []string{"value", "values"},
+				ExactlyOneOf: []string{"value", "values", "field_values"},
 			},
-			// TODO: add support for values
-			//"values": {
-			//	Type:        schema.TypeList,
-			//	Optional:    true,
-			//	Description: "Setting multi value. To set several values, the parameter must be called once for each value",
-			//  ExactlyOneOf: []string{"value", "values"},
-			//},
-			//"fieldValues": {
-			//	Type:        schema.TypeString,
-			//	Optional:    true,
-			//	Description: "Setting field values. To set several values, the parameter must be called once for each value.",
-			//},
+			"values": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				Description:  "Setting multi values for the supplied key",
+				ExactlyOneOf: []string{"value", "values", "field_values"},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"field_values": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				Description:  "Setting field values for the supplied key",
+				ExactlyOneOf: []string{"value", "values", "field_values"},
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+					Elem: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -68,11 +71,7 @@ func resourceSonarqubeSettings() *schema.Resource {
 func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/settings/set"
-	sonarQubeURL.RawQuery = url.Values{
-		"key":   []string{d.Get("key").(string)},
-		"value": []string{d.Get("value").(string)},
-		// "fieldValues": []string{d.Get("fieldValues").(string)},
-	}.Encode()
+	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Get("key").(string)}, d)
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -120,7 +119,8 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 			d.SetId(value.Key)
 			d.Set("key", value.Key)
 			d.Set("value", value.Value)
-			// d.Set("fieldValues", value.FieldValues)
+			d.Set("values", value.Values)
+			d.Set("field_values", value.FieldValues)
 			return nil
 		}
 	}
@@ -159,11 +159,7 @@ func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([
 func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = "api/settings/set"
-	sonarQubeURL.RawQuery = url.Values{
-		"key":   []string{d.Id()},
-		"value": []string{d.Get("value").(string)},
-		// "fieldValues": []string{d.Get("fieldValues").(string)},
-	}.Encode()
+	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Id()}, d)
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -178,4 +174,31 @@ func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) erro
 	defer resp.Body.Close()
 
 	return resourceSonarqubeSettingsRead(d, m)
+}
+func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string {
+	// build the base query
+	RawQuery := url.Values{
+		"key": key,
+	}
+	// Add in value/values/fieldValues as appropriate
+	// single value
+	if value, ok := d.GetOk("value"); ok {
+		RawQuery.Add("value", value.(string))
+	} else {
+		// array of strings
+		if values, ok := d.GetOk("values"); ok {
+			for _, value := range values.([]interface{}) {
+				RawQuery.Add("values", value.(string))
+			}
+		} else {
+			// array of objects of key/value pairs
+			fieldValues := d.Get("field_values").([]interface{})
+			for _, value := range fieldValues {
+				b, _ := json.Marshal(value)
+				fv := string(b)
+				RawQuery.Add("fieldValues", fv)
+			}
+		}
+	}
+	return RawQuery.Encode()
 }
