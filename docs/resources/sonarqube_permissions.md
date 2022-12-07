@@ -50,7 +50,7 @@ The following arguments are supported:
 - project_key - (Optional) Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `template_id & template_name`
 - template_id - (Optional) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_name`
 - template_name - (Optional) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_id`
-- permissions - (Required) A list of permissions that should be applied. Changing this forces a new resource to be created.
+- permissions - (Required) A list of permissions that should be applied. Changing this forces a new resource to be created. Possible values are: `admin`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `scan`, `user`.
 
 **Note:** To prevent unwanted diffs, you should sort the permissions alphabetically.
 
