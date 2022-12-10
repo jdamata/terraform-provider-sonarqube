@@ -111,6 +111,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	sonarQubeURL := url.URL{
 		Scheme:     host.Scheme,
 		Host:       host.Host,
+		Path:       host.Path,
 		ForceQuery: true,
 	}
 
