@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -57,7 +58,7 @@ func resourceSonarqubeWebhook() *schema.Resource {
 
 func resourceSonarqubeWebhookCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/webhooks/create"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/webhooks/create"
 
 	params := url.Values{
 		"name": []string{d.Get("name").(string)},
@@ -95,7 +96,7 @@ func resourceSonarqubeWebhookCreate(d *schema.ResourceData, m interface{}) error
 // loop through the result until we find the one we're looking for.
 func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/webhooks/list"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/webhooks/list"
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -130,7 +131,7 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeWebhookUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/webhooks/update"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/webhooks/update"
 
 	params := url.Values{
 		"webhook": []string{d.Id()},
@@ -159,7 +160,7 @@ func resourceSonarqubeWebhookUpdate(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeWebhookDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/webhooks/delete"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/webhooks/delete"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"webhook": []string{d.Id()},

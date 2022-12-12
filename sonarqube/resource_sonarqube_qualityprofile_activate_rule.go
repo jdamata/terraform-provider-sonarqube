@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -84,7 +85,8 @@ func resourceSonarqubeQualityProfileRule() *schema.Resource {
 
 func resourceSonarqubeQualityProfileRuleCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualityprofiles/activate_rule"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/activate_rule"
+
 	sonarQubeURL.RawQuery = url.Values{
 		"key":      []string{d.Get("key").(string)},
 		"params":   []string{d.Get("params").(string)},
@@ -111,7 +113,7 @@ func resourceSonarqubeQualityProfileRuleCreate(d *schema.ResourceData, m interfa
 
 func resourceSonarqubeQualityProfileRuleDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualityprofiles/deactivate_rule"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/deactivate_rule"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":  []string{d.Get("key").(string)},
 		"rule": []string{d.Get("rule").(string)},
@@ -134,7 +136,7 @@ func resourceSonarqubeQualityProfileRuleDelete(d *schema.ResourceData, m interfa
 
 func resourceSonarqubeQualityProfileRuleRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/rules/show"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/rules/show"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":     []string{d.Id()},
 		"actives": []string{"true"},

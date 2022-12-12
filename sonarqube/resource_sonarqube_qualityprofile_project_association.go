@@ -73,7 +73,7 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 
 func resourceSonarqubeQualityProfileProjectAssociationCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualityprofiles/add_project"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/add_project"
 	sonarQubeURL.RawQuery = url.Values{
 		"language":       []string{d.Get("language").(string)},
 		"project":        []string{d.Get("project").(string)},
@@ -106,7 +106,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	// Call api/qualityprofiles/search to return the qualityProfileID
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualityprofiles/search"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/search"
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -137,7 +137,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	}
 
 	// With the qualityProfileID we can check if the project name is associated
-	sonarQubeURL.Path += "api/qualityprofiles/projects"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/projects"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{qualityProfileID},
 	}.Encode()
@@ -177,7 +177,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 func resourceSonarqubeQualityProfileProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualityprofiles/remove_project"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/remove_project"
 	sonarQubeURL.RawQuery = url.Values{
 		"language":       []string{d.Get("language").(string)},
 		"project":        []string{d.Get("project").(string)},

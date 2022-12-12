@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -75,7 +76,8 @@ func resourceSonarqubeUser() *schema.Resource {
 
 func resourceSonarqubeUserCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/users/create"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/create"
+
 	isLocal := d.Get("is_local").(bool)
 
 	rawQuery := url.Values{
@@ -124,7 +126,8 @@ func resourceSonarqubeUserCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/users/search"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/search"
+
 	sonarQubeURL.RawQuery = url.Values{
 		"q": []string{d.Id()},
 	}.Encode()
@@ -168,7 +171,8 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 	// handle default updates (api/users/update)
 	if d.HasChange("email") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path += "api/users/update"
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/update"
+
 		sonarQubeURL.RawQuery = url.Values{
 			"login": []string{d.Id()},
 			"email": []string{d.Get("email").(string)},
@@ -191,7 +195,7 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange("password") {
 
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path += "api/users/change_password"
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/change_password"
 		sonarQubeURL.RawQuery = url.Values{
 			"login":    []string{d.Id()},
 			"password": []string{d.Get("password").(string)},
@@ -215,7 +219,7 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeUserDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/users/deactivate"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/deactivate"
 	sonarQubeURL.RawQuery = url.Values{
 		"login": []string{d.Id()},
 	}.Encode()

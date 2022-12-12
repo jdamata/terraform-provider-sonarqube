@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -72,7 +73,8 @@ func resourceSonarqubeProject() *schema.Resource {
 
 func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/projects/create"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/create"
+
 	sonarQubeURL.RawQuery = url.Values{
 		"name":       []string{d.Get("name").(string)},
 		"project":    []string{d.Get("project").(string)},
@@ -104,7 +106,7 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/projects/search"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/search"
 	sonarQubeURL.RawQuery = url.Values{
 		"projects": []string{d.Id()},
 	}.Encode()
@@ -149,7 +151,7 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 	// handle default updates (api/users/update)
 	if d.HasChange("visibility") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path += "api/projects/update_visibility"
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_visibility"
 		sonarQubeURL.RawQuery = url.Values{
 			"project":    []string{d.Id()},
 			"visibility": []string{d.Get("visibility").(string)},
@@ -173,7 +175,7 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/projects/delete"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/delete"
 	sonarQubeURL.RawQuery = url.Values{
 		"project": []string{d.Id()},
 	}.Encode()

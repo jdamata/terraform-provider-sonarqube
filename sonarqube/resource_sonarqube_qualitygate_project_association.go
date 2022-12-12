@@ -56,7 +56,7 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 
 func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualitygates/select"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/select"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"gateName":   []string{d.Get("gatename").(string)},
@@ -84,7 +84,7 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	idSlice := strings.Split(d.Id(), "/")
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualitygates/search"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/search"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"gateName": []string{idSlice[0]},
@@ -122,7 +122,8 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/qualitygates/deselect"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/deselect"
+
 	sonarQubeURL.RawQuery = url.Values{
 		"gateName":   []string{d.Get("gatename").(string)},
 		"projectKey": []string{d.Get("projectkey").(string)},

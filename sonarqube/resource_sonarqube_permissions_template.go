@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -65,7 +66,7 @@ func resourceSonarqubePermissionTemplate() *schema.Resource {
 
 func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/permissions/create_template"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/create_template"
 	sonarQubeURL.RawQuery = url.Values{
 		"name":              []string{d.Get("name").(string)},
 		"description":       []string{d.Get("description").(string)},
@@ -110,7 +111,7 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 
 func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/permissions/search_templates"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/search_templates"
 	sonarQubeURL.RawQuery = url.Values{
 		"q": []string{d.Get("name").(string)},
 	}.Encode()
@@ -154,7 +155,7 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 
 func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/permissions/update_template"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/update_template"
 
 	rawQuery := url.Values{
 		"id": []string{d.Id()},
@@ -199,7 +200,7 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 
 func resourceSonarqubePermissionTemplateDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path += "api/permissions/delete_template"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/delete_template"
 	sonarQubeURL.RawQuery = url.Values{
 		"templateId": []string{d.Id()},
 	}.Encode()
@@ -227,7 +228,7 @@ func resourceSonarqubePermissionTemplateImport(d *schema.ResourceData, m interfa
 }
 
 func resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL url.URL, templateID string, m interface{}) error {
-	sonarQubeURL.Path += "api/permissions/set_default_template"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/set_default_template"
 	sonarQubeURL.RawQuery = url.Values{
 		"templateId": []string{templateID},
 	}.Encode()
