@@ -53,7 +53,7 @@ func resourceSonarqubeUserToken() *schema.Resource {
 
 func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_tokens/generate"
+	sonarQubeURL.Path += "api/user_tokens/generate"
 
 	rawQuery := url.Values{
 		"login": []string{d.Get("login_name").(string)},
@@ -99,7 +99,7 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 
 func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_tokens/search"
+	sonarQubeURL.Path += "api/user_tokens/search"
 	// split d.Id into login_name and the token name (foo/bar)
 	login := strings.Split(d.Id(), "/")
 	sonarQubeURL.RawQuery = url.Values{
@@ -142,7 +142,7 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_tokens/revoke"
+	sonarQubeURL.Path += "api/user_tokens/revoke"
 	sonarQubeURL.RawQuery = url.Values{
 		"login": []string{d.Get("login_name").(string)},
 		"name":  []string{d.Get("name").(string)},

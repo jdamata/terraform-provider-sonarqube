@@ -57,7 +57,7 @@ func resourceSonarqubePlugin() *schema.Resource {
 
 func resourceSonarqubePluginCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/plugins/install"
+	sonarQubeURL.Path += "api/plugins/install"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{d.Get("key").(string)},
 	}.Encode()
@@ -80,7 +80,7 @@ func resourceSonarqubePluginCreate(d *schema.ResourceData, m interface{}) error 
 
 func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/plugins/installed"
+	sonarQubeURL.Path += "api/plugins/installed"
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -116,7 +116,7 @@ func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubePluginDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/plugins/uninstall"
+	sonarQubeURL.Path += "api/plugins/uninstall"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{d.Id()},
 	}.Encode()

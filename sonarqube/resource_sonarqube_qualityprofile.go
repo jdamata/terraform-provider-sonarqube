@@ -106,7 +106,7 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 
 func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/create"
+	sonarQubeURL.Path += "api/qualityprofiles/create"
 	sonarQubeURL.RawQuery = url.Values{
 		"name":     []string{d.Get("name").(string)},
 		"language": []string{d.Get("language").(string)},
@@ -148,7 +148,7 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 
 func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/search"
+	sonarQubeURL.Path += "api/qualityprofiles/search"
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -185,7 +185,7 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 
 func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/delete"
+	sonarQubeURL.Path += "api/qualityprofiles/delete"
 	sonarQubeURL.RawQuery = url.Values{
 		"qualityProfile": []string{d.Get("name").(string)},
 		"language":       []string{d.Get("language").(string)},
@@ -222,7 +222,7 @@ func resourceSonarqubeQualityProfileImport(d *schema.ResourceData, m interface{}
 
 func setDefaultQualityProfile(d *schema.ResourceData, m interface{}, setDefault bool) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/set_default"
+	sonarQubeURL.Path += "api/qualityprofiles/set_default"
 	if setDefault {
 		sonarQubeURL.RawQuery = url.Values{
 			"qualityProfile": []string{d.Get("name").(string)},
@@ -251,7 +251,7 @@ func setDefaultQualityProfile(d *schema.ResourceData, m interface{}, setDefault 
 
 func setParentQualityProfile(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/change_parent"
+	sonarQubeURL.Path += "api/qualityprofiles/change_parent"
 	sonarQubeURL.RawQuery = url.Values{
 		"qualityProfile":       []string{d.Get("name").(string)},
 		"language":             []string{d.Get("language").(string)},

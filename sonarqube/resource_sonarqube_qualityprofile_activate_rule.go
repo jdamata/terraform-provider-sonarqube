@@ -84,7 +84,7 @@ func resourceSonarqubeQualityProfileRule() *schema.Resource {
 
 func resourceSonarqubeQualityProfileRuleCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/activate_rule"
+	sonarQubeURL.Path += "api/qualityprofiles/activate_rule"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":      []string{d.Get("key").(string)},
 		"params":   []string{d.Get("params").(string)},
@@ -111,7 +111,7 @@ func resourceSonarqubeQualityProfileRuleCreate(d *schema.ResourceData, m interfa
 
 func resourceSonarqubeQualityProfileRuleDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualityprofiles/deactivate_rule"
+	sonarQubeURL.Path += "api/qualityprofiles/deactivate_rule"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":  []string{d.Get("key").(string)},
 		"rule": []string{d.Get("rule").(string)},
@@ -134,7 +134,7 @@ func resourceSonarqubeQualityProfileRuleDelete(d *schema.ResourceData, m interfa
 
 func resourceSonarqubeQualityProfileRuleRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/rules/show"
+	sonarQubeURL.Path += "api/rules/show"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":     []string{d.Id()},
 		"actives": []string{"true"},

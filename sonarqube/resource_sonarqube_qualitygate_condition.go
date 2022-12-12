@@ -56,7 +56,7 @@ func resourceSonarqubeQualityGateCondition() *schema.Resource {
 
 func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/create_condition"
+	sonarQubeURL.Path += "api/qualitygates/create_condition"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"gateName": []string{d.Get("gatename").(string)},
@@ -90,7 +90,7 @@ func resourceSonarqubeQualityGateConditionCreate(d *schema.ResourceData, m inter
 
 func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/show"
+	sonarQubeURL.Path += "api/qualitygates/show"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"name": []string{d.Get("gatename").(string)},
@@ -130,7 +130,7 @@ func resourceSonarqubeQualityGateConditionRead(d *schema.ResourceData, m interfa
 
 func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/update_condition"
+	sonarQubeURL.Path += "api/qualitygates/update_condition"
 	sonarQubeURL.RawQuery = url.Values{
 		"id":     []string{d.Id()},
 		"error":  []string{d.Get("threshold").(string)},
@@ -155,7 +155,7 @@ func resourceSonarqubeQualityGateConditionUpdate(d *schema.ResourceData, m inter
 
 func resourceSonarqubeQualityGateConditionDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/delete_condition"
+	sonarQubeURL.Path += "api/qualitygates/delete_condition"
 	sonarQubeURL.RawQuery = url.Values{
 		"id": []string{d.Id()},
 	}.Encode()

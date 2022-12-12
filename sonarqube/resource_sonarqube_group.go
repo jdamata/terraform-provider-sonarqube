@@ -59,7 +59,7 @@ func resourceSonarqubeGroup() *schema.Resource {
 
 func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_groups/create"
+	sonarQubeURL.Path += "api/user_groups/create"
 	sonarQubeURL.RawQuery = url.Values{
 		"name":        []string{d.Get("name").(string)},
 		"description": []string{d.Get("description").(string)},
@@ -90,7 +90,7 @@ func resourceSonarqubeGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_groups/search"
+	sonarQubeURL.Path += "api/user_groups/search"
 	sonarQubeURL.RawQuery = url.Values{
 		"q": []string{d.Get("name").(string)},
 	}.Encode()
@@ -135,7 +135,7 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_groups/update"
+	sonarQubeURL.Path += "api/user_groups/update"
 
 	rawQuery := url.Values{
 		"id": []string{d.Id()},
@@ -166,7 +166,7 @@ func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/user_groups/delete"
+	sonarQubeURL.Path += "api/user_groups/delete"
 	sonarQubeURL.RawQuery = url.Values{
 		"id": []string{d.Id()},
 	}.Encode()

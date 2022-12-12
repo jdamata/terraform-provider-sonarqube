@@ -150,7 +150,7 @@ func resourceSonarqubeRule() *schema.Resource {
 
 func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/rules/create"
+	sonarQubeURL.Path += "api/rules/create"
 	sonarQubeURL.RawQuery = url.Values{
 		"custom_key":           []string{d.Get("custom_key").(string)},
 		"markdown_description": []string{d.Get("markdown_description").(string)},
@@ -186,7 +186,7 @@ func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeRuleRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/rules/search"
+	sonarQubeURL.Path += "api/rules/search"
 	sonarQubeURL.RawQuery = url.Values{
 		"rule_key": []string{d.Id()},
 	}.Encode()
@@ -226,7 +226,7 @@ func resourceSonarqubeRuleRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeRuleDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/rules/delete"
+	sonarQubeURL.Path += "api/rules/delete"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{d.Id()},
 	}.Encode()
@@ -255,7 +255,7 @@ func resourceSonarqubeRuleImporter(d *schema.ResourceData, m interface{}) ([]*sc
 
 func resourceSonarqubeRuleUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/rules/update"
+	sonarQubeURL.Path += "api/rules/update"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":                  []string{d.Id()},
 		"markdown_description": []string{d.Get("markdown_description").(string)},
