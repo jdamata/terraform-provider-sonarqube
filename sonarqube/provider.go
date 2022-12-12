@@ -87,7 +87,7 @@ func Provider() *schema.Provider {
 	return sonarqubeProvider
 }
 
-//ProviderConfiguration contains the sonarqube providers configuration
+// ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
 	httpClient       *retryablehttp.Client
 	sonarQubeURL     url.URL
@@ -149,7 +149,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) (*version.Version, error) {
 	// Make request to sonarqube version endpoint
-	sonarqube.Path = "api/server/version"
+	sonarqube.Path += "api/server/version"
 	req, err := retryablehttp.NewRequest("GET", sonarqube.String(), http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("unable to construct sonarqube version request: %+v", err)
