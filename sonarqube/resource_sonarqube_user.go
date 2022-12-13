@@ -167,12 +167,11 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
-
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURLSubPath := sonarQubeURL.Path
 	// handle default updates (api/users/update)
 	if d.HasChange("email") {
-		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/update"
-
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/users/update"
 		sonarQubeURL.RawQuery = url.Values{
 			"login": []string{d.Id()},
 			"email": []string{d.Get("email").(string)},
@@ -193,9 +192,7 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 
 	// handle password updates (api/users/change_password)
 	if d.HasChange("password") {
-
-		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/change_password"
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/users/change_password"
 		sonarQubeURL.RawQuery = url.Values{
 			"login":    []string{d.Id()},
 			"password": []string{d.Get("password").(string)},

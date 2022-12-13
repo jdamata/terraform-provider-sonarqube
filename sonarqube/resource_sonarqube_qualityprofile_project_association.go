@@ -106,7 +106,8 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	// Call api/qualityprofiles/search to return the qualityProfileID
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/search"
+	sonarQubeURLSubPath := sonarQubeURL.Path
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/qualityprofiles/search"
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -137,7 +138,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	}
 
 	// With the qualityProfileID we can check if the project name is associated
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/projects"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/qualityprofiles/projects"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{qualityProfileID},
 	}.Encode()
