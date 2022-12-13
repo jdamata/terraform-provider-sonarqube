@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -64,7 +65,7 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 
 func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/create"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create"
 	sonarQubeURL.RawQuery = url.Values{
 		"name": []string{d.Get("name").(string)},
 	}.Encode()
@@ -100,7 +101,7 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/show"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/show"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"name": []string{d.Id()},
@@ -133,7 +134,7 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 
 func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/destroy"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/destroy"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"name": []string{d.Id()},
@@ -167,7 +168,8 @@ func resourceSonarqubeQualityGateImport(d *schema.ResourceData, m interface{}) (
 
 func setDefaultQualityGate(d *schema.ResourceData, m interface{}, setDefault bool) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/qualitygates/set_as_default"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/set_as_default"
+
 	if setDefault {
 		sonarQubeURL.RawQuery = url.Values{
 			"name": []string{d.Get("name").(string)},

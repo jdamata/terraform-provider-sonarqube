@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type Setting struct {
-	Key         string        `json:"key"`
-	Value       string        `json:"value"`
-	Values      []string      `json:"values"`
-	Inherited   bool          `json:"inherited"`
+	Key         string              `json:"key"`
+	Value       string              `json:"value"`
+	Values      []string            `json:"values"`
+	Inherited   bool                `json:"inherited"`
 	FieldValues []map[string]string `json:"fieldValues"`
-
 }
 
 type GetSettings struct {
@@ -40,9 +40,9 @@ func resourceSonarqubeSettings() *schema.Resource {
 				Description: "Setting key",
 			},
 			"value": {
-				Type:        schema.TypeString,
+				Type:         schema.TypeString,
 				Optional:     true,
-				Description: "Setting value. To reset a value, please use the reset web service.",
+				Description:  "Setting value. To reset a value, please use the reset web service.",
 				ExactlyOneOf: []string{"value", "values", "field_values"},
 			},
 			"values": {
@@ -70,7 +70,7 @@ func resourceSonarqubeSettings() *schema.Resource {
 
 func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/settings/set"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/set"
 	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Get("key").(string)}, d)
 
 	resp, err := httpRequestHelper(
@@ -91,7 +91,7 @@ func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) erro
 
 func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/settings/values"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/values"
 	sonarQubeURL.RawQuery = url.Values{
 		"keys": []string{d.Id()},
 	}.Encode()
@@ -129,7 +129,7 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 
 func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/settings/reset"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/reset"
 	sonarQubeURL.RawQuery = url.Values{
 		"keys": []string{d.Id()},
 	}.Encode()
@@ -158,7 +158,8 @@ func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([
 
 func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = "api/settings/set"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/set"
+
 	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Id()}, d)
 
 	resp, err := httpRequestHelper(

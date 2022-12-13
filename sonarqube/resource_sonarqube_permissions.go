@@ -99,26 +99,26 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 		RawQuery.Add("login", d.Get("login_name").(string))
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template user permission
-			sonarQubeURL.Path = "api/permissions/add_user_to_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_user_to_template"
 			RawQuery.Add("templateId", templateID.(string))
 		} else {
 			// direct user permission
-			sonarQubeURL.Path = "api/permissions/add_user"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_user"
 		}
 	} else {
 		// group permission
 		RawQuery.Add("groupName", d.Get("group_name").(string))
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template user permission
-			sonarQubeURL.Path = "api/permissions/add_group_to_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_group_to_template"
 			RawQuery.Add("templateId", templateID.(string))
 			// name provide instead of id
 		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = "api/permissions/add_group_to_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_group_to_template"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
-			sonarQubeURL.Path = "api/permissions/add_group"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_group"
 		}
 	}
 
@@ -169,15 +169,15 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		// permission target is USER
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template user permission
-			sonarQubeURL.Path = "api/permissions/template_users"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/template_users"
 			RawQuery.Add("templateId", templateID.(string))
 			// name provide instead of id
 		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = "api/permissions/template_users"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/template_users"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
-			sonarQubeURL.Path = "api/permissions/users"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/users"
 		}
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
@@ -214,14 +214,14 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		// permission target is GROUP
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template group permission
-			sonarQubeURL.Path = "api/permissions/template_groups"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/template_groups"
 			RawQuery.Add("templateId", templateID.(string))
 		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = "api/permissions/template_groups"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/template_groups"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct group permission
-			sonarQubeURL.Path = "api/permissions/groups"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/groups"
 		}
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
@@ -277,14 +277,14 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 		// permission target is USER
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template user permission
-			sonarQubeURL.Path = "api/permissions/remove_user_from_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_user_from_template"
 			RawQuery.Add("templateId", templateID.(string))
 		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = "api/permissions/remove_user_from_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_user_from_template"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
-			sonarQubeURL.Path = "api/permissions/remove_user"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_user"
 		}
 		RawQuery.Add("login", d.Get("login_name").(string))
 		sonarQubeURL.RawQuery = RawQuery.Encode()
@@ -293,14 +293,14 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 		// permission target is GROUP
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template group permission
-			sonarQubeURL.Path = "api/permissions/remove_group_from_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_group_from_template"
 			RawQuery.Add("templateId", templateID.(string))
 		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = "api/permissions/remove_group_from_template"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_group_from_template"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct group permission
-			sonarQubeURL.Path = "api/permissions/remove_group"
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_group"
 		}
 		RawQuery.Add("groupName", d.Get("group_name").(string))
 		sonarQubeURL.RawQuery = RawQuery.Encode()
