@@ -18,9 +18,10 @@ type GetTokens struct {
 
 // Token struct
 type Token struct {
-	Login string `json:"login,omitempty"`
-	Name  string `json:"name,omitempty"`
-	Token string `json:"token,omitempty"`
+	Login          string `json:"login,omitempty"`
+	Name           string `json:"name,omitempty"`
+	Token          string `json:"token,omitempty"`
+	ExpirationDate string `json:"expirationDate,omitempty"`
 }
 
 // Returns the resource represented by this file.
@@ -42,6 +43,11 @@ func resourceSonarqubeUserToken() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"expiration_date": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"token": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -58,6 +64,10 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 	rawQuery := url.Values{
 		"login": []string{d.Get("login_name").(string)},
 		"name":  []string{d.Get("name").(string)},
+	}
+
+	if _, ok := d.GetOk("expiration_date"); ok {
+		rawQuery.Add("expirationDate", d.Get("expiration_date").(string))
 	}
 
 	sonarQubeURL.RawQuery = rawQuery.Encode()
@@ -133,6 +143,7 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 				d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
 				d.Set("login_name", getTokensResponse.Login)
 				d.Set("name", value.Name)
+				d.Set("expiration_date", value.ExpirationDate)
 				return nil
 			}
 		}

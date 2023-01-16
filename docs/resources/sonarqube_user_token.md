@@ -27,6 +27,7 @@ The following arguments are supported:
 
 - login_name - (Required) The login name of the User for which the token should be created. Changing this forces a new resource to be created.
 - name - (Required) The name of the Token to create. Changing this forces a new resource to be created.
+- expiration_date - (Optional) The expiration date of the token being generated, in ISO 8601 format (YYYY-MM-DD). If not set, default to no expiration.
 
 ## Attributes Reference
 
