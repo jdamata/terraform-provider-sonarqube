@@ -1,17 +1,17 @@
 name: acceptance-tests-lts
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 jobs:
   acceptance-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
       - name: build and vet the provider
@@ -19,9 +19,8 @@ jobs:
         env:
           GO111MODULE: on
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.2.1
           terraform_wrapper: false
       - name: run acceptance tests
         run: |
