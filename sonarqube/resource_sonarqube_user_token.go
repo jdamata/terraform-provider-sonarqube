@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -47,6 +48,7 @@ func resourceSonarqubeUserToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"token": {
 				Type:      schema.TypeString,
@@ -143,7 +145,13 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 				d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
 				d.Set("login_name", getTokensResponse.Login)
 				d.Set("name", value.Name)
-				d.Set("expiration_date", value.ExpirationDate)
+				if value.ExpirationDate != "" {
+					dateReceived, errTimeParse := time.Parse("2006-01-02T15:04:05-0700", value.ExpirationDate)
+					if errTimeParse != nil {
+						return fmt.Errorf("resourceSonarqubeUserTokenCreate: Failed to parse ExpirationDate: %+v", err)
+					}
+					d.Set("expiration_date", dateReceived.Format("2006-01-02"))
+				}
 				return nil
 			}
 		}

@@ -17,6 +17,7 @@ func generateHCLList(s []string) string {
 	tokens := strings.Split(semiformat, " ") // Split this string by spaces
 	return strings.Join(tokens, ", ")        // Join the Slice together (that was split by spaces) with commas
 }
+
 // Turns the map into a string that looks like {"one": "two", "three": "four"}
 func generateHCLMap(m map[string]string) string {
 	b := new(bytes.Buffer)
