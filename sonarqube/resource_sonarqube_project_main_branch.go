@@ -26,35 +26,6 @@ type Branches struct {
 	ExcludedFromPurge bool   `json:"excludedFromPurge"`
 }
 
-//// Project used in CreateProjectResponse
-//type Project struct {
-//	Key       string `json:"key"`
-//	Name      string `json:"name"`
-//	Qualifier string `json:"qualifier"`
-//}
-//
-//// GetProject for unmarshalling response body from getting project details
-//type GetProject struct {
-//	Paging     Paging              `json:"paging"`
-//	Components []ProjectComponents `json:"components"`
-//}
-//
-//// ProjectComponents used in GetProject
-//type ProjectComponents struct {
-//	Organization     string `json:"organization"`
-//	ProjectKey       string `json:"key"`
-//	Name             string `json:"name"`
-//	Qualifier        string `json:"qualifier"`
-//	Visibility       string `json:"visibility"`
-//	LastAnalysisDate string `json:"lastAnalysisDate"`
-//	Revision         string `json:"revision"`
-//}
-//
-//// CreateProjectResponse for unmarshalling response body of project creation
-//type CreateProjectResponse struct {
-//	Project Project `json:"project"`
-//}
-
 // Returns the resource represented by this file.
 func resourceSonarqubeProjectMainBranch() *schema.Resource {
 	return &schema.Resource{
