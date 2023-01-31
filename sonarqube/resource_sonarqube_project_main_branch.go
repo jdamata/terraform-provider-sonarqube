@@ -38,7 +38,7 @@ func resourceSonarqubeProjectMainBranch() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true, // Investigate if we should do this or just update :)
+				ForceNew: true,
 			},
 			"project": {
 				Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interfac
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusNoContent, // We know its 204 right ?
+		http.StatusNoContent,
 		"resourceSonarqubeProjectMainBranchCreate",
 	)
 	if err != nil {
@@ -77,7 +77,7 @@ func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interfac
 }
 
 func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{}) error {
-	idSlice := strings.Split(d.Id(), "/") // This is kinda borrowed from project assocation as it also return a 204
+	idSlice := strings.Split(d.Id(), "/")
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/list"
 	sonarQubeURL.RawQuery = url.Values{
@@ -97,13 +97,13 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 	defer resp.Body.Close()
 
 	// Decode response into struct
-	projectReadResponse := GetBranches{}
-	err = json.NewDecoder(resp.Body).Decode(&projectReadResponse)
+	branchReadResponse := GetBranches{}
+	err = json.NewDecoder(resp.Body).Decode(&branchReadResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to decode json into struct: %+v", err)
 	}
 	// Loop over all branches to see if the main branch we need exists.
-	for _, value := range projectReadResponse.Branches {
+	for _, value := range branchReadResponse.Branches {
 		if idSlice[1] == value.Name && value.IsMain {
 			d.Set("project", idSlice[0])
 			d.Set("name", value.Name)
@@ -114,12 +114,12 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 
 }
 
-// I believe that the default main branch name is main. so delete could just be setting it back to main. alternatively we can read the RULE that sets up default main branch name and that way get the proper one
+// TODO make the delete function read the default branch name of the sonarQube instance instead of assuming
 func resourceSonarqubeProjectMainBranchDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/rename"
 	sonarQubeURL.RawQuery = url.Values{
-		"name":    []string{"main"}, // See comment we might wanna make it that
+		"name":    []string{"main"},
 		"project": []string{d.Get("project").(string)},
 	}.Encode()
 
