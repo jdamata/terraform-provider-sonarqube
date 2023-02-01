@@ -77,6 +77,8 @@ func Provider() *schema.Provider {
 			"sonarqube_rule":                               resourceSonarqubeRule(),
 			"sonarqube_setting":                            resourceSonarqubeSettings(),
 			"sonarqube_qualityprofile_activate_rule":       resourceSonarqubeQualityProfileRule(),
+			"sonarqube_alm_github":                         resourceSonarqubeAlmGithub(),
+			"sonarqube_github_binding":                     resourceSonarqubeGithubBinding(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sonarqube_user":           dataSourceSonarqubeUser(),

@@ -25,6 +25,7 @@ func resourceSonarqubeAlmGithub() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSonarqubeAlmGithubCreate,
 		Read:   resourceSonarqubeAlmGithubRead,
+		Update: resourceSonarqubeAlmGithubUpdate,
 		Delete: resourceSonarqubeAlmGithubDelete,
 
 		// Define the fields of this schema.
@@ -73,13 +74,13 @@ func resourceSonarqubeAlmGithubCreate(d *schema.ResourceData, m interface{}) err
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_github_binding"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"appId":         []string{d.Get("name").(string)},
-		"clientId":      []string{d.Get("monorepo").(string)},
-		"clientSecret":  []string{d.Get("project").(string)},
-		"key":           []string{d.Get("repository").(string)},
-		"privateKey":    []string{d.Get("summaryCommentEnabled").(string)},
-		"url":           []string{d.Get("summaryCommentEnabled").(string)},
-		"webhookSecret": []string{d.Get("summaryCommentEnabled").(string)},
+		"appId":         []string{d.Get("appId").(string)},
+		"clientId":      []string{d.Get("clientId").(string)},
+		"clientSecret":  []string{d.Get("clientSecret").(string)},
+		"key":           []string{d.Get("key").(string)},
+		"privateKey":    []string{d.Get("privateKey").(string)},
+		"url":           []string{d.Get("url").(string)},
+		"webhookSecret": []string{d.Get("webhookSecret").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -134,6 +135,34 @@ func resourceSonarqubeAlmGithubRead(d *schema.ResourceData, m interface{}) error
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())
 
+}
+func resourceSonarqubeAlmGithubUpdate(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/update_github"
+	sonarQubeURL.RawQuery = url.Values{
+		"appId":         []string{d.Get("appId").(string)},
+		"clientId":      []string{d.Get("clientId").(string)},
+		"clientSecret":  []string{d.Get("clientSecret").(string)},
+		"key":           []string{d.Id()},
+		"newKey":        []string{d.Get("key").(string)},
+		"privateKey":    []string{d.Get("privateKey").(string)},
+		"url":           []string{d.Get("url").(string)},
+		"webhookSecret": []string{d.Get("webhookSecret").(string)},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourceSonarqubeAlmGithubUpdate",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return resourceSonarqubeAlmGithubRead(d, m)
 }
 
 func resourceSonarqubeAlmGithubDelete(d *schema.ResourceData, m interface{}) error {
