@@ -53,7 +53,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 			"summarycommentenabled": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  true,
+				Default:  "true",
 				ForceNew: true,
 			},
 		},
