@@ -20,8 +20,15 @@ func testSweepSonarqubeUserExteernalIdentitySweeper(r string) error {
 
 func testAccSonarqubeUserExternalIdentityConfig(rnd string, login string, externalIdentity string, externalProvider string) string {
 	return fmt.Sprintf(`
+		resource "sonarqube_user" "%[1]s" {
+			login_name = "%[2]s"
+			name       = "Test User"
+			email      = "terraform-test@sonarqube.com"
+			password   = "secret-sauce"
+		}
+
 		resource "sonarqube_user_external_identity" "%[1]s" {
-			login_name         = "%[2]s"
+			login_name         = sonarqube_user.%[1]s.login_name
 			external_identity  = "%[3]s"
 			external_provider  = "%[4]s"
 		}`, rnd, login, externalIdentity, externalProvider)
