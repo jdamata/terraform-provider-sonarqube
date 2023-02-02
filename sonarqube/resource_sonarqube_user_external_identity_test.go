@@ -43,11 +43,11 @@ func TestAccSonarqubeUserExternalIdentity(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUserExternalIdentityConfig(rnd, "testAccSonarqubeUser", "terraform-test@sonarqube.com", "LDAP"),
+				Config: testAccSonarqubeUserExternalIdentityConfig(rnd, "testAccSonarqubeUser", "terraform-test@sonarqube.com", "sonarqube"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "login_name", "testAccSonarqubeUser"),
 					resource.TestCheckResourceAttr(name, "external_identity", "terraform-test@sonarqube.com"),
-					resource.TestCheckResourceAttr(name, "external_provider", "LDAP"),
+					resource.TestCheckResourceAttr(name, "external_provider", "sonarqube"),
 				),
 			},
 		},
