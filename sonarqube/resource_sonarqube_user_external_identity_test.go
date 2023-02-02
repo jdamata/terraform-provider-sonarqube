@@ -24,7 +24,7 @@ func testAccSonarqubeUserExternalIdentityConfig(rnd string, login string, extern
 			login_name = "%[2]s"
 			name       = "Test User"
 			email      = "terraform-test@sonarqube.com"
-			password   = "secret-sauce"
+			is_local   = false
 		}
 
 		resource "sonarqube_user_external_identity" "%[1]s" {
