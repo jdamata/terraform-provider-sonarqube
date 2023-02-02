@@ -1,7 +1,7 @@
 export GO111MODULE=on
 export TF_LOG=DEBUG
 SRC=$(shell find . -name '*.go')
-SONARQUBE_IMAGE?=sonarqube:enterprise
+SONARQUBE_IMAGE?=sonarqube:developer
 SONARQUBE_START_SLEEP?=60
 
 .PHONY: all vet build test
