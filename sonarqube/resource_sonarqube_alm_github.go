@@ -30,17 +30,17 @@ func resourceSonarqubeAlmGithub() *schema.Resource {
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
-			"appId": {
+			"appid": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"clientId": {
+			"clientid": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"clientSecret": {
+			"clientsecret": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceSonarqubeAlmGithub() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"privateKey": {
+			"privatekey": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,10 +60,10 @@ func resourceSonarqubeAlmGithub() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"webhookSecret": {
+			"webhooksecret": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 		},
 	}
@@ -71,16 +71,16 @@ func resourceSonarqubeAlmGithub() *schema.Resource {
 
 func resourceSonarqubeAlmGithubCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_github_binding"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/create_github"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"appId":         []string{d.Get("appId").(string)},
-		"clientId":      []string{d.Get("clientId").(string)},
-		"clientSecret":  []string{d.Get("clientSecret").(string)},
+		"appId":         []string{d.Get("appid").(string)},
+		"clientId":      []string{d.Get("clientid").(string)},
+		"clientSecret":  []string{d.Get("clientsecret").(string)},
 		"key":           []string{d.Get("key").(string)},
-		"privateKey":    []string{d.Get("privateKey").(string)},
+		"privateKey":    []string{d.Get("privatekey").(string)},
 		"url":           []string{d.Get("url").(string)},
-		"webhookSecret": []string{d.Get("webhookSecret").(string)},
+		"webhookSecret": []string{d.Get("webhooksecret").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -128,8 +128,8 @@ func resourceSonarqubeAlmGithubRead(d *schema.ResourceData, m interface{}) error
 		if d.Id() == value.Key {
 			d.Set("key", value.Key)
 			d.Set("url", value.URL)
-			d.Set("appId", value.AppID)
-			d.Set("clientId", value.ClientID)
+			d.Set("appid", value.AppID)
+			d.Set("clientid", value.ClientID)
 			return nil
 		}
 	}
@@ -140,14 +140,14 @@ func resourceSonarqubeAlmGithubUpdate(d *schema.ResourceData, m interface{}) err
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/update_github"
 	sonarQubeURL.RawQuery = url.Values{
-		"appId":         []string{d.Get("appId").(string)},
-		"clientId":      []string{d.Get("clientId").(string)},
-		"clientSecret":  []string{d.Get("clientSecret").(string)},
+		"appId":         []string{d.Get("appid").(string)},
+		"clientId":      []string{d.Get("clientid").(string)},
+		"clientSecret":  []string{d.Get("clientsecret").(string)},
 		"key":           []string{d.Id()},
 		"newKey":        []string{d.Get("key").(string)},
-		"privateKey":    []string{d.Get("privateKey").(string)},
+		"privateKey":    []string{d.Get("privatekey").(string)},
 		"url":           []string{d.Get("url").(string)},
-		"webhookSecret": []string{d.Get("webhookSecret").(string)},
+		"webhookSecret": []string{d.Get("webhooksecret").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(

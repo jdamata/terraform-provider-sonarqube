@@ -29,7 +29,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
-			"almSetting": {
+			"almsetting": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"summaryCommentEnabled": {
+			"summarycommentenabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  true,
@@ -65,11 +65,11 @@ func resourceSonarqubeGithubBindingCreate(d *schema.ResourceData, m interface{})
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_github_binding"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"almSetting":            []string{d.Get("name").(string)},
+		"almSetting":            []string{d.Get("almsetting").(string)},
 		"monorepo":              []string{d.Get("monorepo").(string)},
 		"project":               []string{d.Get("project").(string)},
 		"repository":            []string{d.Get("repository").(string)},
-		"summaryCommentEnabled": []string{d.Get("summaryCommentEnabled").(string)},
+		"summaryCommentEnabled": []string{d.Get("summarycommentenabled").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -111,15 +111,16 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 	defer resp.Body.Close()
 
 	// Decode response into struct
-	branchReadResponse := GetBinding{}
-	err = json.NewDecoder(resp.Body).Decode(&branchReadResponse)
+	BindingReadResponse := GetBinding{}
+	err = json.NewDecoder(resp.Body).Decode(&BindingReadResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to decode json into struct: %+v", err)
 	}
 	// Loop over all branches to see if the main branch we need exists.
-	if idSlice[1] == branchReadResponse.Repository && branchReadResponse.Alm == "github" {
+	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "github" {
 		d.Set("project", idSlice[0])
 		d.Set("repository", idSlice[1])
+		d.Set("almsetting", BindingReadResponse.Key)
 		return nil
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())

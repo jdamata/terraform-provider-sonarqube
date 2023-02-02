@@ -23,13 +23,13 @@ func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting s
 	return fmt.Sprintf(`
 		
 		resource "sonarqube_alm_github" "%[1]s" {
-			appId       = "457"
-			clientId    = "1234"
-			clientSecret    = "secret"
+			appid       = "12345"
+			clientid    = "56789"
+			clientsecret    = "secret"
 			key    = "%[3]s"
-			privateKey    = "myprivatekey"
+			privatekey    = "myprivatekey"
 			url    = "https://api.github.com"
-			webhookSecret = "mysecret"
+			webhooksecret = "mysecret"
 		}
 
 		resource "sonarqube_project" "%[1]s" {
@@ -38,11 +38,12 @@ func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting s
 			visibility = "public"
 		}
 		resource "sonarqube_github_binding" "%[1]s" {
-			almSetting   = "%[3]s"
+			almsetting   = "%[3]s"
 			monorepo     = "no"
 			project = sonarqube_project.%[1]s.project
 			repository   = sonarqube_project.%[1]s.project
-			summaryCommentEnabled = "true"
+			summarycommentenabled = "true"
+		    depends_on = [sonarqube_alm_github.%[1]s]
 		}`, rnd, projName, almSetting)
 }
 
@@ -55,19 +56,19 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "GitHub"),
+				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "github"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
-					resource.TestCheckResourceAttr(name, "almSetting", "GitHub"),
+					resource.TestCheckResourceAttr(name, "almsetting", "github"),
 				),
 			},
 			{
-				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "myAlm"),
+				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "githubb"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
-					resource.TestCheckResourceAttr(name, "almSetting", "myAlm"),
+					resource.TestCheckResourceAttr(name, "almsetting", "githubb"),
 				),
 			},
 		},
