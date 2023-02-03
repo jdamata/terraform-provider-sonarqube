@@ -57,6 +57,12 @@ func Provider() *schema.Provider {
 				Description: "Allows ignoring insecure certificates when set to true. Defaults to false. Disabling TLS verification is dangerous and should only be done for local testing.",
 				Default:     false,
 			},
+			"anonymize_user_on_delete": {
+				Optional:    true,
+				Type:        schema.TypeBool,
+				Description: "Allows anonymizing users on destroy. Requires Sonarqube version >= 9.7.",
+				Default:     false,
+			},
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
@@ -91,9 +97,10 @@ func Provider() *schema.Provider {
 
 // ProviderConfiguration contains the sonarqube providers configuration
 type ProviderConfiguration struct {
-	httpClient       *retryablehttp.Client
-	sonarQubeURL     url.URL
-	sonarQubeVersion *version.Version
+	httpClient              *retryablehttp.Client
+	sonarQubeURL            url.URL
+	sonarQubeVersion        *version.Version
+	sonarQubeAnonymizeUsers bool
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
@@ -142,10 +149,15 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
 	}
 
+	// Anonymizing users is supported since version 9.7. For older releases we reset it to false:
+	minimumVersionForAnonymize, _ := version.NewVersion("9.7")
+	anynomizeUsers := d.Get("anonymize_user_on_delete").(bool) && installedVersion.GreaterThanOrEqual(minimumVersionForAnonymize)
+
 	return &ProviderConfiguration{
-		httpClient:       client,
-		sonarQubeURL:     sonarQubeURL,
-		sonarQubeVersion: installedVersion,
+		httpClient:              client,
+		sonarQubeURL:            sonarQubeURL,
+		sonarQubeVersion:        installedVersion,
+		sonarQubeAnonymizeUsers: anynomizeUsers,
 	}, nil
 }
 
