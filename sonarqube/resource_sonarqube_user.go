@@ -218,7 +218,8 @@ func resourceSonarqubeUserDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/deactivate"
 	sonarQubeURL.RawQuery = url.Values{
-		"login": []string{d.Id()},
+		"login":     []string{d.Id()},
+		"anonymize": []string{strconv.FormatBool(m.(*ProviderConfiguration).sonarQubeAnonymizeUsers)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
