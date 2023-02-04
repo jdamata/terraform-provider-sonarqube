@@ -29,7 +29,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
-			"almsetting": {
+			"alm_setting": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"summarycommentenabled": {
+			"summary_comment_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "true",
@@ -65,11 +65,11 @@ func resourceSonarqubeGithubBindingCreate(d *schema.ResourceData, m interface{})
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_github_binding"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"almSetting":            []string{d.Get("almsetting").(string)},
+		"almSetting":            []string{d.Get("alm_setting").(string)},
 		"monorepo":              []string{d.Get("monorepo").(string)},
 		"project":               []string{d.Get("project").(string)},
 		"repository":            []string{d.Get("repository").(string)},
-		"summaryCommentEnabled": []string{d.Get("summarycommentenabled").(string)},
+		"summaryCommentEnabled": []string{d.Get("summary_comment_enabled").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -120,7 +120,7 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "github" {
 		d.Set("project", idSlice[0])
 		d.Set("repository", idSlice[1])
-		d.Set("almsetting", BindingReadResponse.Key)
+		d.Set("alm_setting", BindingReadResponse.Key)
 		return nil
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())

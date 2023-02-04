@@ -23,13 +23,13 @@ func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting s
 	return fmt.Sprintf(`
 		
 		resource "sonarqube_alm_github" "%[1]s" {
-			appid       = "12345"
-			clientid    = "56789"
-			clientsecret    = "secret"
+			app_id       = "12345"
+			client_id    = "56789"
+			client_secret    = "secret"
 			key    = "%[3]s"
-			privatekey    = "myprivatekey"
+			private_key    = "myprivate_key"
 			url    = "https://api.github.com"
-			webhooksecret = "mysecret"
+			webhook_secret = "mysecret"
 		}
 
 		resource "sonarqube_project" "%[1]s" {
@@ -38,11 +38,11 @@ func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting s
 			visibility = "public"
 		}
 		resource "sonarqube_github_binding" "%[1]s" {
-			almsetting   = "%[3]s"
+			alm_setting   = "%[3]s"
 			monorepo     = "no"
 			project = sonarqube_project.%[1]s.project
 			repository   = sonarqube_project.%[1]s.project
-			summarycommentenabled = "true"
+			summary_comment_enabled = "true"
 		    depends_on = [sonarqube_alm_github.%[1]s]
 		}`, rnd, projName, almSetting)
 }
@@ -60,7 +60,7 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
-					resource.TestCheckResourceAttr(name, "almsetting", "github"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "github"),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
-					resource.TestCheckResourceAttr(name, "almsetting", "githubb"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "githubb"),
 				),
 			},
 		},

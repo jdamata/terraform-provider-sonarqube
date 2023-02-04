@@ -7,13 +7,13 @@ Platform Integration for GitHub.
 
 ```terraform
 resource "sonarqube_alm_github" "github-alm" {
-  appid         = "12345"
-  clientid      = "56789"
-  clientsecret  = "secret"
+  app_id         = "12345"
+  client_id      = "56789"
+  client_secret  = "secret"
   key           = "myalm"
-  privatekey    = "myprivatekey"
+  private_key    = "myprivate_key"
   url           = "https://api.github.com"
-  webhooksecret = "mysecret"
+  webhook_secret = "mysecret"
 }
 ```
 
@@ -21,20 +21,20 @@ resource "sonarqube_alm_github" "github-alm" {
 
 The following arguments are supported:
 
-- appid - (Required) - GitHub App ID. Maximum length: 80
-- clientid - (Required) - GitHub App Client ID. Maximum length: 80
-- clientsecret - (Required) - GitHub App Client Secret. Maximum length: 160
+- app_id - (Required) - GitHub App ID. Maximum length: 80
+- client_id - (Required) - GitHub App Client ID. Maximum length: 80
+- client_secret - (Required) - GitHub App Client Secret. Maximum length: 160
 - key - (Required) - Unique key of the GitHub instance setting. Maximum length: 200
-- privatekey - (Required) - GitHub App private key. Maximum length: 2500
+- private_key - (Required) - GitHub App private key. Maximum length: 2500
 - url - (Required) - GitHub API URL. Maximum length: 2000
-- webhooksecret - (Optional) - GitHub App Webhook Secret. Maximum length: 160
+- webhook_secret - (Optional) - GitHub App Webhook Secret. Maximum length: 160
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-- appid - GitHub App ID.
-- clientid - GitHub App Client ID.
+- app_id - GitHub App ID.
+- client_id - GitHub App Client ID.
 - key - The unique key of the GitHub instance setting.
 - url - GitHub API URL.
 

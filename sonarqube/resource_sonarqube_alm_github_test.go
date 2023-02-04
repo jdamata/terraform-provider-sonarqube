@@ -23,13 +23,13 @@ func testAccSonarqubeAlmGithubName(rnd string, name string, appId string, client
 	return fmt.Sprintf(`
 		
 		resource "sonarqube_alm_github" "%[1]s" {
-			appid       = "%[3]s"
-			clientid    = "%[4]s"
-			clientsecret    = "secret"
+			app_id       = "%[3]s"
+			client_id    = "%[4]s"
+			client_secret    = "secret"
 			key    = "%[2]s"
-			privatekey    = "myprivatekey"
+			private_key    = "myprivate_key"
 			url    = "https://api.github.com"
-			webhooksecret = "mysecret"
+			webhook_secret = "mysecret"
 		}`, rnd, name, appId, clientId)
 }
 
@@ -45,16 +45,16 @@ func TestAccSonarqubeAlmGithubName(t *testing.T) {
 				Config: testAccSonarqubeAlmGithubName(rnd, "testAccSonarqubeAlmGithubName", "123456", "234567"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubeAlmGithubName"),
-					resource.TestCheckResourceAttr(name, "appid", "123456"),
-					resource.TestCheckResourceAttr(name, "clientid", "234567"),
+					resource.TestCheckResourceAttr(name, "app_id", "123456"),
+					resource.TestCheckResourceAttr(name, "client_id", "234567"),
 				),
 			},
 			{
 				Config: testAccSonarqubeAlmGithubName(rnd, "testAccSonarqubeAlmGithubNameUpdate", "654321", "765432"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubeAlmGithubNameUpdate"),
-					resource.TestCheckResourceAttr(name, "appid", "654321"),
-					resource.TestCheckResourceAttr(name, "clientid", "765432"),
+					resource.TestCheckResourceAttr(name, "app_id", "654321"),
+					resource.TestCheckResourceAttr(name, "client_id", "765432"),
 				),
 			},
 		},

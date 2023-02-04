@@ -7,13 +7,13 @@ GitHub repository and a SonarQube project
 
 ```terraform
 resource "sonarqube_alm_github" "github-alm" {
-  appid         = "12345"
-  clientid      = "56789"
-  clientsecret  = "secret"
+  app_id         = "12345"
+  client_id      = "56789"
+  client_secret  = "secret"
   key           = "myalm"
-  privatekey    = "myprivatekey"
+  private_key    = "myprivate_key"
   url           = "https://api.github.com"
-  webhooksecret = "mysecret"
+  webhook_secret = "mysecret"
 }
 
 resource "sonarqube_project" "main" {
@@ -22,7 +22,7 @@ resource "sonarqube_project" "main" {
   visibility = "public"
 }
 resource "sonarqube_github_binding" "github-binding" {
-  almsetting = sonarqube_alm_github.github-alm.key
+  alm_setting = sonarqube_alm_github.github-alm.key
   project    = sonarqube_project.main.project
   repository = "myrepo"
 }
@@ -32,11 +32,11 @@ resource "sonarqube_github_binding" "github-binding" {
 
 The following arguments are supported:
 
-- almsetting - (Required) - GitHub ALM setting key
+- alm_setting - (Required) - GitHub ALM setting key
 - monorepo - (Optional) - Is this project part of a monorepo. Default value: no
 - project - (Required) - Project key
 - repository - (Required) - GitHub Repository. Maximum length: 256
-- summarycommentenabled - (optional) - Enable/disable summary in PR discussion tab. Default value: true
+- summary_comment_enabled - (optional) - Enable/disable summary in PR discussion tab. Default value: true
 
 ## Attributes Reference
 
@@ -44,5 +44,5 @@ The following attributes are exported:
 
 - project - Project key.
 - repository - GitHub Repository.
-- almsetting - The unique key of the GitHub instance setting.
+- alm_setting - The unique key of the GitHub instance setting.
 
