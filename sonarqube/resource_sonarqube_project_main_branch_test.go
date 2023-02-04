@@ -49,7 +49,25 @@ func TestAccSonarqubeProjectMainBranchName(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchName"),
+					resource.TestCheckResourceAttr(name, "name", "test"),
+				),
+			},
+			{
 				Config: testAccSonarqubeProjectMainBranchName(rnd, "testAccSonarqubeProjectMainBranchName", "main"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchName"),
+					resource.TestCheckResourceAttr(name, "name", "main"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchName"),
 					resource.TestCheckResourceAttr(name, "name", "main"),

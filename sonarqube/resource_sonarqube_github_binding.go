@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,7 +18,7 @@ type GetBinding struct {
 	Repository            string `json:"repository"`
 	URL                   string `json:"url"`
 	SummaryCommentEnabled bool   `json:"summaryCommentEnabled"`
-	Monorepo              bool   `json:"monorepo"`
+	Monorepo              bool	 `json:"monorepo"`
 }
 
 // Returns the resource represented by this file.
@@ -26,7 +27,9 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 		Create: resourceSonarqubeGithubBindingCreate,
 		Read:   resourceSonarqubeGithubBindingRead,
 		Delete: resourceSonarqubeGithubBindingDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeGithubBindingImport,
+		},
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"alm_setting": {
@@ -37,7 +40,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 			"monorepo": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "no",
+				Default:  "false",
 				ForceNew: true,
 			},
 			"project": {
@@ -121,10 +124,12 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 		d.Set("project", idSlice[0])
 		d.Set("repository", idSlice[1])
 		d.Set("alm_setting", BindingReadResponse.Key)
+		d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo))
+		d.Set("summary_comment_enabled",  strconv.FormatBool(BindingReadResponse.SummaryCommentEnabled))
+
 		return nil
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())
-
 }
 
 func resourceSonarqubeGithubBindingDelete(d *schema.ResourceData, m interface{}) error {
@@ -147,4 +152,11 @@ func resourceSonarqubeGithubBindingDelete(d *schema.ResourceData, m interface{})
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func resourceSonarqubeGithubBindingImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeGithubBindingRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }

@@ -39,7 +39,7 @@ func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting s
 		}
 		resource "sonarqube_github_binding" "%[1]s" {
 			alm_setting   = "%[3]s"
-			monorepo     = "no"
+			monorepo     = "false"
 			project = sonarqube_project.%[1]s.project
 			repository   = sonarqube_project.%[1]s.project
 			summary_comment_enabled = "true"
@@ -64,7 +64,27 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "github"),
+				),
+			},
+			{
 				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "githubb"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "githubb"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),

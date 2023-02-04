@@ -33,7 +33,7 @@ resource "sonarqube_github_binding" "github-binding" {
 The following arguments are supported:
 
 - alm_setting - (Required) - GitHub ALM setting key
-- monorepo - (Optional) - Is this project part of a monorepo. Default value: no
+- monorepo - (Optional) - Is this project part of a monorepo. Default value: false
 - project - (Required) - Project key
 - repository - (Required) - GitHub Repository. Maximum length: 256
 - summary_comment_enabled - (optional) - Enable/disable summary in PR discussion tab. Default value: true
@@ -46,3 +46,10 @@ The following attributes are exported:
 - repository - GitHub Repository.
 - alm_setting - The unique key of the GitHub instance setting.
 
+## Import
+
+Bindings can be imported using their ID
+
+```terraform
+terraform import sonarqube_github_binding.github-binding project/repository
+```

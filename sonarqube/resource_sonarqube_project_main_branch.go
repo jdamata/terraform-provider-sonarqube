@@ -32,7 +32,9 @@ func resourceSonarqubeProjectMainBranch() *schema.Resource {
 		Create: resourceSonarqubeProjectMainBranchCreate,
 		Read:   resourceSonarqubeProjectMainBranchRead,
 		Delete: resourceSonarqubeProjectMainBranchDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeProjectMainBranchImport,
+		},
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -136,4 +138,11 @@ func resourceSonarqubeProjectMainBranchDelete(d *schema.ResourceData, m interfac
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func resourceSonarqubeProjectMainBranchImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeProjectMainBranchRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }

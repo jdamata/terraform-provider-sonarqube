@@ -25,3 +25,10 @@ The following attributes are exported:
 - name - The name of the main branch
 - project - Key of the project
 
+## Import
+
+Main branch can be imported using their ID
+
+```terraform
+terraform import sonarqube_project_main_branch.mybranch project/name
+```
