@@ -19,7 +19,7 @@ func testSweepSonarqubeGithubBinding(r string) error {
 	return nil
 }
 
-func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting string) string {
+func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting string, repoName string) string {
 	return fmt.Sprintf(`
 		
 		resource "sonarqube_alm_github" "%[1]s" {
@@ -41,10 +41,10 @@ func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting s
 			alm_setting   = "%[3]s"
 			monorepo     = "false"
 			project = sonarqube_project.%[1]s.project
-			repository   = sonarqube_project.%[1]s.project
+			repository   = "%[4]s"
 			summary_comment_enabled = "true"
 		    depends_on = [sonarqube_alm_github.%[1]s]
-		}`, rnd, projName, almSetting)
+		}`, rnd, projName, almSetting, repoName)
 }
 
 func TestAccSonarqubeGithubBindingName(t *testing.T) {
@@ -56,11 +56,12 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "github"),
+				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "github", "testAccSonarqubeGithubBindingName"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "alm_setting", "github"),
+					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
 				),
 			},
 			{
@@ -74,7 +75,7 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "githubb"),
+				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "githubb", "testAccSonarqubeGithubBindingName"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
@@ -89,6 +90,24 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeGithubBindingName"),
 					resource.TestCheckResourceAttr(name, "alm_setting", "githubb"),
+				),
+			},
+			{
+				Config: testAccSonarqubeGithubBindingName(rnd, "testAccSonarqubeGithubBindingName", "GitHub", "org/testAccSonarqubeGithubBindingName"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "repository", "org/testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "GitHub"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "repository", "org/testAccSonarqubeGithubBindingName"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "GitHub"),
 				),
 			},
 		},
