@@ -10,7 +10,7 @@ resource "sonarqube_project" "main" {
 }
 resource "sonarqube_project_main_branch" "mybranch" {
   name    = "release"
-  project = sonarqube_project.main.project
+  project = "my_project"
 }
 ```
 

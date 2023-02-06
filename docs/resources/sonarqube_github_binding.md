@@ -23,8 +23,8 @@ resource "sonarqube_project" "main" {
 }
 resource "sonarqube_github_binding" "github-binding" {
   alm_setting = sonarqube_alm_github.github-alm.key
-  project    = sonarqube_project.main.project
-  repository = "myrepo"
+  project    = "my_project"
+  repository = "myorg/myrepo"
 }
 ```
 
@@ -35,7 +35,7 @@ The following arguments are supported:
 - alm_setting - (Required) - GitHub ALM setting key
 - monorepo - (Optional) - Is this project part of a monorepo. Default value: false
 - project - (Required) - Project key
-- repository - (Required) - GitHub Repository. Maximum length: 256
+- repository - (Required) - GitHub Repository in full name format. Maximum length: 256
 - summary_comment_enabled - (optional) - Enable/disable summary in PR discussion tab. Default value: true
 
 ## Attributes Reference
