@@ -35,7 +35,7 @@ The following arguments are supported:
 - alm_setting - (Required) - GitHub ALM setting key
 - monorepo - (Optional) - Is this project part of a monorepo. Default value: false
 - project - (Required) - Project key
-- repository - (Required) - GitHub Repository in full name format. Maximum length: 256
+- repository - (Required) - The full name of your GitHub repository, including the organization, case-sensitive. Maximum length: 256
 - summary_comment_enabled - (optional) - Enable/disable summary in PR discussion tab. Default value: true
 
 ## Attributes Reference
