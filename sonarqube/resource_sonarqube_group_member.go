@@ -98,7 +98,7 @@ func resourceSonarqubeGroupMemberRead(d *schema.ResourceData, m interface{}) err
 		"resourceSonarqubeGroupMemberRead",
 	)
 	if err != nil {
-		return fmt.Errorf("error reading Sonarqube group members for group '%s': %w", d.Get("name").(string), err)
+		return fmt.Errorf("error reading Sonarqube members of group '%s': %w", d.Get("name").(string), err)
 	}
 	defer resp.Body.Close()
 
@@ -146,7 +146,7 @@ func resourceSonarqubeGroupMemberDelete(d *schema.ResourceData, m interface{}) e
 		"resourceSonarqubeGroupMemberDelete",
 	)
 	if err != nil {
-		return fmt.Errorf("error deleting Sonarqube group member for group '%s' and user '%s': %w", d.Get("name").(string), d.Get("login_name").(string), err)
+		return fmt.Errorf("error deleting Sonarqube member '%s' from group '%s': %w", d.Get("login_name").(string), d.Get("name").(string), err)
 	}
 	defer resp.Body.Close()
 
@@ -186,7 +186,7 @@ func checkGroupMemberExists(groupName string, loginName string, m interface{}) (
 		"checkGroupMemberExists",
 	)
 	if err != nil {
-		return fmt.Errorf("error reading Sonarqube group members for group '%s': %w", groupName, err)
+		return false, fmt.Errorf("error reading Sonarqube members of group '%s': %w", groupName, err)
 	}
 	defer resp.Body.Close()
 
