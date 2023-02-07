@@ -18,7 +18,7 @@ type GetBinding struct {
 	Repository            string `json:"repository"`
 	URL                   string `json:"url"`
 	SummaryCommentEnabled bool   `json:"summaryCommentEnabled"`
-	Monorepo              bool	 `json:"monorepo"`
+	Monorepo              bool   `json:"monorepo"`
 }
 
 // Returns the resource represented by this file.
@@ -94,7 +94,7 @@ func resourceSonarqubeGithubBindingCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) error {
-	idSlice := strings.Split(d.Id(), "/")
+	idSlice := strings.SplitN(d.Id(), "/", 2)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/get_binding"
 	sonarQubeURL.RawQuery = url.Values{
@@ -125,7 +125,7 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 		d.Set("repository", idSlice[1])
 		d.Set("alm_setting", BindingReadResponse.Key)
 		d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo))
-		d.Set("summary_comment_enabled",  strconv.FormatBool(BindingReadResponse.SummaryCommentEnabled))
+		d.Set("summary_comment_enabled", strconv.FormatBool(BindingReadResponse.SummaryCommentEnabled))
 
 		return nil
 	}
