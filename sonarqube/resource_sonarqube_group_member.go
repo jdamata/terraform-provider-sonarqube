@@ -73,7 +73,7 @@ func resourceSonarqubeGroupMemberCreate(d *schema.ResourceData, m interface{}) e
 		"resourceSonarqubeGroupMemberCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("error adding user to Sonarqube group: %+v", err)
+		return fmt.Errorf("error adding user '%s' to Sonarqube group '%s': %w", d.Get("login_name").(string), d.Get("name").(string), err)
 	}
 	defer resp.Body.Close()
 
@@ -98,7 +98,7 @@ func resourceSonarqubeGroupMemberRead(d *schema.ResourceData, m interface{}) err
 		"resourceSonarqubeGroupMemberRead",
 	)
 	if err != nil {
-		return fmt.Errorf("error reading Sonarqube group members: %+v", err)
+		return fmt.Errorf("error reading Sonarqube group members for group '%s': %w", d.Get("name").(string), err)
 	}
 	defer resp.Body.Close()
 
@@ -117,6 +117,7 @@ func resourceSonarqubeGroupMemberRead(d *schema.ResourceData, m interface{}) err
 			d.Set("name", d.Get("name").(string))
 			d.Set("login_name", value.LoginName)
 			readSuccess = true
+			break
 		}
 	}
 
@@ -145,7 +146,7 @@ func resourceSonarqubeGroupMemberDelete(d *schema.ResourceData, m interface{}) e
 		"resourceSonarqubeGroupMemberDelete",
 	)
 	if err != nil {
-		return fmt.Errorf("error deleting Sonarqube group member: %+v", err)
+		return fmt.Errorf("error deleting Sonarqube group member for group '%s' and user '%s': %w", d.Get("name").(string), d.Get("login_name").(string), err)
 	}
 	defer resp.Body.Close()
 
@@ -165,7 +166,7 @@ func resourceSonarqubeGroupMemberImport(d *schema.ResourceData, m interface{}) (
 
 		return []*schema.ResourceData{d}, nil
 	} else {
-		return nil, fmt.Errorf("User \"%+v\" not a member of group \"%+v\"", loginName, groupName)
+		return nil, fmt.Errorf("User '%s' not a member of group '%s'", loginName, groupName)
 	}
 }
 
@@ -185,7 +186,7 @@ func checkGroupMemberExists(groupName string, loginName string, m interface{}) (
 		"checkGroupMemberExists",
 	)
 	if err != nil {
-		return false, fmt.Errorf("error reading Sonarqube group members: %+v", err)
+		return fmt.Errorf("error reading Sonarqube group members for group '%s': %w", groupName, err)
 	}
 	defer resp.Body.Close()
 
@@ -193,7 +194,7 @@ func checkGroupMemberExists(groupName string, loginName string, m interface{}) (
 	groupMemberReadResponse := GetGroupMembersResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&groupMemberReadResponse)
 	if err != nil {
-		return false, fmt.Errorf("checkGroupMemberExists: Failed to decode json into struct: %+v", err)
+		return false, fmt.Errorf("checkGroupMemberExists: Failed to decode json into struct: %w", err)
 	}
 	// Loop over all returned members to see if the member we need exists.
 	for _, value := range groupMemberReadResponse.Members {
