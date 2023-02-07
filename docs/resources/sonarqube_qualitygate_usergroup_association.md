@@ -40,8 +40,8 @@ resource "sonarqube_qualitygate_usergroup_association" "main" {
 The following arguments are supported:
 
 - gatename - (Required) The name of the Quality Gate
-- group_name - (Optional) The name of the Group to associate. 
-- login_name - (Required) The name of the User to associate.
+- group_name - (Optional) The name of the Group to associate. Either `group_name` or `login_name` should be provided.
+- login_name - (Optional) The name of the User to associate. Either `group_name` or `login_name` should be provided.
 
 ## Attributes Reference
 
