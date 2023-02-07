@@ -32,7 +32,7 @@ resource "sonarqube_user" "qa_user" {
 
 resource "sonarqube_qualitygate_usergroup_association" "main" {
     gatename   = sonarqube_qualitygate.main.id
-    group_name = sonarqube_user.qa_user.id
+    login_name = sonarqube_user.qa_user.id
 }
 ```
 
@@ -47,7 +47,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-- id - A randomly generated UUID for the permission entry.
+- id - A randomly generated UUID for the association entry.
 
 ## Import
 
