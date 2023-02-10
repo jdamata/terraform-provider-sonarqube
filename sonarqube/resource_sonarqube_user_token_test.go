@@ -83,3 +83,98 @@ func TestAccSonarqubeUserTokenWithExpirationDate(t *testing.T) {
 		},
 	})
 }
+
+func testAccSonarqubeUserTokenNoLoginConfig(rnd string, name string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_user" "%[1]s" {
+			login_name = "%[2]s"
+			name       = "%[2]s"
+			password   = "secret-sauce37!"
+		}
+		resource "sonarqube_user_token" "%[1]s" {
+			name       = "%[2]s"
+		}`, rnd, name)
+}
+
+func testAccSonarqubeUserTokenNoLogin(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_user_token." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeUserTokenNoLoginConfig(rnd, "testAccSonarqubeUserTokenNoLogin"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenNoLogin"),
+					resource.TestCheckResourceAttr(name, "login", name),
+				),
+			},
+		},
+	})
+}
+
+func testAccSonarqubeUserTokenGlobalAnalysisTokenConfig(rnd string, name string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_user" "%[1]s" {
+			login_name = "%[2]s"
+			name       = "%[2]s"
+			password   = "secret-sauce37!"
+		}
+		resource "sonarqube_user_token" "%[1]s" {
+			name       = "%[2]s"
+			type       = "GLOBAL_ANALYSIS_TOKEN"
+		}`, rnd, name)
+}
+
+func testAccSonarqubeUserTokenGlobalAnalysisToken(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_user_token." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeUserTokenGlobalAnalysisTokenConfig(rnd, "testAccSonarqubeUserTokenGlobalAnalysisToken"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenGlobalAnalysisToken"),
+					resource.TestCheckResourceAttr(name, "type", "GLOBAL_ANALYSIS_TOKEN"),
+				),
+			},
+		},
+	})
+}
+
+func testAccSonarqubeUserTokenProjectAnalysisTokenConfig(rnd string, name string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_user" "%[1]s" {
+			login_name = "%[2]s"
+			name       = "%[2]s"
+			password   = "secret-sauce37!"
+		}
+		resource "sonarqube_user_token" "%[1]s" {
+			name       = "%[2]s"
+			type       = "PROJECT_ANALYSIS_TOKEN"
+		}`, rnd, name)
+}
+
+func testAccSonarqubeUserTokenProjectAnalysisToken(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_user_token." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeUserTokenProjectAnalysisTokenConfig(rnd, "testAccSonarqubeUserTokenProjectAnalysisToken"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenProjectAnalysisToken"),
+					resource.TestCheckResourceAttr(name, "type", "PROJECT_ANALYSIS_TOKEN"),
+				),
+			},
+		},
+	})
+}
