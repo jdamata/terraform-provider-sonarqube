@@ -57,7 +57,7 @@ The following arguments are supported:
 - name - (Required) The name of the Token to create. Changing this forces a new resource to be created.
 - expiration_date - (Optional) The expiration date of the token being generated, in ISO 8601 format (YYYY-MM-DD). If not set, default to no expiration.
 - type - (Optional) The kind of Token to create. Changing this forces a new resource to be created. Possible values are USER_TOKEN, GLOBAL_ANALYSIS_TOKEN, or PROJECT_ANALYSIS_TOKEN. Defaults to USER_TOKEN. If set to PROJECT_ANALYSIS_TOKEN, then the project_key must also be specified.
-- project_key - (Optional) The key of the only project that can be analyzed by the PROJECT_ANALYSIS TOKEN being created.
+- project_key - (Optional) The key of the only project that can be analyzed by the PROJECT_ANALYSIS TOKEN being created. Changing this forces a new resource to be created.
 
 ## Attributes Reference
 
