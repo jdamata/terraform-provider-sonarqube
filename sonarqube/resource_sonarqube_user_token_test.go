@@ -155,8 +155,9 @@ func testAccSonarqubeUserTokenProjectAnalysisTokenConfig(rnd string, name string
 			password   = "secret-sauce37!"
 		}
 		resource "sonarqube_user_token" "%[1]s" {
-			name       = "%[2]s"
-			type       = "PROJECT_ANALYSIS_TOKEN"
+			name        = "%[2]s"
+			type        = "PROJECT_ANALYSIS_TOKEN"
+			project_key = "my-project"
 		}`, rnd, name)
 }
 
