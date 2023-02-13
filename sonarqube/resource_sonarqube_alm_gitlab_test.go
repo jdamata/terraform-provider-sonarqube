@@ -21,7 +21,7 @@ func testSweepSonarqubeAlmGitlab(r string) error {
 
 func testAccSonarqubeAlmGitlabName(rnd string, name string, personalAccessToken string) string {
     return fmt.Sprintf(`
-        
+
         resource "sonarqube_alm_gitlab" "%[1]s" {
             personal_access_token       = "%[3]s"
             key    = "%[2]s"
@@ -41,16 +41,14 @@ func TestAccSonarqubeAlmGitlabName(t *testing.T) {
                 Config: testAccSonarqubeAlmGitlabName(rnd, "testAccSonarqubeAlmGitlabName", "123456"),
                 Check: resource.ComposeTestCheckFunc(
                     resource.TestCheckResourceAttr(name, "key", "testAccSonarqubeAlmGitlabName"),
-                    resource.TestCheckResourceAttr(name, "app_id", "123456"),
-                    resource.TestCheckResourceAttr(name, "client_id", "234567"),
+                    resource.TestCheckResourceAttr(name, "personal_access_token", "123456"),
                 ),
             },
             {
                 Config: testAccSonarqubeAlmGitlabName(rnd, "testAccSonarqubeAlmGitlabNameUpdate", "654321"),
                 Check: resource.ComposeTestCheckFunc(
                     resource.TestCheckResourceAttr(name, "key", "testAccSonarqubeAlmGitlabNameUpdate"),
-                    resource.TestCheckResourceAttr(name, "app_id", "654321"),
-                    resource.TestCheckResourceAttr(name, "client_id", "765432"),
+                    resource.TestCheckResourceAttr(name, "personal_access_token", "654321"),
                 ),
             },
         },

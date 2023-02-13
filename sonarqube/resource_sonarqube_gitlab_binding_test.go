@@ -23,13 +23,9 @@ func testAccSonarqubeGitlabBindingName(rnd string, projName string, almSetting s
     return fmt.Sprintf(`
 
         resource "sonarqube_alm_gitlab" "%[1]s" {
-            app_id       = "12345"
-            client_id    = "56789"
-            client_secret    = "secret"
+            personal_access_token       = "123456"
             key    = "%[3]s"
-            private_key    = "myprivate_key"
-            url    = "https://api.gitlab.com"
-            webhook_secret = "mysecret"
+            url    = "https://gitlab.com/api/v4"
         }
 
         resource "sonarqube_project" "%[1]s" {
@@ -37,12 +33,12 @@ func testAccSonarqubeGitlabBindingName(rnd string, projName string, almSetting s
             project    = "%[2]s"
             visibility = "public"
         }
+
         resource "sonarqube_gitlab_binding" "%[1]s" {
             alm_setting   = "%[3]s"
             monorepo     = "false"
             project = sonarqube_project.%[1]s.project
             repository   = "%[4]s"
-            summary_comment_enabled = "true"
             depends_on = [sonarqube_alm_gitlab.%[1]s]
         }`, rnd, projName, almSetting, repoName)
 }
@@ -93,11 +89,11 @@ func TestAccSonarqubeGitlabBindingName(t *testing.T) {
                 ),
             },
             {
-                Config: testAccSonarqubeGitlabBindingName(rnd, "testAccSonarqubeGitlabBindingName", "GitHub", "org/testAccSonarqubeGitlabBindingName"),
+                Config: testAccSonarqubeGitlabBindingName(rnd, "testAccSonarqubeGitlabBindingName", "GitLab", "org/testAccSonarqubeGitlabBindingName"),
                 Check: resource.ComposeTestCheckFunc(
                     resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGitlabBindingName"),
                     resource.TestCheckResourceAttr(name, "repository", "org/testAccSonarqubeGitlabBindingName"),
-                    resource.TestCheckResourceAttr(name, "alm_setting", "GitHub"),
+                    resource.TestCheckResourceAttr(name, "alm_setting", "GitLab"),
                 ),
             },
             {
@@ -107,7 +103,7 @@ func TestAccSonarqubeGitlabBindingName(t *testing.T) {
                 Check: resource.ComposeTestCheckFunc(
                     resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeGitlabBindingName"),
                     resource.TestCheckResourceAttr(name, "repository", "org/testAccSonarqubeGitlabBindingName"),
-                    resource.TestCheckResourceAttr(name, "alm_setting", "GitHub"),
+                    resource.TestCheckResourceAttr(name, "alm_setting", "GitLab"),
                 ),
             },
         },
