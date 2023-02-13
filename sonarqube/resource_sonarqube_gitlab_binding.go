@@ -52,10 +52,10 @@ func resourceSonarqubeGitlabBindingCreate(d *schema.ResourceData, m interface{})
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_gitlab_binding"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"almSetting":            []string{d.Get("alm_setting").(string)},
-		"monorepo":              []string{d.Get("monorepo").(string)},
-		"project":               []string{d.Get("project").(string)},
-		"repository":            []string{d.Get("repository").(string)},
+		"almSetting": []string{d.Get("alm_setting").(string)},
+		"monorepo":   []string{d.Get("monorepo").(string)},
+		"project":    []string{d.Get("project").(string)},
+		"repository": []string{d.Get("repository").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
