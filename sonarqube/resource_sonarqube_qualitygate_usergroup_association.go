@@ -68,7 +68,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 	if target, ok := d.GetOk("login_name"); ok {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/add_user"
 		rawQuery.Add("login", target.(string))
-	} else if target, ok := d.GetOk("group_name"); ok {
+	} else {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/add_group"
 		rawQuery.Add("groupName", target.(string))
 	}
@@ -84,7 +84,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 	defer resp.Body.Close()
 
 	if err != nil {
-		return fmt.Errorf("error creating Sonarqube quality gate association: %+v", err)
+		return fmt.Errorf("error creating Sonarqube quality gate usergroup association for quality gate '%s': %+v", d.Get("gatename").(string), err)
 	}
 
 	d.SetId(uuid.NewV4().String())
@@ -100,7 +100,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationRead(d *schema.ResourceData
 
 	if _, ok := d.GetOk("login_name"); ok {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/search_users"
-	} else if _, ok := d.GetOk("group_name"); ok {
+	} else {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/search_groups"
 	}
 
