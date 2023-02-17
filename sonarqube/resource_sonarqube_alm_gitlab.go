@@ -39,7 +39,7 @@ func resourceSonarqubeAlmGitlab() *schema.Resource {
 			"personal_access_token": {
 				Type:             schema.TypeString,
 				Required:         true,
-				Sensitive: true,
+				Sensitive:        true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 			},
 			"url": {
@@ -81,7 +81,6 @@ func resourceSonarqubeAlmGitlabCreate(d *schema.ResourceData, m interface{}) err
 func resourceSonarqubeAlmGitlabRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/list_definitions"
-	sonarQubeURL.RawQuery = url.Values{}.Encode() // Dunno if you can keep it empty tbh?
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
