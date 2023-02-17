@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // GetTokens struct
@@ -19,11 +20,29 @@ type GetTokens struct {
 
 // Token struct
 type Token struct {
-	Login          string `json:"login,omitempty"`
-	Name           string `json:"name,omitempty"`
-	Token          string `json:"token,omitempty"`
-	ExpirationDate string `json:"expirationDate,omitempty"`
+	Login          string       `json:"login,omitempty"`
+	Name           string       `json:"name,omitempty"`
+	Token          string       `json:"token,omitempty"`
+	ExpirationDate string       `json:"expirationDate,omitempty"`
+	Type           string       `json:"type,omitempty"`
+	CreatedAt      string       `json:"createdAt,omitempty"`
+	IsExpired      bool         `json:"isExpired,omitempty"`
+	Project        TokenProject `json:"project,omitempty"`
 }
+
+type TokenProject struct {
+	Key  string `json:"key,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// Token types
+type TokenType string
+
+const (
+	UserToken            TokenType = "USER_TOKEN"
+	GlobalAnalysisToken  TokenType = "GLOBAL_ANALYSIS_TOKEN"
+	ProjectAnalysisToken TokenType = "PROJECT_ANALYSIS_TOKEN"
+)
 
 // Returns the resource represented by this file.
 func resourceSonarqubeUserToken() *schema.Resource {
@@ -35,13 +54,14 @@ func resourceSonarqubeUserToken() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 100)),
 			},
 			"login_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"expiration_date": {
@@ -55,6 +75,18 @@ func resourceSonarqubeUserToken() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          UserToken,
+				ForceNew:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{string(UserToken), string(GlobalAnalysisToken), string(ProjectAnalysisToken)}, false)),
+			},
+			"project_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -63,9 +95,23 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_tokens/generate"
 
+	tokenType := TokenType(d.Get("type").(string))
 	rawQuery := url.Values{
-		"login": []string{d.Get("login_name").(string)},
-		"name":  []string{d.Get("name").(string)},
+		"name": []string{d.Get("name").(string)},
+		"type": []string{string(tokenType)},
+	}
+
+	if tokenType == UserToken {
+		loginName := d.Get("login_name").(string)
+		if loginName != "" {
+			rawQuery.Add("login", loginName)
+		}
+	} else if tokenType == ProjectAnalysisToken {
+		projectKey := d.Get("project_key").(string)
+		if projectKey == "" {
+			return fmt.Errorf("resourceSonarqubeUserTokenCreate: 'project_key' must be configured when the token 'type' is %s", ProjectAnalysisToken)
+		}
+		rawQuery.Add("projectKey", projectKey)
 	}
 
 	if _, ok := d.GetOk("expiration_date"); ok {
@@ -115,9 +161,11 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 
 	// split d.Id into login_name and the token name (foo/bar)
 	login := strings.Split(d.Id(), "/")
-	sonarQubeURL.RawQuery = url.Values{
-		"login": []string{login[0]},
-	}.Encode()
+	if login[0] != "" {
+		sonarQubeURL.RawQuery = url.Values{
+			"login": []string{login[0]},
+		}.Encode()
+	}
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -163,10 +211,15 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_tokens/revoke"
-	sonarQubeURL.RawQuery = url.Values{
-		"login": []string{d.Get("login_name").(string)},
-		"name":  []string{d.Get("name").(string)},
-	}.Encode()
+	rawQuery := url.Values{
+		"name": []string{d.Get("name").(string)},
+	}
+	login := d.Get("login_name").(string)
+	if login != "" {
+		rawQuery.Add("login", login)
+	}
+
+	sonarQubeURL.RawQuery = rawQuery.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
