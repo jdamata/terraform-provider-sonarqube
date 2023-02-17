@@ -39,6 +39,7 @@ func resourceSonarqubeAlmGitlab() *schema.Resource {
 			"personal_access_token": {
 				Type:             schema.TypeString,
 				Required:         true,
+				Sensitive: true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 			},
 			"url": {
@@ -105,7 +106,8 @@ func resourceSonarqubeAlmGitlabRead(d *schema.ResourceData, m interface{}) error
 		if d.Id() == value.Key {
 			d.Set("key", value.Key)
 			d.Set("url", value.URL)
-			d.Set("personal_access_token", value.PersonalAccessToken)
+			// The personal_access_token is a secured property that is not returned
+			// d.Set("personal_access_token", value.PersonalAccessToken)
 			return nil
 		}
 	}

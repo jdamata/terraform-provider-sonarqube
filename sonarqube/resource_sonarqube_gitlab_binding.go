@@ -15,6 +15,8 @@ import (
 func resourceSonarqubeGitlabBinding() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSonarqubeGitlabBindingCreate,
+		// You can update any project binding with the same API call as the CREATE
+		Update: resourceSonarqubeGitlabBindingCreate,
 		Read:   resourceSonarqubeGitlabBindingRead,
 		Delete: resourceSonarqubeGitlabBindingDelete,
 		Importer: &schema.ResourceImporter{
@@ -25,13 +27,11 @@ func resourceSonarqubeGitlabBinding() *schema.Resource {
 			"alm_setting": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"monorepo": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "false",
-				ForceNew: true,
 			},
 			"project": {
 				Type:     schema.TypeString,
@@ -41,7 +41,6 @@ func resourceSonarqubeGitlabBinding() *schema.Resource {
 			"repository": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 		},
 	}
