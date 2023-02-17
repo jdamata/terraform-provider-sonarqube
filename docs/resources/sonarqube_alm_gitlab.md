@@ -18,10 +18,7 @@ resource "sonarqube_alm_gitlab" "gitlab-alm" {
 The following arguments are supported:
 
 - key - (Required) - Unique key of the GitLab instance setting. Maximum length: 200
-- personal_access_token - (Required) - GitLab App personal access token with
-- the `read_api` scope. See [this
-- doc](https://docs.sonarqube.org/latest/devops-platform-integration/gitlab-integration/#importing-your-gitlab-projects-into-sonarqube)
-- for more information. Maximum length: 2000
+- personal_access_token - (Required) - GitLab App personal access token with the `read_api` scope. See [this doc](https://docs.sonarqube.org/latest/devops-platform-integration/gitlab-integration/#importing-your-gitlab-projects-into-sonarqube) for more information. Maximum length: 2000
 - url - (Required) - GitLab API URL. Maximum length: 2000
 
 ## Attributes Reference
