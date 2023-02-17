@@ -39,13 +39,11 @@ func resourceSonarqubeAlmGitlab() *schema.Resource {
 			"personal_access_token": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 			},
 			"url": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 			},
 		},
