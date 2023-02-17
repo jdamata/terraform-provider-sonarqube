@@ -101,7 +101,12 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 		"type": []string{string(tokenType)},
 	}
 
-	if tokenType == ProjectAnalysisToken {
+	if tokenType == UserToken {
+		loginName := d.Get("login_name").(string)
+		if loginName != "" {
+			rawQuery.Add("login", loginName)
+		}
+	} else if tokenType == ProjectAnalysisToken {
 		projectKey := d.Get("project_key").(string)
 		if projectKey == "" {
 			return fmt.Errorf("resourceSonarqubeUserTokenCreate: 'project_key' must be configured when the token 'type' is %s", ProjectAnalysisToken)
