@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/satori/uuid"
 )
 
 // GetQualityGateUsergroupAssociation for unmarshalling response body from getting quality gate association
@@ -81,7 +80,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 	defer resp.Body.Close()
 
 	if err != nil {
-		return fmt.Errorf("resourceSonarqubeQualityGateUsergroupAssociationCreate: Failed creating Sonarqube quality gate usergroup association for quality gate '%s' and target '%s': %+v", d.Get("gatename").(string), target, err)
+		return fmt.Errorf("resourceSonarqubeQualityGateUsergroupAssociationCreate: Failed creating Sonarqube quality gate usergroup association for quality gate '%s': %+v", d.Get("gatename").(string), err)
 	}
 
     if _, ok := d.GetOk("login_name"); ok {

@@ -47,8 +47,8 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-- id - A randomly generated UUID for the association entry.
+- id - A quality user/group composed ID for the association entry.
 
 ## Import
 
-Importing is not supported for the `sonarqube_qualitygate_usergroup_association` resource.
+Importing is not supported yet for the `sonarqube_qualitygate_usergroup_association` resource.
