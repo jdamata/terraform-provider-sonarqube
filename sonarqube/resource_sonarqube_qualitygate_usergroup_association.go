@@ -61,7 +61,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 		"gateName": []string{d.Get("gatename").(string)},
 	}
 
-	if _, ok := d.GetOk("login_name") {
+	if _, ok := d.GetOk("login_name"); ok {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/add_user"
 		rawQuery.Add("login", d.Get("login_name").(string))
 	} else {
@@ -84,7 +84,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 		return fmt.Errorf("resourceSonarqubeQualityGateUsergroupAssociationCreate: Failed creating Sonarqube quality gate usergroup association for quality gate '%s' and target '%s': %+v", d.Get("gatename").(string), target, err)
 	}
 
-    if _, ok := d.GetOk("login_name") {
+    if _, ok := d.GetOk("login_name"); ok {
         d.SetId(createGatePermissionId(d.Get("gatename").(string), "user", d.Get("login_name").(string)))
     } else {
 		d.SetId(createGatePermissionId(d.Get("gatename").(string), "group", d.Get("group_name").(string)))
