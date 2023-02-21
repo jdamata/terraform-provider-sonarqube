@@ -149,14 +149,13 @@ func resourceSonarqubeQualityGateUsergroupAssociationDelete(d *schema.ResourceDa
 	rawQuery := url.Values{
 		"gateName": []string{d.Get("gatename").(string)},
 	}
-	target, ok := d.GetOk("login_name")
 
-	if ok {
+	if _, ok := d.GetOk("login_name"); ok {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/remove_user"
-		rawQuery.Add("login", target.(string))
+		rawQuery.Add("login", d.Get("login_name").(string))
 	} else {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/remove_group"
-		rawQuery.Add("groupName", target.(string))
+		rawQuery.Add("groupName", d.Get("group_name").(string))
 	}
 
 	sonarQubeURL.RawQuery = rawQuery.Encode()
@@ -176,6 +175,6 @@ func resourceSonarqubeQualityGateUsergroupAssociationDelete(d *schema.ResourceDa
 	return nil
 }
 
-func createGatePermissionId(gateName string, subjectType string, subject string) string {
-	return gateName + "[" + subjectType + "/" + subject + "]"
+func createGatePermissionId(gateName string, targetType string, target string) string {
+	return gateName + "[" + targetType + "/" + target + "]"
 }
