@@ -48,7 +48,8 @@ func resourceSonarqubeQualityGateUsergroupAssociation() *schema.Resource {
 			},
 			"gatename": {
 				Type:     schema.TypeString,
-				Required: true,				ForceNew: true,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -83,11 +84,11 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 		return fmt.Errorf("resourceSonarqubeQualityGateUsergroupAssociationCreate: Failed creating Sonarqube quality gate usergroup association for quality gate '%s': %+v", d.Get("gatename").(string), err)
 	}
 
-    if _, ok := d.GetOk("login_name"); ok {
-        d.SetId(createGatePermissionId(d.Get("gatename").(string), "user", d.Get("login_name").(string)))
-    } else {
+	if _, ok := d.GetOk("login_name"); ok {
+		d.SetId(createGatePermissionId(d.Get("gatename").(string), "user", d.Get("login_name").(string)))
+	} else {
 		d.SetId(createGatePermissionId(d.Get("gatename").(string), "group", d.Get("group_name").(string)))
-    }
+	}
 	return resourceSonarqubeQualityGateUsergroupAssociationRead(d, m)
 }
 
