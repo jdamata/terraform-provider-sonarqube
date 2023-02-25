@@ -109,6 +109,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/search"
 	sonarQubeURL.RawQuery = url.Values{
 		"projects": []string{d.Id()},
+		"ps":       []string{"500"},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
