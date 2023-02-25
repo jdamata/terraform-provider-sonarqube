@@ -51,6 +51,11 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			}, 
+			"copy_from": {
+				Type:     schema.TypeString,
+				Required: false,
+				ForceNew: true,
 			},
 			"is_default": {
 				Type:        schema.TypeBool,
@@ -58,17 +63,27 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 				Description: "Name of the quality gate to set as default",
 				Default:     false,
 				ForceNew:    true,
-			},
+			},			
 		},
 	}
 }
 
 func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create"
-	sonarQubeURL.RawQuery = url.Values{
-		"name": []string{d.Get("name").(string)},
-	}.Encode()
+
+	if gate_to_copy, ok := d.GetOk("copy_from"); ok {
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/copy"
+		sonarQubeURL.RawQuery = url.Values{
+			"name": []string{d.Get("name").(string)},
+			"sourceName": []string{gate_to_copy.(string)},
+		}.Encode()
+			
+	} else {
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create"
+		sonarQubeURL.RawQuery = url.Values{
+			"name": []string{d.Get("name").(string)},
+		}.Encode()
+	}
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
