@@ -93,7 +93,8 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_groups/search"
 	sonarQubeURL.RawQuery = url.Values{
-		"q": []string{d.Get("name").(string)},
+		"ps": []string{"500"},
+		"q":  []string{d.Get("name").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
