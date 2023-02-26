@@ -33,6 +33,7 @@ type QualityGateActions struct {
 type CreateQualityGateResponse struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	Conditions []CreateQualityGateConditionResponse `json:"conditions"`
 }
 
 // Returns the resource represented by this file.
@@ -144,6 +145,7 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	d.Set("name", qualityGateReadResponse.Name)
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
 	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
+	d.Set("conditions", qualityGateReadResponse.Conditions)
 	return nil
 }
 

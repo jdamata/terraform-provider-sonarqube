@@ -26,6 +26,25 @@ func testAccSonarqubeQualitygateBasicConfig(rnd string, name string, is_default 
 		}`, rnd, name, is_default)
 }
 
+func testAccSonarqubeQualitygateCopyConfig(rnd string, base_name string, condition_name string, threshold string, op string, copy_name string) string {
+	return fmt.Sprintf(`
+	resource "sonarqube_qualitygate" "%[2]s" {
+		name = "%[2]s"
+	}
+	
+	resource "sonarqube_qualitygate_condition" "qualitygate_condition" {
+		gatename  = sonarqube_qualitygate.%[2]s.id
+		metric    = "%[3]s"
+		threshold = "%[4]s"
+		op        = "%[5]s"
+	}
+
+	resource "sonarqube_qualitygate" "main" {
+		name = "%[6]s"
+		copy_from = "%[2]s"
+	}`, rnd, base_name, condition_name, threshold, op, copy_name)
+}
+
 func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate." + rnd
@@ -39,6 +58,14 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
 					resource.TestCheckResourceAttr(name, "is_default", "true"),
+				),
+			},
+			{
+				Config: testAccSonarqubeQualitygateCopyConfig(rnd, "baseGate", "test_condition", "68", "GT", "baseGateCopy"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "baseGateCopy"),
+					resource.TestCheckResourceAttr(name, "is_default", "false"),
+					resource.TestCheckResourceAttr(name, "condition.6.metric", "test_condition"),
 				),
 			},
 			{
