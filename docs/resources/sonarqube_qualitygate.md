@@ -13,6 +13,7 @@ resource "sonarqube_qualitygate" "main" {
 The following arguments are supported:
 
 - name - (Required) The name of the Quality Gate to create. Maximum length 100
+- copy_from - (Optional) Name of an existing Quality Gate to copy from
 - is_default - (Optional) When set to true this will make the added Quality Gate default
 
 ## Attributes Reference
