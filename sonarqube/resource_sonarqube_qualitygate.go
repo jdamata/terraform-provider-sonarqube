@@ -54,7 +54,7 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 			}, 
 			"copy_from": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 			},
 			"is_default": {
