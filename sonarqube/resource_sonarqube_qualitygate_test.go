@@ -88,7 +88,7 @@ func TestAccSonarqubeQualitygateCopy(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateCopyConfig(rnd, "baseGate", "comment_lines_density", "68", "LT", "baseGateCopy"),
+				Config: testAccSonarqubeQualitygateCopyConfig(rnd, baseGateName, "comment_lines_density", "68", "LT", baseGateName+"Copy"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(baseGateResourceName, "conditions", name, "conditions"),
 				),
