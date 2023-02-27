@@ -39,7 +39,8 @@ func testAccSonarqubeQualitygateCopyConfig(rnd string, base_name string, conditi
 		op        = "%[5]s"
 	}
 
-	resource "sonarqube_qualitygate" "main" {
+	resource "sonarqube_qualitygate" "%[1]s" {
+		depends_on = [sonarqube_qualitygate.%[2]s, sonarqube_qualitygate_condition.qualitygate_condition]
 		name = "%[6]s"
 		copy_from = "%[2]s"
 	}`, rnd, base_name, condition_name, threshold, op, copy_name)
@@ -48,6 +49,10 @@ func testAccSonarqubeQualitygateCopyConfig(rnd string, base_name string, conditi
 func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate." + rnd
+
+	// Copy test variables
+	baseGateName := "baseGate"
+	baseGateResourceName := "sonarqube_qualitygate." + baseGateName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -61,11 +66,9 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSonarqubeQualitygateCopyConfig(rnd, "baseGate", "test_condition", "68", "GT", "baseGateCopy"),
+				Config: testAccSonarqubeQualitygateCopyConfig(rnd, "baseGate", "comment_lines_density", "68", "LT", "baseGateCopy"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "baseGateCopy"),
-					resource.TestCheckResourceAttr(name, "is_default", "false"),
-					resource.TestCheckResourceAttr(name, "condition.6.metric", "test_condition"),
+					resource.TestCheckResourceAttrPair(baseGateResourceName, "conditions", name, "conditions"),
 				),
 			},
 			{
