@@ -26,6 +26,35 @@ func testAccSonarqubeQualitygateBasicConfig(rnd string, name string, is_default 
 		}`, rnd, name, is_default)
 }
 
+func TestAccSonarqubeQualitygateBasic(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_qualitygate." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeQualitygateBasicConfig(rnd, "testAccSonarqubeQualitygate", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
+					resource.TestCheckResourceAttr(name, "is_default", "true"),
+				),
+			},
+			{
+				ResourceName:            name,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_default"},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
+					resource.TestCheckResourceAttr(name, "is_default", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSonarqubeQualitygateCopyConfig(rnd string, baseName string, conditionName string, threshold string, op string, copyName string) string {
 	return fmt.Sprintf(`
 	resource "sonarqube_qualitygate" "%[2]s" {
@@ -46,7 +75,7 @@ func testAccSonarqubeQualitygateCopyConfig(rnd string, baseName string, conditio
 	}`, rnd, baseName, conditionName, threshold, op, copyName)
 }
 
-func TestAccSonarqubeQualitygateBasic(t *testing.T) {
+func TestAccSonarqubeQualitygateCopy(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate." + rnd
 
@@ -59,26 +88,9 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeQualitygateBasicConfig(rnd, "testAccSonarqubeQualitygate", "true"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
-					resource.TestCheckResourceAttr(name, "is_default", "true"),
-				),
-			},
-			{
 				Config: testAccSonarqubeQualitygateCopyConfig(rnd, "baseGate", "comment_lines_density", "68", "LT", "baseGateCopy"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(baseGateResourceName, "conditions", name, "conditions"),
-				),
-			},
-			{
-				ResourceName:            name,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"is_default"},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
-					resource.TestCheckResourceAttr(name, "is_default", "true"),
 				),
 			},
 		},
