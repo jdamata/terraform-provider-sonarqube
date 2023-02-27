@@ -111,7 +111,6 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 			"name":       []string{d.Get("name").(string)},
 			"sourceName": []string{gate_to_copy.(string)},
 		}.Encode()
-
 	} else {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create"
 		sonarQubeURL.RawQuery = url.Values{
