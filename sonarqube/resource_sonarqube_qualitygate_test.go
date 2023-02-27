@@ -26,7 +26,7 @@ func testAccSonarqubeQualitygateBasicConfig(rnd string, name string, is_default 
 		}`, rnd, name, is_default)
 }
 
-func testAccSonarqubeQualitygateCopyConfig(rnd string, base_name string, condition_name string, threshold string, op string, copy_name string) string {
+func testAccSonarqubeQualitygateCopyConfig(rnd string, baseName string, conditionName string, threshold string, op string, copyName string) string {
 	return fmt.Sprintf(`
 	resource "sonarqube_qualitygate" "%[2]s" {
 		name = "%[2]s"
@@ -43,7 +43,7 @@ func testAccSonarqubeQualitygateCopyConfig(rnd string, base_name string, conditi
 		depends_on = [sonarqube_qualitygate.%[2]s, sonarqube_qualitygate_condition.qualitygate_condition]
 		name = "%[6]s"
 		copy_from = "%[2]s"
-	}`, rnd, base_name, condition_name, threshold, op, copy_name)
+	}`, rnd, baseName, conditionName, threshold, op, copyName)
 }
 
 func TestAccSonarqubeQualitygateBasic(t *testing.T) {
