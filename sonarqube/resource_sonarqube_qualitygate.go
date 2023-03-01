@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -178,12 +179,10 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
 	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
 
-	var conditions []map[string]string
-	err = json.NewDecoder(resp.Body).Decode(&conditions)
+	conditions, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("resourceQualityGateRead: Failed to decode conditions into map: %+v", err)
+		return fmt.Errorf("resourceQualityGateRead: Failed to decode conditions: %+v", err)
 	}
-
 	d.Set("conditions", conditions)
 
 	return nil
