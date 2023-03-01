@@ -178,10 +178,13 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
 	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
 
-	var allConditions []map[string]string
-	data, _ := json.Marshal(qualityGateReadResponse.Conditions)
-	json.Unmarshal(data, &allConditions)
-	d.Set("conditions", allConditions)
+	var conditions []map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&conditions)
+	if err != nil {
+		return fmt.Errorf("resourceQualityGateRead: Failed to decode conditions into map: %+v", err)
+	}
+
+	d.Set("conditions", conditions)
 
 	return nil
 }
