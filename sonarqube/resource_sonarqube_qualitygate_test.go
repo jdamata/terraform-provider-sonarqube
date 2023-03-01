@@ -54,3 +54,45 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 		},
 	})
 }
+
+func testAccSonarqubeQualitygateCopyConfig(rnd string, baseName string, conditionName string, threshold string, op string, copyName string) string {
+	return fmt.Sprintf(`
+	resource "sonarqube_qualitygate" "%[2]s" {
+		name = "%[2]s"
+	}
+	
+	resource "sonarqube_qualitygate_condition" "qualitygate_condition" {
+		gatename  = sonarqube_qualitygate.%[2]s.id
+		metric    = "%[3]s"
+		threshold = "%[4]s"
+		op        = "%[5]s"
+	}
+
+	resource "sonarqube_qualitygate" "%[1]s" {
+		depends_on = [sonarqube_qualitygate.%[2]s, sonarqube_qualitygate_condition.qualitygate_condition]
+		name = "%[6]s"
+		copy_from = "%[2]s"
+	}`, rnd, baseName, conditionName, threshold, op, copyName)
+}
+
+func TestAccSonarqubeQualitygateCopy(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_qualitygate." + rnd
+
+	// Copy test variables
+	baseGateName := "baseGate"
+	baseGateResourceName := "sonarqube_qualitygate." + baseGateName
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeQualitygateCopyConfig(rnd, baseGateName, "comment_lines_density", "68", "LT", baseGateName+"Copy"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(baseGateResourceName, "conditions", name, "conditions"),
+				),
+			},
+		},
+	})
+}

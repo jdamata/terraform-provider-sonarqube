@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -10,13 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ReadQualityGateConditionsResponse for unmarshalling response body of Quality Gate read
+type ReadQualityGateConditionsResponse struct {
+	ID     string `json:"id"`
+	Metric string `json:"metric"`
+	OP     string `json:"op"`
+	Error  string `json:"error"`
+}
+
 // GetQualityGate for unmarshalling response body of quality gate get
 type GetQualityGate struct {
-	ID         string                               `json:"id"`
-	Name       string                               `json:"name"`
-	Conditions []CreateQualityGateConditionResponse `json:"conditions"`
-	IsBuiltIn  bool                                 `json:"isBuiltIn"`
-	Actions    QualityGateActions                   `json:"actions"`
+	ID         string                              `json:"id"`
+	Name       string                              `json:"name"`
+	Conditions []ReadQualityGateConditionsResponse `json:"conditions"`
+	IsBuiltIn  bool                                `json:"isBuiltIn"`
+	Actions    QualityGateActions                  `json:"actions"`
 }
 
 // QualityGateActions used in GetQualityGate
@@ -31,8 +40,9 @@ type QualityGateActions struct {
 
 // CreateQualityGateResponse for unmarshalling response body of quality gate creation
 type CreateQualityGateResponse struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID         string                              `json:"id"`
+	Name       string                              `json:"name"`
+	Conditions []ReadQualityGateConditionsResponse `json:"conditions"`
 }
 
 // Returns the resource represented by this file.
@@ -52,6 +62,11 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"copy_from": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"is_default": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -59,16 +74,50 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 				Default:     false,
 				ForceNew:    true,
 			},
+			"conditions": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "A list of conditions that the gate uses",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"op": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"error": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create"
-	sonarQubeURL.RawQuery = url.Values{
-		"name": []string{d.Get("name").(string)},
-	}.Encode()
+
+	if gate_to_copy, ok := d.GetOk("copy_from"); ok {
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/copy"
+		sonarQubeURL.RawQuery = url.Values{
+			"name":       []string{d.Get("name").(string)},
+			"sourceName": []string{gate_to_copy.(string)},
+		}.Encode()
+	} else {
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create"
+		sonarQubeURL.RawQuery = url.Values{
+			"name": []string{d.Get("name").(string)},
+		}.Encode()
+	}
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -129,6 +178,13 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	d.Set("name", qualityGateReadResponse.Name)
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
 	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
+
+	conditions, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("resourceQualityGateRead: Failed to decode conditions: %+v", err)
+	}
+	d.Set("conditions", conditions)
+
 	return nil
 }
 
