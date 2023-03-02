@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -17,6 +18,14 @@ func init() {
 // TODO: implement sweeper to clean up projects: https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html
 func testSweepSonarqubeQualitygateUsergroupAssociationSweeper(r string) error {
 	return nil
+}
+func testAccPreCheckQualityGatePermissionFeature(t *testing.T) {
+	sonarQubeVersion := testAccProvider.Meta().(*ProviderConfiguration).sonarQubeVersion
+
+	minimumVersion, _ := version.NewVersion("9.2")
+	if sonarQubeVersion.LessThan(minimumVersion) {
+		t.Skipf("Skipping test of unsupported feature")
+	}
 }
 
 func testAccSonarqubeQualitygateGroupAssociationGateName(rnd string, name string) string {
@@ -41,7 +50,7 @@ func TestAccSonarqubeQualitygateGroupAssociationGateName(t *testing.T) {
 	name := "sonarqube_qualitygate_usergroup_association." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckQualityGatePermissionFeature(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +87,7 @@ func TestAccSonarqubeQualitygateUserAssociationGateName(t *testing.T) {
 	name := "sonarqube_qualitygate_usergroup_association." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckQualityGatePermissionFeature(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
