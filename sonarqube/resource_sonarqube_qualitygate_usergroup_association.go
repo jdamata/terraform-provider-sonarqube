@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -56,6 +57,10 @@ func resourceSonarqubeQualityGateUsergroupAssociation() *schema.Resource {
 }
 
 func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceData, m interface{}) error {
+	if err := checkGatePermissionFeatureSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	rawQuery := url.Values{
 		"gateName": []string{d.Get("gatename").(string)},
@@ -93,6 +98,10 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 }
 
 func resourceSonarqubeQualityGateUsergroupAssociationRead(d *schema.ResourceData, m interface{}) error {
+	if err := checkGatePermissionFeatureSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.RawQuery = url.Values{
 		"gateName": []string{d.Get("gatename").(string)},
@@ -146,6 +155,10 @@ func resourceSonarqubeQualityGateUsergroupAssociationRead(d *schema.ResourceData
 }
 
 func resourceSonarqubeQualityGateUsergroupAssociationDelete(d *schema.ResourceData, m interface{}) error {
+	if err := checkGatePermissionFeatureSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	rawQuery := url.Values{
 		"gateName": []string{d.Get("gatename").(string)},
@@ -178,4 +191,12 @@ func resourceSonarqubeQualityGateUsergroupAssociationDelete(d *schema.ResourceDa
 
 func createGatePermissionId(gateName string, targetType string, target string) string {
 	return gateName + "[" + targetType + "/" + target + "]"
+}
+
+func checkGatePermissionFeatureSupport(conf *ProviderConfiguration) error {
+	minimumVersion, _ := version.NewVersion("9.2")
+	if conf.sonarQubeVersion.LessThan(minimumVersion) {
+		return fmt.Errorf("Minimum required SonarQube version for quality gate permissions is %s", minimumVersion)
+	}
+	return nil
 }
