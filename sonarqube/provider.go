@@ -90,6 +90,7 @@ func Provider() *schema.Provider {
 			"sonarqube_github_binding":                     resourceSonarqubeGithubBinding(),
 			"sonarqube_alm_gitlab":                         resourceSonarqubeAlmGitlab(),
 			"sonarqube_gitlab_binding":                     resourceSonarqubeGitlabBinding(),
+			"sonarqube_new_code_periods":                   resourceSonarqubeNewCodePeriodsBinding(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sonarqube_user":           dataSourceSonarqubeUser(),
