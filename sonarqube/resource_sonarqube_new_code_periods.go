@@ -76,7 +76,7 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 		"type": []string{string(periodType)},
 	}
 
-	id := string(periodType)
+	id := "newCodePeriod"
 
 	branch := d.Get("branch").(string)
 	project := d.Get("project").(string)
@@ -171,7 +171,7 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 	}
 	// Check that the project and branch match
 	if branch == NewCodePeriodsReadResponse.Branch && project == NewCodePeriodsReadResponse.Project {
-		id := NewCodePeriodsReadResponse.Type
+		id := "newCodePeriod"
 		if NewCodePeriodsReadResponse.Branch != "" {
 			id += "/" + NewCodePeriodsReadResponse.Branch
 		}
