@@ -101,12 +101,18 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 		rawQuery.Add("value", value)
 	}
 
-	if periodType == PreviousVersion && value != "" {
-		return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'value' must be unset when the 'type' is %s", periodType)
-	} else if periodType == SpecificAnalysis && branch == "" {
+	if periodType == PreviousVersion {
+		if value != "" {
+			return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'value' must be unset when the 'type' is %s", periodType)
+		}
+	} else if value == "" {
+		return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'value' must be configured when the 'type' is %s", periodType)
+	}
+
+	if periodType == SpecificAnalysis && branch == "" {
 		return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'branch' must be configured when the 'type' is %s", periodType)
-	} else if periodType == ReferenceBranch && (branch == "" && project == "") {
-		return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: both of 'branch' and 'project' must be configured when the 'type' is %s", periodType)
+	} else if periodType == ReferenceBranch && branch == "" && project == "" {
+		return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: both 'branch' and 'project' must be configured when the 'type' is %s", periodType)
 	} else if periodType == NumberOfDays && !regexp.MustCompile(`^\d+$`).MatchString(value) {
 		return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'value' must be a numeric string when the 'type' is %s", periodType)
 	}
@@ -117,7 +123,7 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusNoContent,
+		http.StatusOK,
 		"resourceSonarqubeNewCodePeriodsCreate",
 	)
 	if err != nil {
@@ -198,7 +204,7 @@ func resourceSonarqubeNewCodePeriodsDelete(d *schema.ResourceData, m interface{}
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusNoContent,
+		http.StatusOK,
 		"resourceSonarqubeNewCodePeriodsDelete",
 	)
 	if err != nil {
