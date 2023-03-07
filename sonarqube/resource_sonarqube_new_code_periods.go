@@ -55,13 +55,11 @@ func resourceSonarqubeNewCodePeriodsBinding() *schema.Resource {
 			"type": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         false,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{string(SpecificAnalysis), string(PreviousVersion), string(NumberOfDays), string(ReferenceBranch)}, false)),
 			},
 			"value": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 		},
 	}
