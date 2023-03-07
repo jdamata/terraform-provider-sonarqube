@@ -43,9 +43,10 @@ func resourceSonarqubeNewCodePeriodsBinding() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"branch": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"project"},
 			},
 			"project": {
 				Type:     schema.TypeString,
@@ -80,12 +81,7 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 	project := d.Get("project").(string)
 	value := d.Get("value").(string)
 
-	// If branch is set, project must also be set
 	if branch != "" {
-		if project == "" {
-			return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'project' must be configured when 'branch' is set")
-		}
-
 		rawQuery.Add("branch", branch)
 		id += "/" + branch
 

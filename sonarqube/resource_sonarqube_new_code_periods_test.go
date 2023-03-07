@@ -152,18 +152,18 @@ func TestAccSonarqubeNewCodePeriodsBranchNumberOfDays(t *testing.T) {
 // 			project = "%[1]s"
 // 			visibility = "public"
 // 		}
-// 
+//
 //         resource "sonarqube_new_code_periods" "%[1]s" {
 // 			branch = "main"
 // 			project = sonarqube_project.%[1]s.project
 // 			type = "SPECIFIC_ANALYSIS"
 //         }`, rnd)
 // }
-// 
+//
 // func TestAccSonarqubeNewCodePeriodsBranchSpecificAnalysis(t *testing.T) {
 // 	rnd := generateRandomResourceName()
 // 	name := "sonarqube_new_code_periods." + rnd
-// 
+//
 // 	resource.Test(t, resource.TestCase{
 // 		PreCheck:  func() { testAccPreCheck(t) },
 // 		Providers: testAccProviders,
