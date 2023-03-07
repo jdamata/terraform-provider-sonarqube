@@ -37,7 +37,7 @@ func Provider() *schema.Provider {
 			},
 			"token": {
 				Type:         schema.TypeString,
-				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_TOKEN", "SONRQUBE_TOKEN"}, nil),
+				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_TOKEN", "SONARQUBE_TOKEN"}, nil),
 				Optional:     true,
 				Sensitive:    true,
 				ExactlyOneOf: []string{"pass"},
