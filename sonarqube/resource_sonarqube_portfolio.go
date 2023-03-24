@@ -135,10 +135,14 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 		}
 
 		endpoint = "/api/views/set_tags_mode"
-		tags := []string{d.Get("tags").(string)}
+		
+		var tags []string
+		for _, v := range d.Get("tags").([]interface{}) {
+			tags = append(tags, fmt.Sprint(v))
+		}
 		tagsCSV := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(tags)), ","), "[]")
 		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("key").(string)},
+			"branch":    []string{d.Get("branch").(string)},
 			"portfolio": []string{d.Get("key").(string)},
 			"tags":      []string{tagsCSV},
 		}.Encode()
@@ -150,7 +154,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 
 		endpoint = "/api/views/set_regexp_mode"
 		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("key").(string)},
+			"branch":    []string{d.Get("branch").(string)},
 			"portfolio": []string{d.Get("key").(string)},
 			"regexp":    []string{d.Get("regexp").(string)},
 		}.Encode()
@@ -162,7 +166,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 
 		endpoint = "/api/views/set_remaining_projects_mode"
 		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("key").(string)},
+			"branch":    []string{d.Get("branch").(string)},
 			"portfolio": []string{d.Get("key").(string)},
 		}.Encode()
 

@@ -43,6 +43,22 @@ func testAccSonarqubePortfolioConfigSelectionMode(rnd string, key string, name s
 		`, rnd, key, name, description, visibility, selectionMode)
 }
 
+func testAccSonarqubePortfolioConfigSelectionModeTags(rnd string, key string, name string, description string, visibility string, selectionMode string, tags []string) string {
+	formattedTags := generateHCLList(tags)
+	return fmt.Sprintf(`
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       = "%[2]s"
+		  name    = "%[3]s"
+		  description = "%[4]s"
+		  visibility = "%[5]s"
+		  selection_mode = "%[6]s"
+		  tags = %[7]s
+
+		}
+		`, rnd, key, name, description, visibility, selectionMode, formattedTags)
+}
+
+
 
 func TestAccSonarqubePortfolioBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
@@ -208,6 +224,39 @@ func TestAccSonarqubePortfolioSelectionModeManual(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
 					resource.TestCheckResourceAttr(name, "selection_mode", "MANUAL"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	tags := []string{"tag1", "tag2"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioConfigSelectionModeTags(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "TAGS", tags),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
+					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
+					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
 				),
 			},
 		},
