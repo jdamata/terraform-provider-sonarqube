@@ -52,13 +52,24 @@ func testAccSonarqubePortfolioConfigSelectionModeTags(rnd string, key string, na
 		  description = "%[4]s"
 		  visibility = "%[5]s"
 		  selection_mode = "%[6]s"
-		  tags = %[7]s
-
+		  tags = %[7]s // Note that the "" should be missing since this is a list
 		}
 		`, rnd, key, name, description, visibility, selectionMode, formattedTags)
 }
 
+func testAccSonarqubePortfolioConfigSelectionModeRegex(rnd string, key string, name string, description string, visibility string, selectionMode string, regexp string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       = "%[2]s"
+		  name    = "%[3]s"
+		  description = "%[4]s"
+		  visibility = "%[5]s"
+		  selection_mode = "%[6]s"
+		  regexp = "%[7]s"
 
+		}
+		`, rnd, key, name, description, visibility, selectionMode, regexp)
+}
 
 func TestAccSonarqubePortfolioBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
@@ -171,7 +182,6 @@ func TestAccSonarqubePortfolioVisibilityUpdate(t *testing.T) {
 	})
 }
 
-
 func TestAccSonarqubePortfolioVisibilityError(t *testing.T) {
 	rnd := generateRandomResourceName()
 
@@ -180,7 +190,7 @@ func TestAccSonarqubePortfolioVisibilityError(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubePortfolioBasicConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "badValue"),
+				Config:      testAccSonarqubePortfolioBasicConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "badValue"),
 				ExpectError: regexp.MustCompile("Accepted values are .* for key .* got:"),
 			},
 		},
@@ -195,8 +205,36 @@ func TestAccSonarqubePortfolioSelectionModeError(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubePortfolioConfigSelectionMode(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "badValue"),
+				Config:      testAccSonarqubePortfolioConfigSelectionMode(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "badValue"),
 				ExpectError: regexp.MustCompile("Accepted values are .* for key .* got:"),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSelectionModeNone(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioConfigSelectionMode(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "NONE"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "NONE"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "NONE"),
+				),
 			},
 		},
 	})
@@ -239,6 +277,75 @@ func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioConfigSelectionModeTags(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "TAGS", tags),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
+					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
+					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSelectionModeRegexp(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioConfigSelectionModeRegex(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "REGEXP", "regexp1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "REGEXP"),
+					resource.TestCheckResourceAttr(name, "regexp", "regexp1"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "REGEXP"),
+					resource.TestCheckResourceAttr(name, "regexp", "regexp1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	tags := []string{"tag1", "tag2"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioBasicConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+				),
+			},
 			{
 				Config: testAccSonarqubePortfolioConfigSelectionModeTags(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "TAGS", tags),
 				Check: resource.ComposeTestCheckFunc(
