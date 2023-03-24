@@ -7,29 +7,23 @@ import (
 	"net/url"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Portfolio used in CreatePortfolioResponse
+// Portfolio used in Portfolio
 type Portfolio struct {
-	Key       string `json:"key"`
-	Name      string `json:"name"`
-	Desc      string `json:"desc"`
-	Qualifier string `json:"qualifier"`
-	Visibility string `json:"visibility"`
-	SelectionMode string `json:"selectionMode"`
+	Key           string   `json:"key"`
+	Name          string   `json:"name"`
+	Desc          string   `json:"desc"`
+	Qualifier     string   `json:"qualifier"`
+	Visibility    string   `json:"visibility"`
+	SelectionMode string   `json:"selectionMode"`
+	Branch        string   `json:"branch"`
+	Tags          []string `json:"tags"`
+	Regexp        string   `json:"regexp"`
 }
-
-// CreatePortfolioResponse for unmarshalling response body of project creation
-type CreatePortfolioResponse struct {
-	Portfolio Portfolio `json:"portfolio"`
-}
-
-// GetPortfolio for unmarshalling response body of Portfolio get
-type GetPortfolio struct {
-	Portfolio Portfolio `json:"portfolio"`
-}
-
 
 // Returns the resource represented by this file.
 func resourceSonarqubePortfolio() *schema.Resource {
@@ -37,7 +31,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 		Create: resourceSonarqubePortfolioCreate,
 		Read:   resourceSonarqubePortfolioRead,
 		Update: resourceSonarqubePortfolioUpdate,
-		Delete: resourceSonarqubePortfoliotDelete,
+		Delete: resourceSonarqubePortfolioDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubePortfolioImport,
 		},
@@ -66,16 +60,56 @@ func resourceSonarqubePortfolio() *schema.Resource {
 			"visibility": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "public", // TODO: Not sure if this should be public. The docs makes it sound like this is a global setting somewhere
-				ForceNew: false, // TODO: Implement update
+				Default:  "public",
+				ForceNew: true, // I cant find an API endpoint for changing this, even though it's possible in the UI
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+					visibility := val.(string)
+					validOptions := []string{"public", "private"}
+					if !slices.Contains(validOptions, visibility) {
+						errs = append(errs, fmt.Errorf("Accepted values are public or private for key %q, got: %s", key, val))
+					}
+
+					return
+				},
 			},
 			"selection_mode": {
 				Type:     schema.TypeString,
-				Optional: true, // TODO: Add extra call ic Create for when something other than "NONE" is specified
-				Default:  "NONE", 
-				ForceNew: false, // TODO: Implement update
-				// TODO: Set "regexp" if mode="REGEXP", otherwise create/update fails
+				Optional: true,
+				Default:  "NONE",
+				ForceNew: false,
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+					selectionMode := val.(string)
+					validOptions := []string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}
+					if !slices.Contains(validOptions, selectionMode) {
+						errs = append(errs, fmt.Errorf("Accepted values are NONE, MANUAL, TAGS, REGEXP or REST for key %q, got: %s", key, val))
+					}
+					return
+				},
 			},
+			"branch": { // Only active for TAGS, REGEXP and REST
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
+			},
+			"tags": { // Only active for TAGS
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"regexp"},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"regexp": { // Only active for REGEXP
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"tags"},
+			},
+
+			// TODO: MANUAL
+			// "selectedProjects": [],
+			// "projects": [],
 		},
 	}
 }
@@ -84,35 +118,52 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 	var endpoint string
 	switch selectionMode := d.Get("selection_mode"); selectionMode {
 	case "NONE":
-		endpoint = "/api/views/set_none_mode" 
+		endpoint = "/api/views/set_none_mode"
 		sonarQubeURL.RawQuery = url.Values{
-			"portfolio":       []string{d.Get("key").(string)},
+			"portfolio": []string{d.Get("key").(string)},
 		}.Encode()
 
 	case "MANUAL":
 		endpoint = "/api/views/set_manual_mode"
 		sonarQubeURL.RawQuery = url.Values{
-			"portfolio":       []string{d.Get("key").(string)},
+			"portfolio": []string{d.Get("key").(string)},
 		}.Encode()
-		
+
 	case "TAGS":
+		if !d.HasChanges("branch", "tags") {
+			return nil
+		}
+
 		endpoint = "/api/views/set_tags_mode"
+		tags := []string{d.Get("tags").(string)}
+		tagsCSV := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(tags)), ","), "[]")
 		sonarQubeURL.RawQuery = url.Values{
-			"portfolio":       []string{d.Get("key").(string)},
-			"tags":       []string{d.Get("tags").(string)}, // TODO: Support this, and validate csv and tags
+			"branch":    []string{d.Get("key").(string)},
+			"portfolio": []string{d.Get("key").(string)},
+			"tags":      []string{tagsCSV},
 		}.Encode()
 
 	case "REGEXP":
+		if !d.HasChanges("branch", "regexp") {
+			return nil
+		}
+
 		endpoint = "/api/views/set_regexp_mode"
 		sonarQubeURL.RawQuery = url.Values{
-			"portfolio":       []string{d.Get("key").(string)},
-			"regexp":       []string{d.Get("regexp").(string)}, // TODO: Support this 
+			"branch":    []string{d.Get("key").(string)},
+			"portfolio": []string{d.Get("key").(string)},
+			"regexp":    []string{d.Get("regexp").(string)},
 		}.Encode()
 
 	case "REST":
+		if !d.HasChange("branch") {
+			return nil
+		}
+
 		endpoint = "/api/views/set_remaining_projects_mode"
 		sonarQubeURL.RawQuery = url.Values{
-			"portfolio":       []string{d.Get("key").(string)},
+			"branch":    []string{d.Get("key").(string)},
+			"portfolio": []string{d.Get("key").(string)},
 		}.Encode()
 
 	default:
@@ -125,7 +176,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourceSonarqubePortfolioCreate",
 	)
 	if err != nil {
@@ -141,10 +192,10 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/create"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"description":       []string{d.Get("description").(string)},
-		"key":    []string{d.Get("key").(string)},
-		"name": []string{d.Get("name").(string)},
-		"visibility": []string{d.Get("visibility").(string)},
+		"description": []string{d.Get("description").(string)},
+		"key":         []string{d.Get("key").(string)},
+		"name":        []string{d.Get("name").(string)},
+		"visibility":  []string{d.Get("visibility").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -159,19 +210,19 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 	}
 	defer resp.Body.Close()
 
-	err = portfolioSetSelectionMode(d, m, sonarQubeURL)
+	err = portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
 	if err != nil {
 		return err
 	}
 
 	// Decode response into struct
-	portfolioResponse := CreatePortfolioResponse{}
+	portfolioResponse := Portfolio{}
 	err = json.NewDecoder(resp.Body).Decode(&portfolioResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to decode json into struct: %+v", err)
 	}
 
-	d.SetId(portfolioResponse.Portfolio.Key)
+	d.SetId(portfolioResponse.Key)
 	return resourceSonarqubePortfolioRead(d, m)
 }
 
@@ -190,54 +241,65 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 		"resourceSonarqubePortfolioRead",
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("resourceSonarqubePortfolioRead: Failed to read portfolio %+v: %+v", *d, err)
+
+		// return err
 	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
-	portfolioReadResponse := GetPortfolio{}
+	portfolioReadResponse := Portfolio{}
 	err = json.NewDecoder(resp.Body).Decode(&portfolioReadResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubePortfolioRead: Failed to decode json into struct: %+v", err)
 	}
 
-	d.SetId(portfolioReadResponse.Portfolio.Key)
-	d.Set("name", portfolioReadResponse.Portfolio.Name)
-	d.Set("qualifier", portfolioReadResponse.Portfolio.Qualifier)
-	d.Set("visibility", portfolioReadResponse.Portfolio.Visibility)
-	d.Set("selectionMode", portfolioReadResponse.Portfolio.SelectionMode)
+	d.SetId(portfolioReadResponse.Key)
+	d.Set("key", portfolioReadResponse.Key)
+	d.Set("name", portfolioReadResponse.Name)
+	d.Set("description", portfolioReadResponse.Desc)
+	d.Set("qualifier", portfolioReadResponse.Qualifier)
+	d.Set("visibility", portfolioReadResponse.Visibility)
+	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
+	d.Set("branch", portfolioReadResponse.Branch)
+	d.Set("tags", portfolioReadResponse.Tags)
+	d.Set("regexp", portfolioReadResponse.Regexp)
 
 	return nil
-
 }
 
 func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 
-	if d.HasChange("name") || d.HasChange("description") {
-		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	if d.HasChanges("name", "description") {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/update"
 		sonarQubeURL.RawQuery = url.Values{
-			"key":    []string{d.Id()},
+			"key":         []string{d.Id()},
 			"description": []string{d.Get("description").(string)},
-			"name": []string{d.Get("name").(string)},
+			"name":        []string{d.Get("name").(string)},
 		}.Encode()
 
 		resp, err := httpRequestHelper(
 			m.(*ProviderConfiguration).httpClient,
 			"POST",
 			sonarQubeURL.String(),
-			http.StatusNoContent,
+			http.StatusOK,
 			"resourceSonarqubePortfolioUpdate",
 		)
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube Portfolio Name and Description: %+v", err)
 		}
 		defer resp.Body.Close()
-
 	}
 
+	if d.HasChanges("selection_mode", "branch", "tags", "regexp") {
+		err := portfolioSetSelectionMode(d, m, sonarQubeURL)
+		if err != nil {
+			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
+		}
+	}
 
-	return resourceSonarqubeProjectRead(d, m)
+	return resourceSonarqubePortfolioRead(d, m)
 }
 
 func resourceSonarqubePortfolioDelete(d *schema.ResourceData, m interface{}) error {
@@ -263,7 +325,7 @@ func resourceSonarqubePortfolioDelete(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubePortfolioImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeProjectRead(d, m); err != nil {
+	if err := resourceSonarqubePortfolioRead(d, m); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil

@@ -73,6 +73,7 @@ func Provider() *schema.Provider {
 			"sonarqube_plugin":                             resourceSonarqubePlugin(),
 			"sonarqube_project":                            resourceSonarqubeProject(),
 			"sonarqube_project_main_branch":                resourceSonarqubeProjectMainBranch(),
+			"sonarqube_portfolio":                          resourceSonarqubePortfolio(),
 			"sonarqube_qualityprofile":                     resourceSonarqubeQualityProfile(),
 			"sonarqube_qualityprofile_project_association": resourceSonarqubeQualityProfileProjectAssociation(),
 			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
@@ -95,6 +96,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"sonarqube_user":           dataSourceSonarqubeUser(),
 			"sonarqube_project":        dataSourceSonarqubeProject(),
+			"sonarqube_portfolio":      dataSourceSonarqubePortfolio(),
 			"sonarqube_qualityprofile": dataSourceSonarqubeQualityProfile(),
 			"sonarqube_rule":           dataSourceSonarqubeRule(),
 		},
