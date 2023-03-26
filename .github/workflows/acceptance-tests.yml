@@ -1,4 +1,4 @@
-name: acceptance-tests-lts
+name: acceptance-tests
 on:
   push:
     branches: [master]
