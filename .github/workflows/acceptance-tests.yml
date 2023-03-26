@@ -1,7 +1,9 @@
 name: acceptance-tests-lts
 on:
   push:
-
+    branches: [master]
+  pull_request:
+    branches: [master]
 jobs:
   acceptance-tests:
     strategy:
