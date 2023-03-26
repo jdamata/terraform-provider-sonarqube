@@ -46,7 +46,18 @@ func resourceSonarqubeGitlabBinding() *schema.Resource {
 	}
 }
 
+func checkGitlabBindingSupport(conf *ProviderConfiguration) error {
+	if strings.ToLower(conf.sonarQubeEdition) == "community" {
+		return fmt.Errorf("GitLab Bindings are not supported in the Community edition of SonarQube. You are using: %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+	}
+	return nil
+}
+
 func resourceSonarqubeGitlabBindingCreate(d *schema.ResourceData, m interface{}) error {
+	if err := checkGitlabBindingSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_gitlab_binding"
 
@@ -76,6 +87,10 @@ func resourceSonarqubeGitlabBindingCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceSonarqubeGitlabBindingRead(d *schema.ResourceData, m interface{}) error {
+	if err := checkGitlabBindingSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	idSlice := strings.SplitN(d.Id(), "/", 2)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/get_binding"
@@ -114,6 +129,10 @@ func resourceSonarqubeGitlabBindingRead(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceSonarqubeGitlabBindingDelete(d *schema.ResourceData, m interface{}) error {
+	if err := checkGitlabBindingSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/delete_binding"
 	sonarQubeURL.RawQuery = url.Values{
