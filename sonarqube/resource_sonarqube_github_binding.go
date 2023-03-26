@@ -65,7 +65,7 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 
 func checkGithubBindingSupport(conf *ProviderConfiguration) error {
 	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		return fmt.Errorf("GitHub Bindings are not supproted in the Community edition of SonarQube. You are using: %s version %s", conf.sonarQubeEdition, conf.sonarQubeEdition)
+		return fmt.Errorf("GitHub Bindings are not supported in the Community edition of SonarQube. You are using: %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
 	}
 	return nil
 }
