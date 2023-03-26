@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Portfolio used in Portfolio
@@ -89,7 +89,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Optional:      true,
 				ForceNew:      false,
 				ConflictsWith: []string{"tags"},
-				ValidateFunc: validation.StringIsValidRegExp,
+				ValidateFunc:  validation.StringIsValidRegExp,
 			},
 			// TODO: MANUAL
 			// "selectedProjects": [],
@@ -100,7 +100,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 
 func checkPortfolioSupport(conf *ProviderConfiguration) error {
 	if strings.ToLower(conf.sonarQubeEdition) != "enterprise" {
-		return fmt.Errorf("Portfolios are only supported in the Enterprise edition of SonarQube. You are using: %s", conf.sonarQubeEdition)
+		return fmt.Errorf("Portfolios are only supported in the Enterprise edition of SonarQube. You are using: %s version %s", conf.sonarQubeEdition, conf.sonarQubeEdition)
 	}
 	return nil
 }
@@ -289,7 +289,7 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
 	d.Set("branch", portfolioReadResponse.Branch)
 	d.Set("regexp", portfolioReadResponse.Regexp)
-	
+
 	if len(portfolioReadResponse.Tags) > 0 {
 		d.Set("tags", portfolioReadResponse.Tags)
 	}

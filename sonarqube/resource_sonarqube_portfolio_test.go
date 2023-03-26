@@ -21,7 +21,7 @@ func testSweepSonarqubePortfolioSweeper(r string) error {
 	return nil
 }
 func testAccPreCheckPortfolioSupport(t *testing.T) {
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) != "enterprise" {
+	if err := checkPortfolioSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
 		t.Skipf("Skipping test of unsupported feature (Portfolio)")
 	}
 }
@@ -168,7 +168,7 @@ func TestAccSonarqubePortfolioVisibilityUpdate(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -193,7 +193,7 @@ func TestAccSonarqubePortfolioVisibilityError(t *testing.T) {
 	rnd := generateRandomResourceName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +208,7 @@ func TestAccSonarqubePortfolioSelectionModeError(t *testing.T) {
 	rnd := generateRandomResourceName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -224,7 +224,7 @@ func TestAccSonarqubePortfolioSelectionModeNone(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -252,7 +252,7 @@ func TestAccSonarqubePortfolioSelectionModeManual(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -313,7 +313,7 @@ func TestAccSonarqubePortfolioSelectionModeRegexp(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -344,7 +344,7 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
