@@ -61,7 +61,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "public",
-				ForceNew: true, // I cant find an API endpoint for changing this, even though it's possible in the UI
+				ForceNew: true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI 
 				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					visibility := val.(string)
 					validOptions := []string{"public", "private"}
@@ -115,7 +115,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 }
 
 // Validate the regexp and tag fields if the corresponding selection_mode is chosen
-func validatePortfolioResource(d *schema.ResourceData) error { // TODO: Doc this
+func validatePortfolioResource(d *schema.ResourceData) error {
 	switch selectionMode := d.Get("selection_mode"); selectionMode {
 	case "NONE", "MANUAL", "REST":
 		return nil
