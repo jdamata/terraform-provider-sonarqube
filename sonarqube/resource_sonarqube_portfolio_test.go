@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,6 +19,11 @@ func init() {
 // TODO: implement sweeper to clean up portfolio: https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html
 func testSweepSonarqubePortfolioSweeper(r string) error {
 	return nil
+}
+func testAccPreCheckPortfolioSupport(t *testing.T) {
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) != "enterprise" {
+		t.Skipf("Skipping test of unsupported feature (Portfolio)")
+	}
 }
 
 func testAccSonarqubePortfolioBasicConfig(rnd string, key string, name string, description string, visibility string) string {
@@ -76,7 +82,7 @@ func TestAccSonarqubePortfolioBasic(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +115,7 @@ func TestAccSonarqubePortfolioNameUpdate(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +141,8 @@ func TestAccSonarqubePortfolioDescriptionUpdate(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +168,7 @@ func TestAccSonarqubePortfolioVisibilityUpdate(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -186,12 +193,12 @@ func TestAccSonarqubePortfolioVisibilityError(t *testing.T) {
 	rnd := generateRandomResourceName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSonarqubePortfolioBasicConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "badValue"),
-				ExpectError: regexp.MustCompile("Accepted values are .* for key .* got:"),
+				ExpectError: regexp.MustCompile("expected .* to be one of"),
 			},
 		},
 	})
@@ -201,12 +208,12 @@ func TestAccSonarqubePortfolioSelectionModeError(t *testing.T) {
 	rnd := generateRandomResourceName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSonarqubePortfolioConfigSelectionMode(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "badValue"),
-				ExpectError: regexp.MustCompile("Accepted values are .* for key .* got:"),
+				ExpectError: regexp.MustCompile("expected .* to be one of"),
 			},
 		},
 	})
@@ -217,7 +224,7 @@ func TestAccSonarqubePortfolioSelectionModeNone(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +252,7 @@ func TestAccSonarqubePortfolioSelectionModeManual(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -274,7 +281,7 @@ func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -306,7 +313,7 @@ func TestAccSonarqubePortfolioSelectionModeRegexp(t *testing.T) {
 	name := "sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -337,7 +344,7 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
