@@ -33,6 +33,6 @@ jobs:
           SONAR_PASS: admin
     services:
       sonarqube:
-        image: sonarqube:lts-developer
+        image: sonarqube:enterprise
         ports:
           - 9000:9000

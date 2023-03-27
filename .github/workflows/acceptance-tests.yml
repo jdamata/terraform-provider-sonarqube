@@ -36,6 +36,6 @@ jobs:
         uses: codecov/codecov-action@v2
     services:
       sonarqube:
-        image: sonarqube:developer
+        image: sonarqube:enterprise
         ports:
           - 9000:9000

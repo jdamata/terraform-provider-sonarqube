@@ -73,6 +73,7 @@ func Provider() *schema.Provider {
 			"sonarqube_plugin":                             resourceSonarqubePlugin(),
 			"sonarqube_project":                            resourceSonarqubeProject(),
 			"sonarqube_project_main_branch":                resourceSonarqubeProjectMainBranch(),
+			"sonarqube_portfolio":                          resourceSonarqubePortfolio(),
 			"sonarqube_qualityprofile":                     resourceSonarqubeQualityProfile(),
 			"sonarqube_qualityprofile_project_association": resourceSonarqubeQualityProfileProjectAssociation(),
 			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
