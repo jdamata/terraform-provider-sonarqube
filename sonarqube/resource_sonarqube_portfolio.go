@@ -61,7 +61,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "public",
-				ForceNew: true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI 
+				ForceNew: true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI
 				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
 					visibility := val.(string)
 					validOptions := []string{"public", "private"}

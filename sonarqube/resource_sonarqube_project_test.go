@@ -29,6 +29,18 @@ func testAccSonarqubeProjectBasicConfig(rnd string, name string, project string,
 		`, rnd, name, project, visibility)
 }
 
+func testAccSonarqubeProjectTagsConfig(rnd string, name string, project string, visibility string, tags []string) string {
+	formattedTags := generateHCLList(tags)
+	return fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+		  name       = "%[2]s"
+		  project    = "%[3]s"
+		  visibility = "%[4]s"
+		  tags = %[5]s // Note that the "" should be missing since this is a list
+		}
+		`, rnd, name, project, visibility, formattedTags)
+}
+
 func TestAccSonarqubeProjectBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
@@ -98,6 +110,74 @@ func TestAccSonarqubeProjectVisibilityUpdate(t *testing.T) {
 				// Requires 'Project administer' permission on the specified project or view
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectTagsCreate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+	tags := []string{"tag1", "tag2"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectTagsConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public", tags),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectTagsUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+	tags := []string{"tag1", "tag2"}
+	tagsUpdated := []string{"tag1", "tag2", "tag3"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "tags.#", "0"),
+				),
+			},
+			{
+				Config: testAccSonarqubeProjectTagsConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public", tags),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+					resource.TestCheckResourceAttr(name, "tags.#", "2"),
+				),
+			},
+			{
+				Config: testAccSonarqubeProjectTagsConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public", tagsUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "tags.0", tagsUpdated[0]),
+					resource.TestCheckResourceAttr(name, "tags.1", tagsUpdated[1]),
+					resource.TestCheckResourceAttr(name, "tags.2", tagsUpdated[2]),
+					resource.TestCheckResourceAttr(name, "tags.#", "3"),
+				),
+			},
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "tags.#", "0"),
+				),
 			},
 		},
 	})
