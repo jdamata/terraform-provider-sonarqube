@@ -37,7 +37,7 @@ func dataSourceSonarqubePortfolio() *schema.Resource {
 				Computed: true,
 			},
 			"tags": { // Only active for TAGS
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Computed: true,
 			},
 			"regexp": { // Only active for REGEXP
