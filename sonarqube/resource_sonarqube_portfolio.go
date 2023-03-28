@@ -307,9 +307,9 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 
 	if d.HasChanges("name", "description") {
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/update"
 		sonarQubeURL.RawQuery = url.Values{
 			"key":         []string{d.Id()},
@@ -331,7 +331,7 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 	}
 
 	if d.HasChanges("selection_mode", "branch", "tags", "regexp") {
-		err := portfolioSetSelectionMode(d, m, sonarQubeURL)
+		err := portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
 		}
