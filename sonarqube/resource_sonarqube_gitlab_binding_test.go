@@ -18,6 +18,11 @@ func init() {
 func testSweepSonarqubeGitlabBinding(r string) error {
 	return nil
 }
+func testAccPreCheckGitlabBindingSupport(t *testing.T) {
+	if err := checkGitlabBindingSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
+		t.Skipf("Skipping test of unsupported feature (Gitlab Binding)")
+	}
+}
 
 func testAccSonarqubeGitlabBindingName(rnd string, projName string, almSetting string, repoName string) string {
 	return fmt.Sprintf(`
@@ -48,7 +53,7 @@ func TestAccSonarqubeGitlabBindingName(t *testing.T) {
 	name := "sonarqube_gitlab_binding." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckGitlabBindingSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

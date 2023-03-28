@@ -7,9 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Portfolio used in Portfolio
@@ -58,33 +57,18 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Computed: true,
 			},
 			"visibility": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "public",
-				ForceNew: true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI 
-				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
-					visibility := val.(string)
-					validOptions := []string{"public", "private"}
-					if !slices.Contains(validOptions, visibility) {
-						errs = append(errs, fmt.Errorf("Accepted values are public or private for key %q, got: %s", key, val))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "public",
+				ForceNew:     true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI 
+				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
 			"selection_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "NONE",
-				ForceNew: false,
-				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
-					selectionMode := val.(string)
-					validOptions := []string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}
-					if !slices.Contains(validOptions, selectionMode) {
-						errs = append(errs, fmt.Errorf("Accepted values are NONE, MANUAL, TAGS, REGEXP or REST for key %q, got: %s", key, val))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "NONE",
+				ForceNew:     false,
+				ValidateFunc: validation.StringInSlice([]string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}, false),
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:     schema.TypeString,
@@ -105,13 +89,20 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Optional:      true,
 				ForceNew:      false,
 				ConflictsWith: []string{"tags"},
+				ValidateFunc:  validation.StringIsValidRegExp,
 			},
-
 			// TODO: MANUAL
 			// "selectedProjects": [],
 			// "projects": [],
 		},
 	}
+}
+
+func checkPortfolioSupport(conf *ProviderConfiguration) error {
+	if strings.ToLower(conf.sonarQubeEdition) != "enterprise" {
+		return fmt.Errorf("Portfolios are only supported in the Enterprise edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+	}
+	return nil
 }
 
 // Validate the regexp and tag fields if the corresponding selection_mode is chosen
@@ -212,6 +203,10 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 }
 
 func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	err := validatePortfolioResource(d)
 	if err != nil {
 		return err
@@ -256,6 +251,10 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/show"
 	sonarQubeURL.RawQuery = url.Values{
@@ -289,13 +288,20 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	d.Set("visibility", portfolioReadResponse.Visibility)
 	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
 	d.Set("branch", portfolioReadResponse.Branch)
-	d.Set("tags", portfolioReadResponse.Tags)
 	d.Set("regexp", portfolioReadResponse.Regexp)
+
+	if len(portfolioReadResponse.Tags) > 0 {
+		d.Set("tags", portfolioReadResponse.Tags)
+	}
 
 	return nil
 }
 
 func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	err := validatePortfolioResource(d)
 	if err != nil {
 		return err
@@ -335,6 +341,10 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubePortfolioDelete(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/delete"
 	sonarQubeURL.RawQuery = url.Values{
