@@ -151,7 +151,7 @@ func resourceSonarqubeGithubBindingDelete(d *schema.ResourceData, m interface{})
 	if err := checkGithubBindingSupport(m.(*ProviderConfiguration)); err != nil {
 		return err
 	}
-	
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/delete_binding"
 	sonarQubeURL.RawQuery = url.Values{

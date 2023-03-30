@@ -60,7 +60,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "public",
-				ForceNew:     true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI 
+				ForceNew:     true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI
 				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
 			"selection_mode": {
@@ -336,7 +336,6 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return err
 	}
-
 
 	if d.HasChanges("name", "description") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
