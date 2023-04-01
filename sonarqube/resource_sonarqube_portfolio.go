@@ -74,6 +74,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
+				Description: "Which branch to analyze. If nothing, or \"\" is specified, the main branch is used.",
 			},
 			"tags": { // Only active for TAGS
 				Type:          schema.TypeList,
@@ -166,7 +167,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			"tags":      []string{tagsCSV},
 		}
 
-		// SonarQube handles "" like it actually is a name of a branch
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: TODO: Add Link to PR
 		branch := d.Get("branch").(string)
 		if len(branch) > 0 {
 			urlParameters.Add("branch", branch)
