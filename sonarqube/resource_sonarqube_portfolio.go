@@ -313,7 +313,7 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	d.Set("visibility", portfolioReadResponse.Visibility)
 	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
 
-	// These fields may or may not be set in the reposnse from SonarQube depending on the selection_mode
+	// These fields may or may not be set in the reposnse from SonarQube
 	if len(portfolioReadResponse.Tags) > 0 {
 		d.Set("tags", portfolioReadResponse.Tags)
 	}
