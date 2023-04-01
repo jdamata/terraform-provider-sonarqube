@@ -74,7 +74,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
-				Description: "Which branch to analyze. If nothing, or \"\" is specified, the main branch is used.",
+				Description: "Which branch to analyze. If nothing, or '' is specified, the main branch is used.",
 			},
 			"tags": { // Only active for TAGS
 				Type:          schema.TypeList,
