@@ -160,19 +160,35 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			tags = append(tags, fmt.Sprint(v))
 		}
 		tagsCSV := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(tags)), ","), "[]")
-		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("branch").(string)},
+
+		urlParameters := url.Values{
 			"portfolio": []string{d.Get("key").(string)},
 			"tags":      []string{tagsCSV},
-		}.Encode()
+		}
+
+		// SonarQube handles "" like it actually is a name of a branch
+		branch := d.Get("branch").(string)
+		if len(branch) > 0 {
+			urlParameters.Add("branch", branch)
+		}
+
+		sonarQubeURL.RawQuery = urlParameters.Encode()
 
 	case "REGEXP":
 		endpoint = "/api/views/set_regexp_mode"
-		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("branch").(string)},
+
+		urlParameters := url.Values{
 			"portfolio": []string{d.Get("key").(string)},
 			"regexp":    []string{d.Get("regexp").(string)},
-		}.Encode()
+		}
+
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: TODO: Add Link to PR
+		branch := d.Get("branch").(string)
+		if len(branch) > 0 {
+			urlParameters.Add("branch", branch)
+		}
+
+		sonarQubeURL.RawQuery = urlParameters.Encode()
 
 	case "REST":
 		endpoint = "/api/views/set_remaining_projects_mode"
@@ -287,11 +303,16 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	d.Set("qualifier", portfolioReadResponse.Qualifier)
 	d.Set("visibility", portfolioReadResponse.Visibility)
 	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
-	d.Set("branch", portfolioReadResponse.Branch)
-	d.Set("regexp", portfolioReadResponse.Regexp)
 
+	// These fields may or may not be set in the reposnse from SonarQube depending on the selection_mode
 	if len(portfolioReadResponse.Tags) > 0 {
 		d.Set("tags", portfolioReadResponse.Tags)
+	}
+	if len(portfolioReadResponse.Branch) > 0 {
+		d.Set("branch", portfolioReadResponse.Branch)
+	}
+	if len(portfolioReadResponse.Regexp) > 0 {
+		d.Set("regexp", portfolioReadResponse.Regexp)
 	}
 
 	return nil
