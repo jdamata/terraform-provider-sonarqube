@@ -167,7 +167,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			"tags":      []string{tagsCSV},
 		}
 
-		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: TODO: Add Link to PR
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: https://github.com/jdamata/terraform-provider-sonarqube/pull/150
 		branch := d.Get("branch").(string)
 		if len(branch) > 0 {
 			urlParameters.Add("branch", branch)
@@ -183,7 +183,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			"regexp":    []string{d.Get("regexp").(string)},
 		}
 
-		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: TODO: Add Link to PR
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: https://github.com/jdamata/terraform-provider-sonarqube/pull/150
 		branch := d.Get("branch").(string)
 		if len(branch) > 0 {
 			urlParameters.Add("branch", branch)
@@ -198,7 +198,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			"portfolio": []string{d.Get("key").(string)},
 		}
 
-		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: TODO: Add Link to PR
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: https://github.com/jdamata/terraform-provider-sonarqube/pull/150
 		branch := d.Get("branch").(string)
 		if len(branch) > 0 {
 			urlParameters.Add("branch", branch)
