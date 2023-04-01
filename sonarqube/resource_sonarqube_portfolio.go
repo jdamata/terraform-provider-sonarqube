@@ -192,10 +192,18 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 
 	case "REST":
 		endpoint = "/api/views/set_remaining_projects_mode"
-		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("branch").(string)},
+
+		urlParameters := url.Values{
 			"portfolio": []string{d.Get("key").(string)},
-		}.Encode()
+		}
+
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: TODO: Add Link to PR
+		branch := d.Get("branch").(string)
+		if len(branch) > 0 {
+			urlParameters.Add("branch", branch)
+		}
+
+		sonarQubeURL.RawQuery = urlParameters.Encode()
 
 	default:
 		return fmt.Errorf("resourceSonarqubePortfolioCreate: selection_mode needs to be set to one of NONE, MANUAL, TAGS, REGEXP, REST")
