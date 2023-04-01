@@ -290,6 +290,7 @@ func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
 					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
 					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+					resource.TestCheckNoResourceAttr(name, "branch"),
 				),
 			},
 			{
@@ -301,6 +302,7 @@ func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
 					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
 					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+					resource.TestCheckNoResourceAttr(name, "branch"),
 				),
 			},
 		},
@@ -321,6 +323,7 @@ func TestAccSonarqubePortfolioSelectionModeRegexp(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
 					resource.TestCheckResourceAttr(name, "selection_mode", "REGEXP"),
 					resource.TestCheckResourceAttr(name, "regexp", "regexp1"),
+					resource.TestCheckNoResourceAttr(name, "branch"),
 				),
 			},
 			{
@@ -331,6 +334,7 @@ func TestAccSonarqubePortfolioSelectionModeRegexp(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
 					resource.TestCheckResourceAttr(name, "selection_mode", "REGEXP"),
 					resource.TestCheckResourceAttr(name, "regexp", "regexp1"),
+					resource.TestCheckNoResourceAttr(name, "branch"),
 				),
 			},
 		},
@@ -359,6 +363,7 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
 					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
 					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+					resource.TestCheckNoResourceAttr(name, "branch"),
 				),
 			},
 			{
@@ -370,6 +375,7 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
 					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
 					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+					resource.TestCheckNoResourceAttr(name, "branch"),
 				),
 			},
 		},
