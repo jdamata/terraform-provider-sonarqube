@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image_tag: [community, developer, enterprise]
+        image_tag: [lts-community, lts-developer, lts-enterprise]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
