@@ -47,6 +47,10 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_HOST", "SONARQUBE_HOST"}, nil),
 				Required:    true,
 			},
+			"http_proxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"installed_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -119,6 +123,13 @@ type ProviderConfiguration struct {
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	transport := cleanhttp.DefaultPooledTransport()
+	if proxy, ok := d.GetOk("http_proxy"); ok {
+		proxyUrl, err := url.Parse(proxy.(string))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse http_proxy: %+v", err)
+		}
+		transport.Proxy = http.ProxyURL(proxyUrl)
+	}
 	transport.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool),
 	}
