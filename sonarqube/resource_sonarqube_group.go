@@ -48,7 +48,6 @@ func resourceSonarqubeGroup() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -139,8 +138,10 @@ func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_groups/update"
 
+	oldName, newName := d.GetChange("name")
 	rawQuery := url.Values{
-		"id": []string{d.Id()},
+		"currentName": []string{oldName.(string)},
+		"name":        []string{newName.(string)},
 	}
 
 	if _, ok := d.GetOk("description"); ok {
