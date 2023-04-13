@@ -117,10 +117,8 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	}
 	// Loop over all groups to see if the group we need exists.
 	for _, value := range groupReadResponse.Groups {
-		if d.Id() == value.ID {
+		if d.Get("name").(string) == value.Name {
 			// If it does, set the values of that group
-			d.SetId(value.ID)
-			d.Set("name", value.Name)
 			d.Set("description", value.Description)
 			readSuccess = true
 		}
