@@ -172,7 +172,7 @@ func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_groups/delete"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"id": []string{d.Id()},
+		"name": []string{d.Get("name").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
