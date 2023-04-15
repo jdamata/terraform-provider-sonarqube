@@ -64,8 +64,8 @@ func TestAccSonarqubeGroupBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", groupName),
-					resource.TestCheckResourceAttr(name, "description", "group description"),
+					resource.TestCheckResourceAttr(name, "name", updatedGroupName),
+					resource.TestCheckResourceAttr(name, "description", "group description 3"),
 				),
 			},
 		},

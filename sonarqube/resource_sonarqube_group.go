@@ -115,12 +115,22 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
 	}
+
+	groupName := d.Get("name").(string)
+
 	// Loop over all groups to see if the group we need exists.
 	for _, value := range groupReadResponse.Groups {
-		if d.Get("name").(string) == value.Name {
+		// no ID in the group search response from sonarqube 10.0+,
+		// here is to make comparation compatible with sonarqube 9.9 and 10+
+		if (d.Id() != "" && d.Id() == value.ID) || groupName == value.Name {
+			if value.ID != "" {
+				d.SetId(value.ID)
+			}
 			// If it does, set the values of that group
+			d.Set("name", value.Name)
 			d.Set("description", value.Description)
 			readSuccess = true
+			break
 		}
 	}
 
@@ -139,7 +149,10 @@ func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	oldName, newName := d.GetChange("name")
 	rawQuery := url.Values{
 		"currentName": []string{oldName.(string)},
-		"name":        []string{newName.(string)},
+	}
+
+	if newName != oldName {
+		rawQuery.Add("name", newName.(string))
 	}
 
 	if _, ok := d.GetOk("description"); ok {
