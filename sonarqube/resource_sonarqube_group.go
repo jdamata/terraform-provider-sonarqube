@@ -48,7 +48,6 @@ func resourceSonarqubeGroup() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -116,14 +115,22 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeGroupRead: Failed to decode json into struct: %+v", err)
 	}
+
+	groupName := d.Get("name").(string)
+
 	// Loop over all groups to see if the group we need exists.
 	for _, value := range groupReadResponse.Groups {
-		if d.Id() == value.ID {
+		// no ID in the group search response from sonarqube 10.0+,
+		// here is to make comparation compatible with sonarqube 9.9 and 10+
+		if (d.Id() != "" && d.Id() == value.ID) || groupName == value.Name {
+			if value.ID != "" {
+				d.SetId(value.ID)
+			}
 			// If it does, set the values of that group
-			d.SetId(value.ID)
 			d.Set("name", value.Name)
 			d.Set("description", value.Description)
 			readSuccess = true
+			break
 		}
 	}
 
@@ -139,8 +146,13 @@ func resourceSonarqubeGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_groups/update"
 
+	oldName, newName := d.GetChange("name")
 	rawQuery := url.Values{
-		"id": []string{d.Id()},
+		"currentName": []string{oldName.(string)},
+	}
+
+	if newName != oldName {
+		rawQuery.Add("name", newName.(string))
 	}
 
 	if _, ok := d.GetOk("description"); ok {
@@ -171,7 +183,7 @@ func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_groups/delete"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"id": []string{d.Id()},
+		"name": []string{d.Get("name").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(

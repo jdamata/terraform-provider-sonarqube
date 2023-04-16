@@ -31,23 +31,32 @@ func testAccSonarqubeGroupBasicConfig(rnd string, name string, description strin
 func TestAccSonarqubeGroupBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_group." + rnd
+	groupName := "testAccSonarqubeGroup" + rnd
+	updatedGroupName := "testAccSonarqubeGroupUpdated" + rnd
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeGroupBasicConfig(rnd, "testAccSonarqubeGroup", "group description"),
+				Config: testAccSonarqubeGroupBasicConfig(rnd, groupName, "group description"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeGroup"),
+					resource.TestCheckResourceAttr(name, "name", groupName),
 					resource.TestCheckResourceAttr(name, "description", "group description"),
 				),
 			},
 			{
-				Config: testAccSonarqubeGroupBasicConfig(rnd, "testAccSonarqubeGroup", "group description 2"),
+				Config: testAccSonarqubeGroupBasicConfig(rnd, groupName, "group description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeGroup"),
+					resource.TestCheckResourceAttr(name, "name", groupName),
 					resource.TestCheckResourceAttr(name, "description", "group description 2"),
+				),
+			},
+			{
+				Config: testAccSonarqubeGroupBasicConfig(rnd, updatedGroupName, "group description 3"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", updatedGroupName),
+					resource.TestCheckResourceAttr(name, "description", "group description 3"),
 				),
 			},
 			{
@@ -55,8 +64,8 @@ func TestAccSonarqubeGroupBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeGroup"),
-					resource.TestCheckResourceAttr(name, "description", "group description"),
+					resource.TestCheckResourceAttr(name, "name", updatedGroupName),
+					resource.TestCheckResourceAttr(name, "description", "group description 3"),
 				),
 			},
 		},
