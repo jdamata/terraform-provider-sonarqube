@@ -2,8 +2,10 @@ package sonarqube
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -27,6 +29,19 @@ func testAccSonarqubeQualitygateBasicConfig(rnd string, name string, is_default 
 }
 
 func TestAccSonarqubeQualitygateBasic(t *testing.T) {
+
+	numDefaultConditions := 6 // 9.9 and above automatically add conditions to the quality gate
+
+	sonarQubeVersion, err := getSonarQubeVersion()
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	minimumVersion, _ := version.NewVersion("9.9")
+	if sonarQubeVersion.LessThan(minimumVersion) {
+		numDefaultConditions = 0
+	}
+	t.Logf("Sonar version: %s - %d default quality gate conditions expected", sonarQubeVersion.Core().String(), numDefaultConditions)
+
 	rnd := generateRandomResourceName()
 	name := "sonarqube_qualitygate." + rnd
 
@@ -39,6 +54,7 @@ func TestAccSonarqubeQualitygateBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeQualitygate"),
 					resource.TestCheckResourceAttr(name, "is_default", "true"),
+					resource.TestCheckResourceAttr(name, "conditions.#", strconv.Itoa(numDefaultConditions)),
 				),
 			},
 			{
@@ -60,7 +76,7 @@ func testAccSonarqubeQualitygateCopyConfig(rnd string, baseName string, conditio
 	resource "sonarqube_qualitygate" "%[2]s" {
 		name = "%[2]s"
 	}
-	
+
 	resource "sonarqube_qualitygate_condition" "qualitygate_condition" {
 		gatename  = sonarqube_qualitygate.%[2]s.id
 		metric    = "%[3]s"

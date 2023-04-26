@@ -3,7 +3,6 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -178,13 +177,7 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	d.Set("name", qualityGateReadResponse.Name)
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=tue
 	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
-
-	conditions, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("resourceQualityGateRead: Failed to decode conditions: %+v", err)
-	}
-	d.Set("conditions", conditions)
-
+	d.Set("conditions", flattenReadQualityGateConditionsResponse(&qualityGateReadResponse.Conditions))
 	return nil
 }
 
@@ -248,4 +241,24 @@ func setDefaultQualityGate(d *schema.ResourceData, m interface{}, setDefault boo
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+func flattenReadQualityGateConditionsResponse(input *[]ReadQualityGateConditionsResponse) []interface{} {
+	flatConditions := make([]interface{}, len(*input), len(*input))
+	if input == nil {
+		return flatConditions
+	}
+
+	for i, condition := range *input {
+		c := make(map[string]interface{})
+
+		c["id"] = condition.ID
+		c["metric"] = condition.Metric
+		c["op"] = condition.OP
+		c["error"] = condition.Error
+
+		flatConditions[i] = c
+	}
+
+	return flatConditions
 }
