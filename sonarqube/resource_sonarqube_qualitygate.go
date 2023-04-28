@@ -91,7 +91,7 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"error": {
+						"threshold": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -256,7 +256,7 @@ func flattenReadQualityGateConditionsResponse(input *[]ReadQualityGateConditions
 		c["id"] = condition.ID
 		c["metric"] = condition.Metric
 		c["op"] = condition.OP
-		c["error"] = condition.Error
+		c["threshold"] = condition.Error
 
 		flatConditions[i] = c
 	}
