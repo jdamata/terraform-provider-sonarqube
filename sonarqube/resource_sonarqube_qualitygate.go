@@ -244,10 +244,11 @@ func setDefaultQualityGate(d *schema.ResourceData, m interface{}, setDefault boo
 }
 
 func flattenReadQualityGateConditionsResponse(input *[]ReadQualityGateConditionsResponse) []interface{} {
-	flatConditions := make([]interface{}, len(*input), len(*input))
-	if input == nil {
-		return flatConditions
+	if input == nil || len(*input) == 0 {
+		return make([]interface{}, 0)
 	}
+
+	flatConditions := make([]interface{}, len(*input))
 
 	for i, condition := range *input {
 		c := make(map[string]interface{})
