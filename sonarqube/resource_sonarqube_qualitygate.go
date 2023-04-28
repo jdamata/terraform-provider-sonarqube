@@ -196,6 +196,14 @@ func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) e
 		"name": []string{d.Id()},
 	}.Encode()
 
+	// If this is the default quality gate then we need to default it back to "Sonar way" so there is still a default
+	if d.Get("is_default").(bool) {
+		err := setDefaultQualityGate(d, m, false)
+		if err != nil {
+			return err
+		}
+	}
+	
 	err := setDefaultQualityGate(d, m, false)
 	if err != nil {
 		return err
