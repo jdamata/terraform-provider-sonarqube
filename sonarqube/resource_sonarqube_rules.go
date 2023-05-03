@@ -154,14 +154,14 @@ func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/rules/create"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"custom_key":           []string{d.Get("custom_key").(string)},
-		"markdown_description": []string{d.Get("markdown_description").(string)},
+		"customKey":            []string{d.Get("custom_key").(string)},
+		"markdownDescription":  []string{d.Get("markdown_description").(string)},
 		"name":                 []string{d.Get("name").(string)},
 		"params":               []string{d.Get("params").(string)},
-		"prevent_reactivation": []string{d.Get("prevent_reactivation").(string)},
+		"preventReactivation":  []string{d.Get("prevent_reactivation").(string)},
 		"severity":             []string{d.Get("severity").(string)},
 		"status":               []string{d.Get("status").(string)},
-		"template_key":         []string{d.Get("template_key").(string)},
+		"templateKey":          []string{d.Get("template_key").(string)},
 		"type":                 []string{d.Get("type").(string)},
 	}.Encode()
 
