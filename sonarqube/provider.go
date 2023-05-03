@@ -85,7 +85,6 @@ func Provider() *schema.Provider {
 			"sonarqube_qualityprofile":                     resourceSonarqubeQualityProfile(),
 			"sonarqube_qualityprofile_project_association": resourceSonarqubeQualityProfileProjectAssociation(),
 			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
-			"sonarqube_qualitygate_condition":              resourceSonarqubeQualityGateCondition(),
 			"sonarqube_qualitygate_project_association":    resourceSonarqubeQualityGateProjectAssociation(),
 			"sonarqube_qualitygate_usergroup_association":  resourceSonarqubeQualityGateUsergroupAssociation(),
 			"sonarqube_user":                               resourceSonarqubeUser(),

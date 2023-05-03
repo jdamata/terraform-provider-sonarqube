@@ -37,6 +37,12 @@ func testAccSonarqubeQualitygateGroupAssociationGateName(rnd string, name string
 
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
+
+			condition {
+				metric    = "new_coverage"
+				op        = "LT"
+				threshold = "30"
+			}
 		}
 
 		resource "sonarqube_qualitygate_usergroup_association" "%[1]s" {
@@ -74,6 +80,12 @@ func testAccSonarqubeQualitygateUserAssociationGateName(rnd string, name string)
 
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
+
+			condition {
+				metric    = "new_coverage"
+				op        = "LT"
+				threshold = "30"
+			}
 		}
 
 		resource "sonarqube_qualitygate_usergroup_association" "%[1]s" {
