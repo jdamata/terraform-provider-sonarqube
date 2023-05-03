@@ -121,10 +121,12 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 	// Loop over all groups to see if the group we need exists.
 	for _, value := range groupReadResponse.Groups {
 		// no ID in the group search response from sonarqube 10.0+,
-		// here is to make comparation compatible with sonarqube 9.9 and 10+
+		// here is to make comparison compatible with sonarqube 9.9 and 10+
 		if (d.Id() != "" && d.Id() == value.ID) || groupName == value.Name {
 			if value.ID != "" {
 				d.SetId(value.ID)
+			} else {
+				//				d.SetId(value.Name)
 			}
 			// If it does, set the values of that group
 			d.Set("name", value.Name)
@@ -136,7 +138,9 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 
 	if !readSuccess {
 		// Group not found
-		d.SetId("")
+		if _, ok := d.GetOk("id"); ok {
+			d.SetId("")
+		}
 	}
 
 	return nil
