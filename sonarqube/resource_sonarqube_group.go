@@ -125,8 +125,6 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 		if (d.Id() != "" && d.Id() == value.ID) || groupName == value.Name {
 			if value.ID != "" {
 				d.SetId(value.ID)
-			} else {
-				//				d.SetId(value.Name)
 			}
 			// If it does, set the values of that group
 			d.Set("name", value.Name)
