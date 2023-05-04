@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 
@@ -344,6 +345,12 @@ func readQualityGateFromApi(d *schema.ResourceData, m interface{}) (*GetQualityG
 	if err != nil {
 		return nil, fmt.Errorf("resourceQualityGateRead: Failed to decode json into struct: %+v", err)
 	}
+
+	// Make sure the order is always the same for when we are comparing lists of conditions
+	sort.Slice(qualityGateReadResponse.Conditions, func(i, j int) bool {
+		return qualityGateReadResponse.Conditions[i].Metric < qualityGateReadResponse.Conditions[j].Metric
+	})
+
 	return &qualityGateReadResponse, nil
 }
 
@@ -351,6 +358,11 @@ func synchronizeConditions(d *schema.ResourceData, m interface{}, apiQualityGate
 
 	changed := false
 	qualityGateConditions := d.Get("condition").([]interface{})
+
+	// Make sure the order is always the same for when we are comparing lists of conditions
+	sort.Slice(qualityGateConditions, func(i, j int) bool {
+		return qualityGateConditions[i].(map[string]interface{})["metric"].(string) < qualityGateConditions[j].(map[string]interface{})["metric"].(string)
+	})
 
 	// Determine which conditions have been added or changed and update those
 	for i, condition := range qualityGateConditions {
