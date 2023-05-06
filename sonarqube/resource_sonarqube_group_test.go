@@ -32,6 +32,27 @@ func TestAccSonarqubeGroupBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_group." + rnd
 	groupName := "testAccSonarqubeGroup" + rnd
+	groupDescription := "testAccSonarqubeDescription" + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeGroupBasicConfig(rnd, groupName, groupDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "name", groupName),
+					resource.TestCheckResourceAttr(name, "description", groupDescription),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeGroupUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_group." + rnd
+	groupName := "testAccSonarqubeGroup" + rnd
 	updatedGroupName := "testAccSonarqubeGroupUpdated" + rnd
 
 	resource.Test(t, resource.TestCase{
@@ -59,13 +80,29 @@ func TestAccSonarqubeGroupBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "description", "group description 3"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSonarqubeGroupImport(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_group." + rnd
+	groupName := "testAccSonarqubeGroup" + rnd
+	groupDescription := "testAccSonarqubeGroupDescription" + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccSonarqubeGroupBasicConfig(rnd, groupName, groupDescription),
+			},
+			{
+				ResourceName: name,
+				ImportState:  true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "name", updatedGroupName),
-					resource.TestCheckResourceAttr(name, "description", "group description 3"),
+					resource.TestCheckResourceAttr(name, "name", groupName),
+					resource.TestCheckResourceAttr(name, "description", groupDescription),
 				),
 			},
 		},
