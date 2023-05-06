@@ -5,6 +5,12 @@ Provides a Sonarqube Quality Gate Project association resource. This can be used
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
+
+  condition {
+    metric    = "new_coverage"
+    op        = "LT"
+    threshold = "30"
+  }
 }
 
 resource "sonarqube_project" "main" {

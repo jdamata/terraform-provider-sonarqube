@@ -14,6 +14,12 @@ provider "sonarqube" {
 
 resource "sonarqube_qualitygate" "tf-postfix" {
 	name = "tf-postfix"
+
+  condition {
+    metric    = "new_coverage"
+    op        = "LT"
+    threshold = "30"
+  }
 }
 
 module "tf-postfix-repo" {
