@@ -85,7 +85,6 @@ func Provider() *schema.Provider {
 			"sonarqube_qualityprofile":                     resourceSonarqubeQualityProfile(),
 			"sonarqube_qualityprofile_project_association": resourceSonarqubeQualityProfileProjectAssociation(),
 			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
-			"sonarqube_qualitygate_condition":              resourceSonarqubeQualityGateCondition(),
 			"sonarqube_qualitygate_project_association":    resourceSonarqubeQualityGateProjectAssociation(),
 			"sonarqube_qualitygate_usergroup_association":  resourceSonarqubeQualityGateUsergroupAssociation(),
 			"sonarqube_user":                               resourceSonarqubeUser(),
@@ -184,14 +183,14 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 	// Anonymizing users is supported since version 9.7. For older releases we reset it to false:
 	minimumVersionForAnonymize, _ := version.NewVersion("9.7")
-	anynomizeUsers := d.Get("anonymize_user_on_delete").(bool) && parsedInstalledVersion.GreaterThanOrEqual(minimumVersionForAnonymize)
+	anonymizeUsers := d.Get("anonymize_user_on_delete").(bool) && parsedInstalledVersion.GreaterThanOrEqual(minimumVersionForAnonymize)
 
 	return &ProviderConfiguration{
 		httpClient:              client,
 		sonarQubeURL:            sonarQubeURL,
 		sonarQubeVersion:        parsedInstalledVersion,
 		sonarQubeEdition:        installedEdition,
-		sonarQubeAnonymizeUsers: anynomizeUsers,
+		sonarQubeAnonymizeUsers: anonymizeUsers,
 	}, nil
 }
 
