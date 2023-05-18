@@ -33,10 +33,10 @@ func resourceSonarqubeAlmAzure() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"personalAccessToken": {
+			"personal_access_token": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Required: false,
+				ForceNew: false,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -113,6 +113,7 @@ func resourceSonarqubeAlmAzureUpdate(d *schema.ResourceData, m interface{}) erro
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/update_azure"
 	sonarQubeURL.RawQuery = url.Values{
 		"key":                 []string{d.Id()},
+		"newKey":              []string{d.Get("key").(string)},
 		"personalAccessToken": []string{d.Get("personal_access_token").(string)},
 		"url":                 []string{d.Get("url").(string)},
 	}.Encode()
