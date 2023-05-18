@@ -7,21 +7,22 @@ Azure Devops repository and a SonarQube project
 
 ```terraform
 resource "sonarqube_alm_azure" "az1" {
-  key           = "az1"
-  personal_access_token    = "my_pat"
-  url           = "https://dev.azure.com/my-org"
+  key                   = "az1"
+  personal_access_token = "my_pat"
+  url                   = "https://dev.azure.com/my-org"
 }
 
 resource "sonarqube_project" "main" {
   name       = "SonarQube"
-  project    = "my_project"
+  project    = "main"
   visibility = "public"
 }
 
-resource "sonarqube_azure_binding" "az1-my_project-my_repo" {
-  alm_setting = sonarqube_alm_azure.az1.key
-  project    = sonarqube_project.main.project
-  repository = "my_repo"
+resource "sonarqube_azure_binding" "main" {
+  alm_setting   = sonarqube_alm_azure.az1.key
+  project       = sonarqube_project.main.project
+  project_name  = "my_azure_project"
+  repository    = "my_repo"
 }
 ```
 
@@ -31,21 +32,23 @@ The following arguments are supported:
 
 - alm_setting - (Required) - azure ALM setting key
 - monorepo - (Optional) - Is this project part of a monorepo. Default value: false
-- project - (Required) - Project key
-- repository - (Required) - The name of your Azure Devops repository.
+- project - (Required) - SonarQube Project key
+- project_name - (Required) - Azure DevOps Project name
+- repository - (Required) - Azure DevOps Repository name
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-- project - Project key.
-- repository - Azure Devops Repository.
 - alm_setting - The unique key of the azure alm instance setting.
+- project - Project key.
+- project_name - Azure DevOps Project name.
+- repository - Azure DevOps Repository name.
 
 ## Import
 
 Bindings can be imported using their ID
 
 ```terraform
-terraform import sonarqube_azure_binding.az1-my_project-my_repo project/repository
+terraform import sonarqube_azure_binding.main project/project_name/repository
 ```
