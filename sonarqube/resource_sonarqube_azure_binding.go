@@ -11,6 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GetAzureBinding for unmarshalling response body from getting project binding details
+type GetAzureBinding struct {
+	Key        string `json:"key"`
+	Alm        string `json:"alm"`
+	Repository string `json:"repository"`
+	Slug       string `json:"slug"`
+	URL        string `json:"url"`
+	Monorepo   bool   `json:"monorepo"`
+}
+
 // Returns the resource represented by this file.
 func resourceSonarqubeAzureBinding() *schema.Resource {
 	return &schema.Resource{
@@ -28,9 +38,9 @@ func resourceSonarqubeAzureBinding() *schema.Resource {
 				ForceNew: true,
 			},
 			"monorepo": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  "false",
+				Default:  false,
 				ForceNew: true,
 			},
 			"project": {
@@ -38,15 +48,14 @@ func resourceSonarqubeAzureBinding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"repository": {
+			"project_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"summary_comment_enabled": {
+			"repository": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "true",
+				Required: true,
 				ForceNew: true,
 			},
 		},
@@ -69,11 +78,11 @@ func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) 
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_azure_binding"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"almSetting":            []string{d.Get("alm_setting").(string)},
-		"monorepo":              []string{d.Get("monorepo").(string)},
-		"project":               []string{d.Get("project").(string)},
-		"repository":            []string{d.Get("repository").(string)},
-		"summaryCommentEnabled": []string{d.Get("summary_comment_enabled").(string)},
+		"almSetting":  []string{d.Get("alm_setting").(string)},
+		"monorepo":    []string{strconv.FormatBool(d.Get("monorepo").(bool))},
+		"project":     []string{d.Get("project").(string)},
+		"projectName": []string{d.Get("project_name").(string)},
+		"repository":  []string{d.Get("repository").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -88,7 +97,7 @@ func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) 
 	}
 	defer resp.Body.Close()
 
-	id := fmt.Sprintf("%v/%v", d.Get("project").(string), d.Get("repository").(string))
+	id := fmt.Sprintf("%v/%v/%v", d.Get("project").(string), d.Get("project_name").(string), d.Get("repository").(string))
 	d.SetId(id)
 
 	return resourceSonarqubeAzureBindingRead(d, m)
@@ -119,18 +128,18 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 	defer resp.Body.Close()
 
 	// Decode response into struct
-	BindingReadResponse := GetBinding{}
+	BindingReadResponse := GetAzureBinding{}
 	err = json.NewDecoder(resp.Body).Decode(&BindingReadResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to decode json into struct: %+v", err)
 	}
-	// Loop over all branches to see if the main branch we need exists.
+
+	// if
 	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "azure" {
-		d.Set("project", idSlice[0])
-		d.Set("repository", idSlice[1])
+		d.Set("project", BindingReadResponse.SummaryCommentEnabled)
+		d.Set("repository", BindingReadResponse.Repository)
 		d.Set("alm_setting", BindingReadResponse.Key)
-		d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo))
-		d.Set("summary_comment_enabled", strconv.FormatBool(BindingReadResponse.SummaryCommentEnabled))
+		d.Set("monorepo", BindingReadResponse.Monorepo)
 
 		return nil
 	}
