@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // GetAlmAzure for unmarshalling response body from alm list definitions. With only azure populated
@@ -25,23 +26,31 @@ func resourceSonarqubeAlmAzure() *schema.Resource {
 		Read:   resourceSonarqubeAlmAzureRead,
 		Update: resourceSonarqubeAlmAzureUpdate,
 		Delete: resourceSonarqubeAlmAzureDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeAlmAzureImport,
+		},
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				Description:      "Unique key of the Azure Devops instance setting",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 200)),
 			},
 			"personal_access_token": {
-				Type:     schema.TypeString,
-				Required: false,
-				ForceNew: false,
+				Type:             schema.TypeString,
+				Required:         true,
+				Sensitive:        true,
+				Description:      "Azure Devops personal access token",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				Description:      "Azure API URL",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 			},
 		},
 	}
@@ -153,4 +162,24 @@ func resourceSonarqubeAlmAzureDelete(d *schema.ResourceData, m interface{}) erro
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func resourceSonarqubeAlmAzureImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	// import id in format {key}/{personal_access_token}
+	importIdComponents := strings.SplitN(d.Id(), "/", 2)
+
+	if len(importIdComponents) != 2 {
+		return nil, fmt.Errorf("resourceSonarqubeAlmAzureImport: Import id: '%+v' is not in format {key}/{personal_access_token}", d.Id())
+	}
+
+	// set Id to key for Read
+	d.SetId(importIdComponents[0])
+	if err := resourceSonarqubeAlmAzureRead(d, m); err != nil {
+		return nil, err
+	}
+
+	// Add personal_access_token from import id
+	d.Set("personal_access_token", importIdComponents[1])
+
+	return []*schema.ResourceData{d}, nil
 }

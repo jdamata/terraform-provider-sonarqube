@@ -15,8 +15,8 @@ import (
 type GetAzureBinding struct {
 	Key        string `json:"key"`
 	Alm        string `json:"alm"`
-	Repository string `json:"repository"`
-	Slug       string `json:"slug"`
+	Repository string `json:"repository"` // Azure DevOps Repository
+	Slug       string `json:"slug"`       // Azure DevOps Project (recorded as a slug by SonarQube??)
 	URL        string `json:"url"`
 	Monorepo   bool   `json:"monorepo"`
 }
@@ -33,30 +33,35 @@ func resourceSonarqubeAzureBinding() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"alm_setting": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Azure DevOps setting key",
 			},
 			"monorepo": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Is this project part of a monorepo",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "SonarQube project key",
 			},
 			"project_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Azure project name",
 			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"repository_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Azure repository name",
 			},
 		},
 	}
@@ -78,11 +83,11 @@ func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) 
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_azure_binding"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"almSetting":  []string{d.Get("alm_setting").(string)},
-		"monorepo":    []string{strconv.FormatBool(d.Get("monorepo").(bool))},
-		"project":     []string{d.Get("project").(string)},
-		"projectName": []string{d.Get("project_name").(string)},
-		"repository":  []string{d.Get("repository").(string)},
+		"almSetting":     []string{d.Get("alm_setting").(string)},
+		"monorepo":       []string{strconv.FormatBool(d.Get("monorepo").(bool))},
+		"project":        []string{d.Get("project").(string)},
+		"projectName":    []string{d.Get("project_name").(string)},
+		"repositoryName": []string{d.Get("repository_name").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -97,7 +102,12 @@ func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) 
 	}
 	defer resp.Body.Close()
 
-	id := fmt.Sprintf("%v/%v/%v", d.Get("project").(string), d.Get("project_name").(string), d.Get("repository").(string))
+	// id consists of "project/project_name/repository"
+	id := fmt.Sprintf("%v/%v/%v",
+		d.Get("project").(string),
+		d.Get("project_name").(string),
+		d.Get("repository_name").(string),
+	)
 	d.SetId(id)
 
 	return resourceSonarqubeAzureBindingRead(d, m)
@@ -108,7 +118,8 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 		return err
 	}
 
-	idSlice := strings.SplitN(d.Id(), "/", 2)
+	// id consists of "project/project_name/repository"
+	idSlice := strings.SplitN(d.Id(), "/", 3)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/get_binding"
 	sonarQubeURL.RawQuery = url.Values{
@@ -134,10 +145,12 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 		return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to decode json into struct: %+v", err)
 	}
 
-	// if
-	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "azure" {
-		d.Set("project", BindingReadResponse.SummaryCommentEnabled)
-		d.Set("repository", BindingReadResponse.Repository)
+	if idSlice[1] == BindingReadResponse.Slug &&
+		idSlice[2] == BindingReadResponse.Repository &&
+		BindingReadResponse.Alm == "azure" {
+		d.Set("project", idSlice[0])
+		d.Set("project_name", idSlice[1])
+		d.Set("repository_name", idSlice[2])
 		d.Set("alm_setting", BindingReadResponse.Key)
 		d.Set("monorepo", BindingReadResponse.Monorepo)
 

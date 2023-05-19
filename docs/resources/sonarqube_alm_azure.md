@@ -27,3 +27,11 @@ The following attributes are exported:
 
 - key - The unique key of the azure alm instance setting.
 - url - Azure Devops Organization URL.
+
+## Import
+
+Resource can be imported providing their Alm Instance Key and Azure DevOps Personal Access Token
+
+```terraform
+terraform import sonarqube_alm_azure.az1 key/personal_access_token
+```

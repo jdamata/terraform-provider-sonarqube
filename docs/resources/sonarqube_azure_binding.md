@@ -19,10 +19,10 @@ resource "sonarqube_project" "main" {
 }
 
 resource "sonarqube_azure_binding" "main" {
-  alm_setting   = sonarqube_alm_azure.az1.key
-  project       = sonarqube_project.main.project
-  project_name  = "my_azure_project"
-  repository    = "my_repo"
+  alm_setting     = sonarqube_alm_azure.az1.key
+  project         = sonarqube_project.main.project
+  project_name    = "my_azure_project"
+  repository_name = "my_repo"
 }
 ```
 
@@ -34,16 +34,16 @@ The following arguments are supported:
 - monorepo - (Optional) - Is this project part of a monorepo. Default value: false
 - project - (Required) - SonarQube Project key
 - project_name - (Required) - Azure DevOps Project name
-- repository - (Required) - Azure DevOps Repository name
+- repository_name - (Required) - Azure DevOps Repository name
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 - alm_setting - The unique key of the azure alm instance setting.
-- project - Project key.
+- project - SonarQube Project key.
 - project_name - Azure DevOps Project name.
-- repository - Azure DevOps Repository name.
+- repository_name - Azure DevOps Repository name.
 
 ## Import
 
