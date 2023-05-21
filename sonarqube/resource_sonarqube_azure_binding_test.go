@@ -28,9 +28,9 @@ func testAccSonarqubeAzureBindingName(rnd string, projKey string, almSetting str
 	return fmt.Sprintf(`
 		
 		resource "sonarqube_alm_azure" "%[1]s" {
-			key    = "%[3]s"
-			personal_access_token    = "my_pat"
-			url    = "https://dev.azure.com/my-org"
+			key                   = "%[3]s"
+			personal_access_token = "my_pat"
+			url                   = "https://dev.azure.com/my-org"
 		}
 
 		resource "sonarqube_project" "%[1]s" {
@@ -39,10 +39,11 @@ func testAccSonarqubeAzureBindingName(rnd string, projKey string, almSetting str
 			visibility = "public"
 		}
 		resource "sonarqube_azure_binding" "%[1]s" {
-			alm_setting   = sonarqube_alm_azure.%[1]s.key
-			project = sonarqube_project.%[1]s.project
-			project_name   = "%[4]s"
-			repository_name   = "%[5]s"
+			alm_setting     = sonarqube_alm_azure.%[1]s.key
+			project         = sonarqube_project.%[1]s.project
+			project_name    = "%[4]s"
+			repository_name = "%[5]s"
+			monorepo        = false
 		}`, rnd, projKey, almSetting, projName, repoName)
 }
 
