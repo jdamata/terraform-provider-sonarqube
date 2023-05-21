@@ -24,7 +24,7 @@ func testAccPreCheckAzureBindingSupport(t *testing.T) {
 	}
 }
 
-func testAccSonarqubeAzureBindingName(rnd string, projName string, almSetting string, repoName string) string {
+func testAccSonarqubeAzureBindingName(rnd string, projKey string, almSetting string, projName string, repoName string) string {
 	return fmt.Sprintf(`
 		
 		resource "sonarqube_alm_azure" "%[1]s" {
@@ -40,10 +40,10 @@ func testAccSonarqubeAzureBindingName(rnd string, projName string, almSetting st
 		}
 		resource "sonarqube_azure_binding" "%[1]s" {
 			alm_setting   = sonarqube_alm_azure.%[1]s.key
-			monorepo     = "false"
 			project = sonarqube_project.%[1]s.project
-			repository   = "%[4]s"
-		}`, rnd, projName, almSetting, repoName)
+			project_name   = "%[4]s"
+			repository_name   = "%[5]s"
+		}`, rnd, projKey, almSetting, projName, repoName)
 }
 
 func TestAccSonarqubeAzureBindingName(t *testing.T) {
@@ -55,12 +55,12 @@ func TestAccSonarqubeAzureBindingName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeAzureBindingName(rnd, "testAccSonarqubeAzureBindingName", "azure", "testAccSonarqubeAzureBindingName"),
+				Config: testAccSonarqubeAzureBindingName(rnd, "testSqProjectKey", "azure", "testAzProjName", "testAzRepoName"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeAzureBindingName"),
+					resource.TestCheckResourceAttr(name, "project", "testSqProjectKey"),
 					resource.TestCheckResourceAttr(name, "alm_setting", "azure"),
-					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeAzureBindingName"),
+					resource.TestCheckResourceAttr(name, "project_name", "testAzProjName"),
+					resource.TestCheckResourceAttr(name, "repository_name", "testAzRepoName"),
 				),
 			},
 			{
@@ -68,17 +68,19 @@ func TestAccSonarqubeAzureBindingName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeAzureBindingName"),
+					resource.TestCheckResourceAttr(name, "project", "testSqProjectKey"),
 					resource.TestCheckResourceAttr(name, "alm_setting", "azure"),
+					resource.TestCheckResourceAttr(name, "project_name", "testAzProjName"),
+					resource.TestCheckResourceAttr(name, "repository_name", "testAzRepoName"),
 				),
 			},
 			{
-				Config: testAccSonarqubeAzureBindingName(rnd, "testAccSonarqubeAzureBindingName", "azurea", "testAccSonarqubeAzureBindingName"),
+				Config: testAccSonarqubeAzureBindingName(rnd, "testSqProjectKey", "azurea", "testAzProjName", "testAzRepoName"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeAzureBindingName"),
+					resource.TestCheckResourceAttr(name, "project", "testSqProjectKey"),
 					resource.TestCheckResourceAttr(name, "alm_setting", "azurea"),
+					resource.TestCheckResourceAttr(name, "project_name", "testAzProjName"),
+					resource.TestCheckResourceAttr(name, "repository_name", "testAzRepoName"),
 				),
 			},
 			{
@@ -86,17 +88,19 @@ func TestAccSonarqubeAzureBindingName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "repository", "testAccSonarqubeAzureBindingName"),
+					resource.TestCheckResourceAttr(name, "project", "testSqProjectKey"),
 					resource.TestCheckResourceAttr(name, "alm_setting", "azurea"),
+					resource.TestCheckResourceAttr(name, "project_name", "testAzProjName"),
+					resource.TestCheckResourceAttr(name, "repository_name", "testAzRepoName"),
 				),
 			},
 			{
-				Config: testAccSonarqubeAzureBindingName(rnd, "testAccSonarqubeAzureBindingName", "azure", "org/testAccSonarqubeAzureBindingName"),
+				Config: testAccSonarqubeAzureBindingName(rnd, "testSqProjectKey", "azurea", "testAzProjName", "testAzRepoName"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "repository", "org/testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "alm_setting", "azure"),
+					resource.TestCheckResourceAttr(name, "project", "testSqProjectKey"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "azurea"),
+					resource.TestCheckResourceAttr(name, "project_name", "testAzProjName"),
+					resource.TestCheckResourceAttr(name, "repository_name", "testAzRepoName"),
 				),
 			},
 			{
@@ -104,9 +108,10 @@ func TestAccSonarqubeAzureBindingName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "repository", "org/testAccSonarqubeAzureBindingName"),
-					resource.TestCheckResourceAttr(name, "alm_setting", "azure"),
+					resource.TestCheckResourceAttr(name, "project", "testSqProjectKey"),
+					resource.TestCheckResourceAttr(name, "alm_setting", "azurea"),
+					resource.TestCheckResourceAttr(name, "project_name", "testAzProjName"),
+					resource.TestCheckResourceAttr(name, "repository_name", "testAzRepoName"),
 				),
 			},
 		},
