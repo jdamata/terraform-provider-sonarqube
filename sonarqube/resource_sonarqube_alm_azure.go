@@ -86,7 +86,6 @@ func resourceSonarqubeAlmAzureCreate(d *schema.ResourceData, m interface{}) erro
 func resourceSonarqubeAlmAzureRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/list_definitions"
-	sonarQubeURL.RawQuery = url.Values{}.Encode() // Dunno if you can keep it empty tbh?
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
