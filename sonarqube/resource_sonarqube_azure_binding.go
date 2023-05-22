@@ -16,7 +16,7 @@ type GetAzureBinding struct {
 	Key        string `json:"key"`
 	Alm        string `json:"alm"`
 	Repository string `json:"repository"` // Azure DevOps Repository
-	Slug       string `json:"slug"`       // Azure DevOps Project (recorded as a slug by SonarQube??)
+	Slug       string `json:"slug"`       // Azure DevOps Project
 	URL        string `json:"url"`
 	Monorepo   bool   `json:"monorepo"`
 }
