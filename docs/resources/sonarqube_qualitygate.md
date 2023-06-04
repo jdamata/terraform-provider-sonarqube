@@ -53,6 +53,19 @@ A `condition` block supports:
 - threshold - (Required) Condition error threshold (For ratings: A=1, B=2, C=3, D=4)
 - op - (Required) Condition operator. Possible values are: LT and GT
 
+> **Disclaimer: Operator Requirement for Grade Rating Conditions**
+>
+> When working with grade rating conditions, it is important to note that the "GT" (greater than) operator must be used for the `op` field. This is due to SonarQube's API design. More information can be found in this [issue](https://github.com/jdamata/terraform-provider-sonarqube/issues/171).
+>
+> For example, if you are using a grade rating metric such as `new_reliability_rating`, where A represents the highest rating and subsequent letters represent lower ratings, you need to supply the `op` field with "GT" via the provider. Using "LT" will return an error from SonarQube's API:
+>
+> ```terraform
+> condition {
+>   metric    = "new_reliability_rating"
+>   op        = "GT"
+>   threshold = "1"
+> }
+
 ## Attributes Reference
 
 The following attributes are exported:
