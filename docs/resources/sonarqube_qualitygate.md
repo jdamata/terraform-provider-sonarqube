@@ -55,7 +55,7 @@ A `condition` block supports:
 
 > **Disclaimer: Operator Requirement for Grade Rating Conditions**
 >
-> When working with grade rating conditions, it is important to note that the "GT" (greater than) operator must be used for the `op` field. This is due to SonarQube's API design. More information can be found in this [issue](https://github.com/jdamata/terraform-provider-sonarqube/issues/171).
+> When working with grade rating conditions, (A-D), it is important to note that the "GT" (greater than) operator must be used for the `op` field. This is due to SonarQube's API design. More information can be found in this [issue](https://github.com/jdamata/terraform-provider-sonarqube/issues/171).
 >
 > For example, if you are using a grade rating metric such as `new_reliability_rating`, where A represents the highest rating and subsequent letters represent lower ratings, you need to supply the `op` field with "GT" via the provider. Using "LT" will return an error from SonarQube's API:
 >
