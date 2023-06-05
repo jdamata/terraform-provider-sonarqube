@@ -49,7 +49,7 @@ A `condition` block supports:
   - alert_status
   - security_hotspots
   - new_security_hotspots
--
+
 - threshold - (Required) Condition error threshold (For ratings: A=1, B=2, C=3, D=4)
 - op - (Required) Condition operator. Possible values are: LT and GT
 
