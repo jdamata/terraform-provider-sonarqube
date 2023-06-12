@@ -30,7 +30,7 @@ func testAccSonarqubePortfolioDataSourceConfigTags(rnd string, key string, name 
 			description = "%[4]s"
 			visibility = "%[5]s"
 			selection_mode = "TAGS"
-			tags = %[7]s // Note that the "" should be missing since this is a list
+			tags = %[6]s // Note that the "" should be missing since this is a list
 		}
 		data "sonarqube_portfolio" "%[1]s" {
 			key = sonarqube_portfolio.%[1]s.id
