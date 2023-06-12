@@ -45,7 +45,7 @@ func testAccSonarqubePortfolioDataSourceConfigRegex(rnd string, key string, name
 			name    = "%[3]s"
 			description = "%[4]s"
 			visibility = "%[5]s"
-			selection_mode = "REGEX"
+			selection_mode = "REGEXP"
 			regexp = "%[6]s"
 		}
 		data "sonarqube_portfolio" "%[1]s" {
