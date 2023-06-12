@@ -59,7 +59,7 @@ func TestAccSonarqubePortfolioDataSource(t *testing.T) {
 	name := "data.sonarqube_portfolio." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +81,7 @@ func TestAccSonarqubePortfolioDataSourceTags(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +103,7 @@ func TestAccSonarqubePortfolioDataSourceRegex(t *testing.T) {
 	exampleRegex := "myExampleRegex"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
