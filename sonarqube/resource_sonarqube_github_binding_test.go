@@ -18,6 +18,11 @@ func init() {
 func testSweepSonarqubeGithubBinding(r string) error {
 	return nil
 }
+func testAccPreCheckGithubBindingSupport(t *testing.T) {
+	if err := checkGithubBindingSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
+		t.Skipf("Skipping test of unsupported feature (GitHub Binding)")
+	}
+}
 
 func testAccSonarqubeGithubBindingName(rnd string, projName string, almSetting string, repoName string) string {
 	return fmt.Sprintf(`
@@ -52,7 +57,7 @@ func TestAccSonarqubeGithubBindingName(t *testing.T) {
 	name := "sonarqube_github_binding." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckGithubBindingSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

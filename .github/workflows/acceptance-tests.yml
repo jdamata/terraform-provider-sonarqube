@@ -1,4 +1,4 @@
-name: acceptance-tests-latest
+name: acceptance-tests
 on:
   push:
     branches: [master]
@@ -6,6 +6,10 @@ on:
     branches: [master]
 jobs:
   acceptance-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        image_tag: [lts-community, lts-developer, lts-enterprise, latest, developer, enterprise]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,10 +36,10 @@ jobs:
           SONAR_USER: admin
           SONAR_PASS: admin
       - name: Run code coverage
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ github.ref == 'refs/heads/master' && matrix.image_tag == 'enterprise'}}
         uses: codecov/codecov-action@v2
     services:
       sonarqube:
-        image: sonarqube:enterprise
+        image: sonarqube:${{ matrix.image_tag }}
         ports:
           - 9000:9000

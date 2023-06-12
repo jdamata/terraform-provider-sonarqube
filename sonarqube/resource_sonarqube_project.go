@@ -19,19 +19,19 @@ type Project struct {
 
 // GetProject for unmarshalling response body from getting project details
 type GetProject struct {
-	Paging     Paging              `json:"paging"`
-	Components []ProjectComponents `json:"components"`
+	Component ProjectComponent `json:"component"`
 }
 
 // ProjectComponents used in GetProject
-type ProjectComponents struct {
-	Organization     string `json:"organization"`
-	ProjectKey       string `json:"key"`
-	Name             string `json:"name"`
-	Qualifier        string `json:"qualifier"`
-	Visibility       string `json:"visibility"`
-	LastAnalysisDate string `json:"lastAnalysisDate"`
-	Revision         string `json:"revision"`
+type ProjectComponent struct {
+	Key          string   `json:"key"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	Qualifier    string   `json:"qualifier"`
+	AnalysisDate string   `json:"analysisDate"`
+	Version      string   `json:"version"`
+	Tags         []string `json:"tags,omitempty"`
+	Visibility   string   `json:"visibility"`
 }
 
 // CreateProjectResponse for unmarshalling response body of project creation
@@ -67,8 +67,45 @@ func resourceSonarqubeProject() *schema.Resource {
 				Optional: true,
 				Default:  "public",
 			},
+			"tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
+}
+
+func projectSetTags(d *schema.ResourceData, m interface{}, sonarQubeURL url.URL) error {
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_tags/set"
+
+	// TODO: Create a helper file for convertListToCSV or something. This is used in Portfolio too
+	var tags []string
+	for _, v := range d.Get("tags").([]interface{}) {
+		tags = append(tags, fmt.Sprint(v))
+	}
+	tagsCSV := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(tags)), ","), "[]")
+	sonarQubeURL.RawQuery = url.Values{
+		"project": []string{d.Get("project").(string)},
+		"tags":    []string{tagsCSV},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubePortfolioCreate",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
 
 func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error {
@@ -93,6 +130,11 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	}
 	defer resp.Body.Close()
 
+	err = projectSetTags(d, m, m.(*ProviderConfiguration).sonarQubeURL)
+	if err != nil {
+		return err
+	}
+
 	// Decode response into struct
 	projectResponse := CreateProjectResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&projectResponse)
@@ -106,10 +148,9 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/search"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/components/show"
 	sonarQubeURL.RawQuery = url.Values{
-		"projects": []string{d.Id()},
-		"ps":       []string{"500"},
+		"component": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -126,25 +167,22 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 
 	// Decode response into struct
 	projectReadResponse := GetProject{}
+
 	err = json.NewDecoder(resp.Body).Decode(&projectReadResponse)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode json into struct: %+v", err)
 	}
 
-	// Loop over all projects to see if the project we need exists.
-	for _, value := range projectReadResponse.Components {
-		if d.Id() == value.ProjectKey {
-			// If it does, set the values of that project
-			d.SetId(value.ProjectKey)
-			d.Set("name", value.Name)
-			d.Set("project", value.ProjectKey)
-			d.Set("visibility", value.Visibility)
-			return nil
-		}
+	d.SetId(projectReadResponse.Component.Key)
+	d.Set("name", projectReadResponse.Component.Name)
+	d.Set("project", projectReadResponse.Component.Key)
+	d.Set("visibility", projectReadResponse.Component.Visibility)
+
+	if len(projectReadResponse.Component.Tags) > 0 {
+		d.Set("tags", projectReadResponse.Component.Tags)
 	}
 
-	return fmt.Errorf("resourceSonarqubeProjectRead: Failed to find project: %+v", d.Id())
-
+	return nil
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
@@ -169,6 +207,13 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 			return fmt.Errorf("error updating Sonarqube project: %+v", err)
 		}
 		defer resp.Body.Close()
+	}
+
+	if d.HasChanges("tags") {
+		err := projectSetTags(d, m, m.(*ProviderConfiguration).sonarQubeURL)
+		if err != nil {
+			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
+		}
 	}
 
 	return resourceSonarqubeProjectRead(d, m)

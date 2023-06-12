@@ -16,6 +16,7 @@ The following arguments are supported:
 - name - (Required) The name of the Project to create
 - project - (Required) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.
 - visibility - (Optional) Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used.
+- tags - (Optional) A list of tags to put on the project.
 
 ## Attributes Reference
 The following attributes are exported:

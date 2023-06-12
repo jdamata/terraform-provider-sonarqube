@@ -22,6 +22,12 @@ resource "sonarqube_qualitygate" "this" {
   for_each = var.quality_gates
 
   name = each.key
+
+  condition {
+    metric    = each.value.metric
+    threshold = each.value.threshold
+    op        = each.value.operator
+  }
 }
 
 resource "sonarqube_qualitygate_project_association" "this" {
@@ -29,13 +35,4 @@ resource "sonarqube_qualitygate_project_association" "this" {
 
   gatename   = sonarqube_qualitygate.this[each.key].id
   projectkey = sonarqube_project.this.project
-}
-
-resource "sonarqube_qualitygate_condition" "this" {
-  for_each = var.quality_gates
-
-  gatename  = sonarqube_qualitygate.this[each.key].id
-  metric    = each.value.metric
-  threshold = each.value.threshold
-  op        = each.value.operator
 }

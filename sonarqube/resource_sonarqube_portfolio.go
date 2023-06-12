@@ -7,9 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Portfolio used in Portfolio
@@ -58,38 +57,24 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Computed: true,
 			},
 			"visibility": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "public",
-				ForceNew: true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI 
-				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
-					visibility := val.(string)
-					validOptions := []string{"public", "private"}
-					if !slices.Contains(validOptions, visibility) {
-						errs = append(errs, fmt.Errorf("Accepted values are public or private for key %q, got: %s", key, val))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "public",
+				ForceNew:     true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI
+				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
 			"selection_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "NONE",
-				ForceNew: false,
-				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
-					selectionMode := val.(string)
-					validOptions := []string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}
-					if !slices.Contains(validOptions, selectionMode) {
-						errs = append(errs, fmt.Errorf("Accepted values are NONE, MANUAL, TAGS, REGEXP or REST for key %q, got: %s", key, val))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "NONE",
+				ForceNew:     false,
+				ValidateFunc: validation.StringInSlice([]string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}, false),
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
+				Description: "Which branch to analyze. If nothing, or '' is specified, the main branch is used.",
 			},
 			"tags": { // Only active for TAGS
 				Type:          schema.TypeList,
@@ -105,13 +90,20 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Optional:      true,
 				ForceNew:      false,
 				ConflictsWith: []string{"tags"},
+				ValidateFunc:  validation.StringIsValidRegExp,
 			},
-
 			// TODO: MANUAL
 			// "selectedProjects": [],
 			// "projects": [],
 		},
 	}
+}
+
+func checkPortfolioSupport(conf *ProviderConfiguration) error {
+	if strings.ToLower(conf.sonarQubeEdition) != "enterprise" {
+		return fmt.Errorf("Portfolios are only supported in the Enterprise edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+	}
+	return nil
 }
 
 // Validate the regexp and tag fields if the corresponding selection_mode is chosen
@@ -169,26 +161,50 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			tags = append(tags, fmt.Sprint(v))
 		}
 		tagsCSV := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(tags)), ","), "[]")
-		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("branch").(string)},
+
+		urlParameters := url.Values{
 			"portfolio": []string{d.Get("key").(string)},
 			"tags":      []string{tagsCSV},
-		}.Encode()
+		}
+
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: https://github.com/jdamata/terraform-provider-sonarqube/pull/150
+		branch := d.Get("branch").(string)
+		if len(branch) > 0 {
+			urlParameters.Add("branch", branch)
+		}
+
+		sonarQubeURL.RawQuery = urlParameters.Encode()
 
 	case "REGEXP":
 		endpoint = "/api/views/set_regexp_mode"
-		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("branch").(string)},
+
+		urlParameters := url.Values{
 			"portfolio": []string{d.Get("key").(string)},
 			"regexp":    []string{d.Get("regexp").(string)},
-		}.Encode()
+		}
+
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: https://github.com/jdamata/terraform-provider-sonarqube/pull/150
+		branch := d.Get("branch").(string)
+		if len(branch) > 0 {
+			urlParameters.Add("branch", branch)
+		}
+
+		sonarQubeURL.RawQuery = urlParameters.Encode()
 
 	case "REST":
 		endpoint = "/api/views/set_remaining_projects_mode"
-		sonarQubeURL.RawQuery = url.Values{
-			"branch":    []string{d.Get("branch").(string)},
+
+		urlParameters := url.Values{
 			"portfolio": []string{d.Get("key").(string)},
-		}.Encode()
+		}
+
+		// SonarQube handles "" like it actually is a name of a branch, see PR for reference: https://github.com/jdamata/terraform-provider-sonarqube/pull/150
+		branch := d.Get("branch").(string)
+		if len(branch) > 0 {
+			urlParameters.Add("branch", branch)
+		}
+
+		sonarQubeURL.RawQuery = urlParameters.Encode()
 
 	default:
 		return fmt.Errorf("resourceSonarqubePortfolioCreate: selection_mode needs to be set to one of NONE, MANUAL, TAGS, REGEXP, REST")
@@ -212,6 +228,10 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 }
 
 func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	err := validatePortfolioResource(d)
 	if err != nil {
 		return err
@@ -256,6 +276,10 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/show"
 	sonarQubeURL.RawQuery = url.Values{
@@ -288,22 +312,33 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	d.Set("qualifier", portfolioReadResponse.Qualifier)
 	d.Set("visibility", portfolioReadResponse.Visibility)
 	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
-	d.Set("branch", portfolioReadResponse.Branch)
-	d.Set("tags", portfolioReadResponse.Tags)
-	d.Set("regexp", portfolioReadResponse.Regexp)
+
+	// These fields may or may not be set in the reposnse from SonarQube
+	if len(portfolioReadResponse.Tags) > 0 {
+		d.Set("tags", portfolioReadResponse.Tags)
+	}
+	if len(portfolioReadResponse.Branch) > 0 {
+		d.Set("branch", portfolioReadResponse.Branch)
+	}
+	if len(portfolioReadResponse.Regexp) > 0 {
+		d.Set("regexp", portfolioReadResponse.Regexp)
+	}
 
 	return nil
 }
 
 func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	err := validatePortfolioResource(d)
 	if err != nil {
 		return err
 	}
 
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-
 	if d.HasChanges("name", "description") {
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/update"
 		sonarQubeURL.RawQuery = url.Values{
 			"key":         []string{d.Id()},
@@ -325,7 +360,7 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 	}
 
 	if d.HasChanges("selection_mode", "branch", "tags", "regexp") {
-		err := portfolioSetSelectionMode(d, m, sonarQubeURL)
+		err := portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
 		}
@@ -335,6 +370,10 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubePortfolioDelete(d *schema.ResourceData, m interface{}) error {
+	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
+		return err
+	}
+
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/delete"
 	sonarQubeURL.RawQuery = url.Values{

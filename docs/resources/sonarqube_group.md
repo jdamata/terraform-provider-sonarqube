@@ -26,7 +26,7 @@ The following attributes are exported:
 
 ## Import
 
-Groups can be imported using their ID
+Groups can be imported using their ID, and only support in the Sonarqube version <= 9.9
 
 ```terraform
 terraform import sonarqube_group.group 101

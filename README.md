@@ -30,3 +30,7 @@ In order to run the full suite of Acceptance tests, run `make -i testacc`. These
 ```sh
 $ make -i testacc
 ```
+
+## Debugging the Provider
+
+See [debugging.md](docs/debugging.md)

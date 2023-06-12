@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-cleanhttp"
-
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/tidwall/gjson"
 )
 
 var sonarqubeProvider *schema.Provider
@@ -47,7 +47,15 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"SONAR_HOST", "SONARQUBE_HOST"}, nil),
 				Required:    true,
 			},
+			"http_proxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"installed_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"installed_edition": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -66,6 +74,8 @@ func Provider() *schema.Provider {
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
+			"sonarqube_alm_azure":                          resourceSonarqubeAlmAzure(),
+			"sonarqube_azure_binding":                      resourceSonarqubeAzureBinding(),
 			"sonarqube_group":                              resourceSonarqubeGroup(),
 			"sonarqube_group_member":                       resourceSonarqubeGroupMember(),
 			"sonarqube_permission_template":                resourceSonarqubePermissionTemplate(),
@@ -77,7 +87,6 @@ func Provider() *schema.Provider {
 			"sonarqube_qualityprofile":                     resourceSonarqubeQualityProfile(),
 			"sonarqube_qualityprofile_project_association": resourceSonarqubeQualityProfileProjectAssociation(),
 			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
-			"sonarqube_qualitygate_condition":              resourceSonarqubeQualityGateCondition(),
 			"sonarqube_qualitygate_project_association":    resourceSonarqubeQualityGateProjectAssociation(),
 			"sonarqube_qualitygate_usergroup_association":  resourceSonarqubeQualityGateUsergroupAssociation(),
 			"sonarqube_user":                               resourceSonarqubeUser(),
@@ -95,9 +104,11 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sonarqube_user":           dataSourceSonarqubeUser(),
+			"sonarqube_group":          dataSourceSonarqubeGroup(),
 			"sonarqube_project":        dataSourceSonarqubeProject(),
 			"sonarqube_portfolio":      dataSourceSonarqubePortfolio(),
 			"sonarqube_qualityprofile": dataSourceSonarqubeQualityProfile(),
+			"sonarqube_qualitygate":    dataSourceSonarqubeQualityGate(),
 			"sonarqube_rule":           dataSourceSonarqubeRule(),
 		},
 		ConfigureFunc: configureProvider,
@@ -110,11 +121,19 @@ type ProviderConfiguration struct {
 	httpClient              *retryablehttp.Client
 	sonarQubeURL            url.URL
 	sonarQubeVersion        *version.Version
+	sonarQubeEdition        string
 	sonarQubeAnonymizeUsers bool
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	transport := cleanhttp.DefaultPooledTransport()
+	if proxy, ok := d.GetOk("http_proxy"); ok {
+		proxyUrl, err := url.Parse(proxy.(string))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse http_proxy: %+v", err)
+		}
+		transport.Proxy = http.ProxyURL(proxyUrl)
+	}
 	transport.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool),
 	}
@@ -140,68 +159,68 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		sonarQubeURL.User = url.UserPassword(d.Get("user").(string), d.Get("pass").(string))
 	}
 
-	var installedVersion *version.Version
-	if v, ok := d.GetOk("installed_version"); ok {
-		installedVersion, err = version.NewVersion(v.(string))
+	// If either of installed_version or installed_edition is not set, we need to fetch them from the API
+	installedVersion := d.Get("installed_version").(string)
+	installedEdition := d.Get("installed_edition").(string)
+	if installedVersion == "" || installedEdition == "" {
+		installedVersionAPI, installedEditionAPI, err := sonarqubeSystemInfo(client, sonarQubeURL)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		// Check that the sonarqube api is available, get version
-		installedVersion, err = sonarqubeHealth(client, sonarQubeURL)
-		if err != nil {
-			return nil, err
+
+		if installedVersion == "" {
+			installedVersion = installedVersionAPI
+		}
+		if installedEdition == "" {
+			installedEdition = installedEditionAPI
 		}
 	}
 
+	parsedInstalledVersion, err := version.NewVersion(installedVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert sonarqube version to a version: %+v", err)
+	}
+
 	minimumVersion, _ := version.NewVersion("8.9")
-	if installedVersion.LessThan(minimumVersion) {
+	if parsedInstalledVersion.LessThan(minimumVersion) {
 		return nil, fmt.Errorf("unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
 	}
 
 	// Anonymizing users is supported since version 9.7. For older releases we reset it to false:
 	minimumVersionForAnonymize, _ := version.NewVersion("9.7")
-	anynomizeUsers := d.Get("anonymize_user_on_delete").(bool) && installedVersion.GreaterThanOrEqual(minimumVersionForAnonymize)
+	anonymizeUsers := d.Get("anonymize_user_on_delete").(bool) && parsedInstalledVersion.GreaterThanOrEqual(minimumVersionForAnonymize)
 
 	return &ProviderConfiguration{
 		httpClient:              client,
 		sonarQubeURL:            sonarQubeURL,
-		sonarQubeVersion:        installedVersion,
-		sonarQubeAnonymizeUsers: anynomizeUsers,
+		sonarQubeVersion:        parsedInstalledVersion,
+		sonarQubeEdition:        installedEdition,
+		sonarQubeAnonymizeUsers: anonymizeUsers,
 	}, nil
 }
 
-func sonarqubeHealth(client *retryablehttp.Client, sonarqube url.URL) (*version.Version, error) {
+func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (string, string, error) {
 	// Make request to sonarqube version endpoint
-	sonarqube.Path = strings.TrimSuffix(sonarqube.Path, "/") + "/api/server/version"
-	req, err := retryablehttp.NewRequest("GET", sonarqube.String(), http.NoBody)
+	sonarqube.Path = strings.TrimSuffix(sonarqube.Path, "/") + "/api/system/info"
+	resp, err := httpRequestHelper(
+		client,
+		"GET",
+		sonarqube.String(),
+		http.StatusOK,
+		"sonarqubeHealth",
+	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to construct sonarqube version request: %+v", err)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("unable to reach sonarqube: %+v", err)
+		return "", "", err
 	}
 	defer resp.Body.Close()
 
-	// Check response code
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("sonarqube version api did not return a 200: %+v", err)
-	}
-
 	// Read in the response
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	responseData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse response body on GET sonarqube version api: %+v", err)
+		return "", "", fmt.Errorf("failed to parse response body on GET sonarqube system/info api: %+v", err)
 	}
 
-	// Convert response to a int.
-	bodyString := string(bodyBytes)
-	installedVersion, err := version.NewVersion(bodyString)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert sonarqube version to a version: %+v", err)
-	}
-
-	return installedVersion, nil
+	sonarqubeVersion := gjson.GetBytes(responseData, "System.Version").String()
+	sonarqubeEdition := gjson.GetBytes(responseData, "System.Edition").String()
+	return sonarqubeVersion, sonarqubeEdition, nil
 }

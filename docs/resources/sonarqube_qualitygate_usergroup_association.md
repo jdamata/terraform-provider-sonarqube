@@ -7,6 +7,12 @@ The feature is available on SonarQube 9.2 or newer.
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
+
+    condition {
+        metric    = "new_coverage"
+        op        = "LT"
+        threshold = "30"
+    }
 }
 
 resource "sonarqube_group" "qa_team" {
@@ -24,6 +30,12 @@ resource "sonarqube_qualitygate_usergroup_association" "main" {
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
+
+    condition {
+        metric    = "new_coverage"
+        op        = "LT"
+        threshold = "30"
+    }
 }
 
 resource "sonarqube_user" "qa_user" {

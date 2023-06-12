@@ -23,6 +23,12 @@ func testAccSonarqubeQualitygateProjectAssociationGateName(rnd string, name stri
 	return fmt.Sprintf(`
 		resource "sonarqube_qualitygate" "%[1]s" {
 			name = "%[2]s"
+
+			condition {
+				metric    = "new_coverage"
+				op        = "LT"
+				threshold = "30"
+			}
 		}
 
 		resource "sonarqube_project" "%[1]s" {

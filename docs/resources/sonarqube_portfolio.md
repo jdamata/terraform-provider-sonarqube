@@ -18,7 +18,7 @@ The following arguments are supported:
 - description - (Required) A description of the Portfolio to create
 - visibility - (Optional) Whether the created portfolio should be visible to everyone, or only specific user/groups. If no visibility is specified, the default portfolio visibility will be `public`.
 - selection_mode - (Optional) How to populate the Portfolio to create. Possible values are ``NONE``, ``MANUAL``, ``TAGS``, ``REGEXP`` or ``REST``. [See docs](https://docs.sonarqube.org/9.8/project-administration/managing-portfolios/#populating-portfolios) for how Portfolio population works
-- branch - (Optional) Which branch to analyze. If nothing is specified, the main branch is used. 
+- branch - (Optional) Which branch to analyze. If nothing, or "" is specified, the main branch is used.
 - tags - (Optional) List of Project tags to populate the Portfolio from. Only active when `selection_mode` is `TAGS`
 - regexp - (Optional) A regular expression that is used to match Projects with a matching name OR key. If they match, they are added to the Portfolio
 
