@@ -47,9 +47,9 @@ func resourceSonarqubeWebhook() *schema.Resource {
 				Required: true,
 			},
 			"secret": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Optional:  true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
