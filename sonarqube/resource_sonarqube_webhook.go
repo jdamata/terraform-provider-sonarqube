@@ -120,7 +120,9 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 		if webhook.Key == d.Id() {
 			d.Set("name", webhook.Name)
 			d.Set("url", webhook.Url)
-
+			if webhook.Secret != "" {
+				d.Set("secret", webhook.Secret)
+			}
 			return nil
 		}
 	}
