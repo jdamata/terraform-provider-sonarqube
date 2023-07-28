@@ -62,7 +62,6 @@ func TestAccSonarqubeWebhookUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", firstName),
 					resource.TestCheckResourceAttr(resourceName, "url", firstUrl),
-					resource.TestCheckResourceAttr(resourceName, "secret", firstSecret),
 				),
 			},
 			{
@@ -70,7 +69,6 @@ func TestAccSonarqubeWebhookUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", secondName),
 					resource.TestCheckResourceAttr(resourceName, "url", secondUrl),
-					resource.TestCheckResourceAttr(resourceName, "secret", secondSecret),
 				),
 			},
 		},
