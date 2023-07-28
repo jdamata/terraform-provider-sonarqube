@@ -12,10 +12,10 @@ jobs:
         env: [.env.dce.lts.yml, .env.dce.yml]
     runs-on: ubuntu-latest
     steps:
-      - name: Start Sonarqube dce
-        run: docker compose -f docker-compose-dce.yml --env-file ${{ matrix.env }} up -d 
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Start Sonarqube dce
+        run: docker compose -f docker-compose-dce.yml --env-file ${{ matrix.env }} up -d 
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
