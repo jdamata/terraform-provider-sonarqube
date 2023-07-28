@@ -47,9 +47,10 @@ func resourceSonarqubeWebhook() *schema.Resource {
 				Required: true,
 			},
 			"secret": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Optional:  true,
+				Computed:  true,
 			},
 		},
 	}
@@ -118,7 +119,6 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	for _, webhook := range webhookResponse.Webhooks {
 		if webhook.Key == d.Id() {
 			d.Set("name", webhook.Name)
-			d.Set("secret", webhook.Secret)
 			d.Set("url", webhook.Url)
 
 			return nil
