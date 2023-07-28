@@ -50,7 +50,6 @@ func resourceSonarqubeWebhook() *schema.Resource {
 				Type:      schema.TypeString,
 				Sensitive: true,
 				Optional:  true,
-				Computed:  true,
 			},
 		},
 	}

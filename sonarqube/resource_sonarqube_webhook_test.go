@@ -26,7 +26,6 @@ func TestAccSonarqubeWebhookBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
-					resource.TestCheckResourceAttr(resourceName, "secret", secret),
 				),
 			},
 			{
@@ -36,7 +35,6 @@ func TestAccSonarqubeWebhookBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
-					resource.TestCheckResourceAttr(resourceName, "secret", secret),
 				),
 			},
 		},
