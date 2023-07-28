@@ -29,9 +29,10 @@ func TestAccSonarqubeWebhookBasic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Version 10.1 of sonarqube does not return the secret in the api response anymore. Field 'secret' replaced by flag 'hasSecret' in response
 				ImportStateVerifyIgnore: []string{"secret"},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -63,6 +64,7 @@ func TestAccSonarqubeWebhookUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", firstName),
 					resource.TestCheckResourceAttr(resourceName, "url", firstUrl),
+					resource.TestCheckResourceAttr(resourceName, "secret", firstSecret),
 				),
 			},
 			{
@@ -70,6 +72,7 @@ func TestAccSonarqubeWebhookUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", secondName),
 					resource.TestCheckResourceAttr(resourceName, "url", secondUrl),
+					resource.TestCheckResourceAttr(resourceName, "secret", secondSecret),
 				),
 			},
 		},
