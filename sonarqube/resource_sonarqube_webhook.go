@@ -119,9 +119,12 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	for _, webhook := range webhookResponse.Webhooks {
 		if webhook.Key == d.Id() {
 			d.Set("name", webhook.Name)
-			d.Set("secret", webhook.Secret)
 			d.Set("url", webhook.Url)
-
+			// Version 10.1 of sonarqube does not return the secret in the api response anymore. Field 'secret' replaced by flag 'hasSecret' in response
+			// Instead we just set the secret in state to the value being passed in to avoid constant drifts
+			if secret, ok := d.GetOk("secret"); ok {
+				d.Set("secret", secret.(string))
+			}
 			return nil
 		}
 	}
