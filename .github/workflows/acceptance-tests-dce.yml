@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Add hosts to /etc/hosts
+        run: |
+            sudo echo "127.0.0.1 sonarqube.dev.local" | sudo tee -a /etc/hosts      
       - name: Start Sonarqube dce
         run: docker compose -f docker-compose-dce.yml --env-file ${{ matrix.env }} up -d 
       - name: Set up Go
@@ -34,6 +37,6 @@ jobs:
         env:
           TF_ACC: 1
           GO111MODULE: on
-          SONAR_HOST: http://127.0.0.1
+          SONAR_HOST: http://sonarqube.dev.local
           SONAR_USER: admin
           SONAR_PASS: admin
