@@ -181,7 +181,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("failed to convert sonarqube version to a version: %+v", err)
 	}
 
-	minimumVersion, _ := version.NewVersion("8.9")
+	minimumVersion, _ := version.NewVersion("9.9")
 	if parsedInstalledVersion.LessThan(minimumVersion) {
 		return nil, fmt.Errorf("unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
 	}
@@ -209,7 +209,11 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 		http.StatusOK,
 		"sonarqubeHealth",
 	)
-	if err != nil {
+
+	// Datacenter edition does not have the /api/system/info endpoint for some reason -_-
+	if resp.StatusCode == http.StatusNotFound {
+		return "9.9", "Datacenter", nil
+	} else if err != nil {
 		return "", "", err
 	}
 	defer resp.Body.Close()
