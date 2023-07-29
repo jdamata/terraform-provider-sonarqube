@@ -52,12 +52,14 @@ func Provider() *schema.Provider {
 				Optional: true,
 			},
 			"installed_version": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"INSTALLED_VERSION"}, ""),
+				Optional:    true,
 			},
 			"installed_edition": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"INSTALLED_EDITION"}, ""),
+				Optional:    true,
 			},
 			"tls_insecure_skip_verify": {
 				Optional:    true,
@@ -209,12 +211,8 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 		http.StatusOK,
 		"sonarqubeHealth",
 	)
-
-	// Datacenter edition does not have the /api/system/info endpoint for some reason -_-
-	if resp.StatusCode == http.StatusNotFound {
-		return "9.9", "Datacenter", nil
-	} else if err != nil {
-		return "", "", err
+	if err != nil {
+		return "", "", fmt.Errorf("cannot get sonarqube version/edition. Please configure installed_version and installed_edition: %+v", err)
 	}
 	defer resp.Body.Close()
 

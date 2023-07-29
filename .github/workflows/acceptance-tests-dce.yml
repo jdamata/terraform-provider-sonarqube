@@ -40,3 +40,6 @@ jobs:
           SONAR_HOST: http://sonarqube.dev.local
           SONAR_USER: admin
           SONAR_PASS: admin
+          INSTALLED_VERSION: 9.9
+          INSTALLED_EDITION: Datacenter
+          
