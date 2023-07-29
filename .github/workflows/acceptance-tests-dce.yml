@@ -33,6 +33,7 @@ jobs:
           terraform_wrapper: false
       - name: run acceptance tests
         run: |
+          sleep 120 # Testing if sonarqube dce needs more time to start
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           TF_ACC: 1
