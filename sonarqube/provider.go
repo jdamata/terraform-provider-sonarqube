@@ -52,12 +52,14 @@ func Provider() *schema.Provider {
 				Optional: true,
 			},
 			"installed_version": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"INSTALLED_VERSION"}, ""),
+				Optional:    true,
 			},
 			"installed_edition": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"INSTALLED_EDITION"}, ""),
+				Optional:    true,
 			},
 			"tls_insecure_skip_verify": {
 				Optional:    true,
@@ -181,7 +183,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		return nil, fmt.Errorf("failed to convert sonarqube version to a version: %+v", err)
 	}
 
-	minimumVersion, _ := version.NewVersion("8.9")
+	minimumVersion, _ := version.NewVersion("9.9")
 	if parsedInstalledVersion.LessThan(minimumVersion) {
 		return nil, fmt.Errorf("unsupported version of sonarqube. Minimum supported version is %+v. Running version is %+v", minimumVersion, installedVersion)
 	}
@@ -210,7 +212,7 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 		"sonarqubeHealth",
 	)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("cannot get sonarqube version/edition. Please configure installed_version and installed_edition: %+v", err)
 	}
 	defer resp.Body.Close()
 
