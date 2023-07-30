@@ -33,7 +33,7 @@ jobs:
           terraform_wrapper: false
       - name: run acceptance tests
         run: |
-          bash -c 'while [[ "curl -s -o /dev/null -w ''%{http_code}'' sonarqube.dev.local/api/system/info" != "401" ]]; do echo "waiting for sonarqube to start"; sleep 15; done'
+          sleep 120 # Testing if sonarqube dce needs more time to start
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           TF_ACC: 1
@@ -43,4 +43,3 @@ jobs:
           SONAR_PASS: admin
           INSTALLED_VERSION: 9.9
           INSTALLED_EDITION: Datacenter
-          
