@@ -92,7 +92,7 @@ func resourceSonarqubeQualityProfileProjectAssociationCreate(d *schema.ResourceD
 	}
 	defer resp.Body.Close()
 
-	id := fmt.Sprintf("%v/%v", d.Get("quality_profile").(string), d.Get("project").(string))
+	id := fmt.Sprintf("%v/%v/%v", d.Get("quality_profile").(string), d.Get("project").(string), d.Get("language").(string))
 	d.SetId(id)
 	return resourceSonarqubeQualityProfileProjectAssociationRead(d, m)
 }
@@ -130,14 +130,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	var qualityProfileID string
 	for _, value := range getQualityProfileResponse.Profiles {
-		fmt.Println()
-		fmt.Println(idSlice[0])
-		fmt.Println(value.Name)
-		fmt.Println()
-		fmt.Println(d.Get("language").(string))
-		fmt.Println(value.Language)
-		fmt.Println()
-		if idSlice[0] == value.Name && d.Get("language").(string) == value.Language {
+		if idSlice[0] == value.Name && idSlice[2] == value.Language {
 			qualityProfileID = value.Key
 			language = value.Language
 			qualityProfile = value.Name
