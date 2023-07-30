@@ -19,6 +19,7 @@ vet:
 
 testacc:
 	docker run --name sonarqube1 -d -p 9001:9000 ${SONARQUBE_IMAGE}
+	# timeout 300 bash -c 'while [[ "curl -s -o /dev/null -w ''%{http_code}'' localhost:9001/api/system/info" != "401" ]]; do echo "waiting for sonarqube to start"; sleep 15; done'
 	sleep ${SONARQUBE_START_SLEEP}
 	-TF_ACC=1 SONAR_HOST=http://localhost:9001 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 	docker stop sonarqube1

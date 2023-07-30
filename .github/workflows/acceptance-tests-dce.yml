@@ -43,4 +43,3 @@ jobs:
           SONAR_PASS: admin
           INSTALLED_VERSION: 9.9
           INSTALLED_EDITION: Datacenter
-          
