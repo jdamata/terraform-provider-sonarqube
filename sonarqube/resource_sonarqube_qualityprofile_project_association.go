@@ -130,11 +130,16 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	var qualityProfileID string
 	for _, value := range getQualityProfileResponse.Profiles {
+		fmt.Printf("JOEL TESTING. THIS IS THE NAME OF THE QUALITY PROFILE FROM THE ID: %+v", idSlice[0])
+		fmt.Printf("JOEL TESTING. THIS IS THE NAME OF THE QUALITY PROFILE FROM THE API RESULTS: %+v", value.Name)
 		if idSlice[0] == value.Name {
 			qualityProfileID = value.Key
 			language = value.Language
 			qualityProfile = value.Name
 		}
+	}
+	if qualityProfileID == "" {
+		return fmt.Errorf("resourceSonarqubeQualityProfileProjectAssociationRead: Failed to find a quality profile ID from quality profile name: %+v", d.Id())
 	}
 
 	// With the qualityProfileID we can check if the project name is associated
