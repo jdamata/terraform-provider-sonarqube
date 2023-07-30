@@ -33,7 +33,7 @@ jobs:
           terraform_wrapper: false
       - name: run acceptance tests
         run: |
-          timeout 300 bash -c 'while [[ "curl -s -o /dev/null -w ''%{http_code}'' sonarqube.dev.local/api/system/info" != "401" ]]; do echo "waiting for sonarqube to start"; sleep 15; done'
+          timeout 500 bash -c 'while [[ "curl -s -o /dev/null -w ''%{http_code}'' sonarqube.dev.local/api/system/info" != "401" ]]; do echo "waiting for sonarqube to start"; sleep 15; done'
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           TF_ACC: 1
