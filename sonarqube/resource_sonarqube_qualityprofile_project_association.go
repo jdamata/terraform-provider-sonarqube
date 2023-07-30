@@ -130,7 +130,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	var qualityProfileID string
 	for _, value := range getQualityProfileResponse.Profiles {
-		if idSlice[0] == value.Name {
+		if idSlice[0] == value.Name && d.Get("language").(string) == value.Language {
 			fmt.Println(value)
 			qualityProfileID = value.Key
 			language = value.Language
