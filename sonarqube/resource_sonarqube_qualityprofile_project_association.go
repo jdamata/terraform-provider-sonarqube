@@ -130,8 +130,14 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	var qualityProfileID string
 	for _, value := range getQualityProfileResponse.Profiles {
+		fmt.Println()
+		fmt.Println(idSlice[0])
+		fmt.Println(value.Name)
+		fmt.Println()
+		fmt.Println(d.Get("language").(string))
+		fmt.Println(value.Language)
+		fmt.Println()
 		if idSlice[0] == value.Name && d.Get("language").(string) == value.Language {
-			fmt.Println(value)
 			qualityProfileID = value.Key
 			language = value.Language
 			qualityProfile = value.Name
@@ -162,10 +168,6 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeQualityProfileProjectAssociationRead: Failed to decode json into struct: %+v", err)
 	}
-	fmt.Printf("JOEL TEST. QUALITY PROFILE ID: %v", qualityProfileID)
-	fmt.Println()
-	fmt.Printf("JOEL TEST. This many results found: %v", len(getQualityProfileProjectResponse.Results))
-	fmt.Println()
 	for _, value := range getQualityProfileProjectResponse.Results {
 		if idSlice[1] == value.Key {
 			d.SetId(d.Id())
