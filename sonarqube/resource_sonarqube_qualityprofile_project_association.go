@@ -60,12 +60,6 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Quality profile language",
-				ValidateDiagFunc: validation.ToDiagFunc(
-					validation.StringInSlice(
-						[]string{"cloudformation", "cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "terraform", "ts", "vbnet", "web", "xml"},
-						false,
-					),
-				),
 			},
 		},
 	}

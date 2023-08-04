@@ -26,7 +26,7 @@ The following arguments are supported:
 
 - quality_profile - (Required) Name of the Quality Profile
 - project         - (Required) Name of the project
-- language        - (Required) Quality profile language. Must be one of "cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "ts", "vbnet", "web", "xml"
+- language        - (Required) Quality profile language. Must be a langauge in this list https://next.sonarqube.com/sonarqube/web_api/api/languages/list
 
 ## Import 
 Quality Profiles Project Associations can be imported using a combination of quality profile name, project name and language
