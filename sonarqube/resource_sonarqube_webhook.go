@@ -11,10 +11,11 @@ import (
 )
 
 type Webhook struct {
-	Key    string `json:"key"`
-	Name   string `json:"name"`
-	Url    string `json:"url"`
-	Secret string `json:"secret"`
+	Key     string `json:"key"`
+	Name    string `json:"name"`
+	Url     string `json:"url"`
+	Secret  string `json:"secret"`
+	Project string `json:"project"` // field project added since 7.1
 }
 
 type CreateWebhookResponse struct {
@@ -52,6 +53,11 @@ func resourceSonarqubeWebhook() *schema.Resource {
 				Optional:  true,
 				Computed:  true,
 			},
+			"project": {
+				Type:        schema.TypeString,
+				Description: "The key of the project that will own the webhook (optional).",
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -66,6 +72,9 @@ func resourceSonarqubeWebhookCreate(d *schema.ResourceData, m interface{}) error
 	}
 	if secret, ok := d.GetOk("secret"); ok {
 		params.Set("secret", secret.(string))
+	}
+	if project, ok := d.GetOk("project"); ok {
+		params.Set("project", project.(string))
 	}
 	sonarQubeURL.RawQuery = params.Encode()
 
@@ -125,6 +134,9 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 			if secret, ok := d.GetOk("secret"); ok {
 				d.Set("secret", secret.(string))
 			}
+			if project, ok := d.GetOk("project"); ok {
+				d.Set("project", project.(string))
+			}
 			return nil
 		}
 	}
@@ -143,6 +155,9 @@ func resourceSonarqubeWebhookUpdate(d *schema.ResourceData, m interface{}) error
 	}
 	if secret, ok := d.GetOk("secret"); ok {
 		params.Set("secret", secret.(string))
+	}
+	if project, ok := d.GetOk("project"); ok {
+		params.Set("project", project.(string))
 	}
 	sonarQubeURL.RawQuery = params.Encode()
 
