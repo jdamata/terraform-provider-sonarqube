@@ -55,7 +55,7 @@ func resourceSonarqubeWebhook() *schema.Resource {
 			},
 			"project": {
 				Type:        schema.TypeString,
-				Description: "The key of the project that will own the webhook (optional).",
+				Description: "The key of the project that will own the webhook.",
 				Optional:    true,
 			},
 		},
