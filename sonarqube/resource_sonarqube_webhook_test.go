@@ -92,18 +92,17 @@ resource "sonarqube_webhook" "%s" {
 func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	resourceName := "sonarqube_webhook." + rnd
-	project := "sonarqube_webhook." + rnd
+	project := "testAccSonarqubeWebhookProject"
 
 	name := acctest.RandString(10)
 	url := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secret := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeWebhookProjectBasicConfig(rnd, name, url, secret, project),
+				Config: testAccSonarqubeWebhookProjectBasicConfig(rnd, name, url, project),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
@@ -124,19 +123,18 @@ func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 	})
 }
 
-func testAccSonarqubeWebhookProjectBasicConfig(rnd, name, url, secret string, project string) string {
+func testAccSonarqubeWebhookProjectBasicConfig(rnd string, name string, url string, project string) string {
 	return fmt.Sprintf(`
 resource "sonarqube_project" "%[1]s" {
-	name       = "%[5]s"
-	project    = "%[5]s"
+	name       = "%[4]s"
+	project    = "%[4]s"
 	visibility = "public" 
 }
 
 resource "sonarqube_webhook" "%[1]s" {
 	name    = "%[2]s"
 	url     = "%[3]s"
-	secret  = "%[4]s"
-	project = sonarqube_project.%[1]s.name
+	project = sonarqube_project.%[1]s.project
 }
-`, rnd, name, url, secret, project)
+`, rnd, name, url, project)
 }
