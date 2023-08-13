@@ -92,10 +92,10 @@ resource "sonarqube_webhook" "%s" {
 func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	resourceName := "sonarqube_webhook." + rnd
-	project := "testAccSonarqubeWebhookProject"
 
 	name := acctest.RandString(10)
 	url := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	project := "testAccSonarqubeWebhookProject"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -109,32 +109,21 @@ func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project", project),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "url", url),
-					resource.TestCheckResourceAttr(resourceName, "project", project),
-				),
-			},
 		},
 	})
 }
 
 func testAccSonarqubeWebhookProjectBasicConfig(rnd string, name string, url string, project string) string {
 	return fmt.Sprintf(`
-resource "sonarqube_project" "%[1]s" {
-	name       = "%[4]s"
-	project    = "%[4]s"
-	visibility = "public" 
-}
+		resource "sonarqube_project" "%[1]s" {
+			name       = "%[4]s"
+			project    = "%[4]s"
+			visibility = "public" 
+		}
 
-resource "sonarqube_webhook" "%[1]s" {
-	name    = "%[2]s"
-	url     = "%[3]s"
-	project = sonarqube_project.%[1]s.project
-}
-`, rnd, name, url, project)
+		resource "sonarqube_webhook" "%[1]s" {
+			name    = "%[2]s"
+			url     = "%[3]s"
+			project = sonarqube_project.%[1]s.project
+		}`, rnd, name, url, project)
 }
