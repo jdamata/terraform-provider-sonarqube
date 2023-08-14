@@ -52,6 +52,12 @@ func resourceSonarqubeWebhook() *schema.Resource {
 				Optional:  true,
 				Computed:  true,
 			},
+			"project": {
+				Type:        schema.TypeString,
+				Description: "The key of the project that will own the webhook.",
+				Optional:    true,
+				ForceNew:    true,
+			},
 		},
 	}
 }
@@ -67,6 +73,10 @@ func resourceSonarqubeWebhookCreate(d *schema.ResourceData, m interface{}) error
 	if secret, ok := d.GetOk("secret"); ok {
 		params.Set("secret", secret.(string))
 	}
+	if project, ok := d.GetOk("project"); ok {
+		params.Set("project", project.(string))
+	}
+
 	sonarQubeURL.RawQuery = params.Encode()
 
 	resp, err := httpRequestHelper(
@@ -98,6 +108,13 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/webhooks/list"
 
+	if project, ok := d.GetOk("project"); ok {
+		rawQuery := url.Values{
+			"project": []string{string(project.(string))},
+		}
+		sonarQubeURL.RawQuery = rawQuery.Encode()
+	}
+
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"GET",
@@ -120,6 +137,10 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 		if webhook.Key == d.Id() {
 			d.Set("name", webhook.Name)
 			d.Set("url", webhook.Url)
+			// Field 'project' is not included in the webhook response object, so it is imported from the parameter.
+			if project, ok := d.GetOk("project"); ok {
+				d.Set("project", project.(string))
+			}
 			// Version 10.1 of sonarqube does not return the secret in the api response anymore. Field 'secret' replaced by flag 'hasSecret' in response
 			// Instead we just set the secret in state to the value being passed in to avoid constant drifts
 			if secret, ok := d.GetOk("secret"); ok {
@@ -140,6 +161,10 @@ func resourceSonarqubeWebhookUpdate(d *schema.ResourceData, m interface{}) error
 		"webhook": []string{d.Id()},
 		"name":    []string{d.Get("name").(string)},
 		"url":     []string{d.Get("url").(string)},
+	}
+	project := d.Get("project").(string)
+	if project != "" {
+		params.Set("project", project)
 	}
 	if secret, ok := d.GetOk("secret"); ok {
 		params.Set("secret", secret.(string))
