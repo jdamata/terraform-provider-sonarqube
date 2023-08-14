@@ -269,8 +269,7 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceSonarqubeProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	if err := resourceSonarqubeProjectRead(d, m); err != nil {
-		return nil, err
-	}
+	// As per the docs, use the id to make the read work as intended (https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/import)
+	d.Set("project", d.Id())
 	return []*schema.ResourceData{d}, nil
 }
