@@ -60,7 +60,7 @@ func resourceSonarqubeProject() *schema.Resource {
 			"project": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"visibility": {
 				Type:     schema.TypeString,
@@ -150,7 +150,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/components/show"
 	sonarQubeURL.RawQuery = url.Values{
-		"component": []string{d.Id()},
+		"component": []string{d.Get("project").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -192,7 +192,7 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_visibility"
 		sonarQubeURL.RawQuery = url.Values{
-			"project":    []string{d.Id()},
+			"project":    []string{d.Get("project").(string)},
 			"visibility": []string{d.Get("visibility").(string)},
 		}.Encode()
 
@@ -216,6 +216,33 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
+	// handle project key updates (api/projects/update_key)
+	if d.HasChange("project") {
+		oldKey, newKey := d.GetChange("project")
+
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_key"
+		sonarQubeURL.RawQuery = url.Values{
+			"from": []string{oldKey.(string)},
+			"to":   []string{newKey.(string)},
+		}.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubeProjectUpdate",
+		)
+		if err != nil {
+			return fmt.Errorf("error updating Sonarqube project key: %+v", err)
+		}
+		defer resp.Body.Close()
+
+		// Update the id like in github provider (https://github.com/integrations/terraform-provider-github/blob/b7e63d63c59b9b1df9c6d05204bdaa1b349e8c8a/github/resource_github_repository.go#L746-L750)
+		d.SetId(newKey.(string))
+	}
+
 	return resourceSonarqubeProjectRead(d, m)
 }
 
@@ -223,7 +250,7 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/delete"
 	sonarQubeURL.RawQuery = url.Values{
-		"project": []string{d.Id()},
+		"project": []string{d.Get("project").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
