@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func testAccSonarqubeRuleDataSourceConfig(rnd string, custom_key string, markdown_description string, name string, template_key string, severity string, status string, type_p string) string {
