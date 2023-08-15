@@ -60,7 +60,6 @@ func resourceSonarqubeProject() *schema.Resource {
 			"project": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: false,
 			},
 			"visibility": {
 				Type:     schema.TypeString,
