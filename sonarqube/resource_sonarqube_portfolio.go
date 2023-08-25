@@ -71,9 +71,9 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}, false),
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
 				Description: "Which branch to analyze. If nothing, or '' is specified, the main branch is used.",
 			},
 			"tags": { // Only active for TAGS
