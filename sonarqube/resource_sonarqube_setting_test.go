@@ -25,7 +25,6 @@ func testAccSonarqubeSettingBasicConfig(rnd string, key string, value string) st
 			value = "%[3]s"
 		}`, rnd, key, value)
 }
-
 func testAccSonarqubeSettingConfigMultipleValues(rnd string, key string, values []string) string {
 	formattedValues := generateHCLList(values)
 	return fmt.Sprintf(`
@@ -42,6 +41,15 @@ func testAccSonarqubeSettingConfigMultipleFields(rnd string, key string, fields 
 			field_values = [%[3]s]
 		}`, rnd, key, formattedFields)
 }
+func testAccSonarqubeSettingComponentConfig(rnd string, key string, value string, component string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_setting" "%[1]s" {
+			key = "%[2]s"
+			value = "%[3]s"
+			component = "%[4]s"
+		}`, rnd, key, value, component)
+}
+
 func TestAccSonarqubeSettingBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_setting." + rnd
@@ -121,6 +129,35 @@ func TestAccSonarqubeSettingMultipleFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", key),
 					resource.TestCheckTypeSetElemNestedAttrs(name, "field_values.*", expected),
+				),
+			},
+		},
+	})
+}
+func TestAccSonarqubeSettingComponent(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_setting." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeSettingComponentConfig(rnd, "sonar.demo", "sonarqube@example.org", "sonar.component"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "value", "sonarqube@example.org"),
+					resource.TestCheckResourceAttr(name, "component", "sonar.component"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "value", "sonarqube@example.org"),
+					resource.TestCheckResourceAttr(name, "component", "sonar.component"),
 				),
 			},
 		},

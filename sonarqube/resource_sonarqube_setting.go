@@ -64,6 +64,11 @@ func resourceSonarqubeSettings() *schema.Resource {
 					Elem: schema.TypeString,
 				},
 			},
+			"component": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Component key. Only keys for projects, applications, portfolios or subportfolios are accepted.",
+			},
 		},
 	}
 }
@@ -92,9 +97,16 @@ func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) erro
 func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/values"
-	sonarQubeURL.RawQuery = url.Values{
+
+	params := url.Values{
 		"keys": []string{d.Id()},
-	}.Encode()
+	}
+	component, componentOk := d.GetOk("component")
+	if componentOk {
+		params.Set("component", component.(string))
+	}
+
+	sonarQubeURL.RawQuery = params.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -121,6 +133,10 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 			d.Set("value", value.Value)
 			d.Set("values", value.Values)
 			d.Set("field_values", value.FieldValues)
+			// Field 'component' is not included in the response object, so it is imported from the parameter.
+			if componentOk {
+				d.Set("component", component.(string))
+			}
 			return nil
 		}
 	}
@@ -130,9 +146,15 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/reset"
-	sonarQubeURL.RawQuery = url.Values{
+	params := url.Values{
 		"keys": []string{d.Id()},
-	}.Encode()
+	}
+	component, componentOk := d.GetOk("component")
+	if componentOk {
+		params.Set("component", component.(string))
+	}
+
+	sonarQubeURL.RawQuery = params.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -180,6 +202,10 @@ func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string
 	// build the base query
 	RawQuery := url.Values{
 		"key": key,
+	}
+	// check optional
+	if component, ok := d.GetOk("component"); ok {
+		RawQuery.Add("component", component.(string))
 	}
 	// Add in value/values/fieldValues as appropriate
 	// single value
