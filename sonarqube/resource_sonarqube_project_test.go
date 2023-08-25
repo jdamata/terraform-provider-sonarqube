@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func init() {
@@ -177,6 +178,40 @@ func TestAccSonarqubeProjectTagsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
 					resource.TestCheckResourceAttr(name, "tags.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectKeyUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+
+	oldKey := "testAccSonarqubeProjectOld"
+	newKey := "testAccSonarqubeProjectNew"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", oldKey, "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", oldKey),
+				),
+			},
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", newKey, "public"),
+
+				// Make sure the update is in-place (https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/plan-checks#examples-using-plancheck-expectresourceaction)
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(name, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", newKey),
 				),
 			},
 		},
