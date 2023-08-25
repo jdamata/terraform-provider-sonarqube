@@ -43,10 +43,16 @@ func testAccSonarqubeSettingConfigMultipleFields(rnd string, key string, fields 
 }
 func testAccSonarqubeSettingComponentConfig(rnd string, key string, value string, component string) string {
 	return fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+			name       = "%[4]s"
+			project    = "%[4]s"
+			visibility = "public" 
+		}
+
 		resource "sonarqube_setting" "%[1]s" {
-			key = "%[2]s"
-			value = "%[3]s"
-			component = "%[4]s"
+			key       = "%[2]s"
+			value     = "%[3]s"
+			component = sonarqube_project.%[1]s.project
 		}`, rnd, key, value, component)
 }
 
@@ -143,11 +149,11 @@ func TestAccSonarqubeSettingComponent(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeSettingComponentConfig(rnd, "sonar.demo", "sonarqube@example.org", "sonar.component"),
+				Config: testAccSonarqubeSettingComponentConfig(rnd, "sonar.branch.longLivedBranches.regex", ".*", "testAccSonarqubeSettingComponent"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "sonar.demo"),
-					resource.TestCheckResourceAttr(name, "value", "sonarqube@example.org"),
-					resource.TestCheckResourceAttr(name, "component", "sonar.component"),
+					resource.TestCheckResourceAttr(name, "key", "sonar.branch.longLivedBranches.regex"),
+					resource.TestCheckResourceAttr(name, "value", ".*"),
+					resource.TestCheckResourceAttr(name, "component", "testAccSonarqubeSettingComponent"),
 				),
 			},
 			{
@@ -155,9 +161,9 @@ func TestAccSonarqubeSettingComponent(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "sonar.demo"),
-					resource.TestCheckResourceAttr(name, "value", "sonarqube@example.org"),
-					resource.TestCheckResourceAttr(name, "component", "sonar.component"),
+					resource.TestCheckResourceAttr(name, "key", "sonar.branch.longLivedBranches.regex"),
+					resource.TestCheckResourceAttr(name, "value", ".*"),
+					resource.TestCheckResourceAttr(name, "component", "testAccSonarqubeSettingComponent"),
 				),
 			},
 		},
