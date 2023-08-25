@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccSonarqubeWebhookBasic(t *testing.T) {
@@ -87,4 +87,43 @@ resource "sonarqube_webhook" "%s" {
 	secret = "%s"
 }
 `, rnd, name, url, secret)
+}
+
+func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
+	rnd := generateRandomResourceName()
+	resourceName := "sonarqube_webhook." + rnd
+
+	name := acctest.RandString(10)
+	url := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	project := "testAccSonarqubeWebhookProject"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeWebhookProjectBasicConfig(rnd, name, url, project),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "url", url),
+					resource.TestCheckResourceAttr(resourceName, "project", project),
+				),
+			},
+		},
+	})
+}
+
+func testAccSonarqubeWebhookProjectBasicConfig(rnd string, name string, url string, project string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+			name       = "%[4]s"
+			project    = "%[4]s"
+			visibility = "public" 
+		}
+
+		resource "sonarqube_webhook" "%[1]s" {
+			name    = "%[2]s"
+			url     = "%[3]s"
+			project = sonarqube_project.%[1]s.project
+		}`, rnd, name, url, project)
 }

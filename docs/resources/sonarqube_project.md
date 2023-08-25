@@ -26,6 +26,6 @@ The following attributes are exported:
 Projects can be imported using their project key
 
 ```terraform
-terraform import sonarqube_qualitygate.main my_project
+terraform import sonarqube_project.main my_project
 ```
 
