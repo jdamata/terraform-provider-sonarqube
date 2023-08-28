@@ -90,7 +90,7 @@ func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) erro
 	}
 	defer resp.Body.Close()
 
-	d.SetId(d.Get("key").(string))
+	d.SetId(buildId(d))
 	return resourceSonarqubeSettingsRead(d, m)
 }
 
@@ -98,8 +98,9 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/values"
 
+	key := d.Get("key").(string)
 	params := url.Values{
-		"keys": []string{d.Id()},
+		"keys": []string{key},
 	}
 	component, componentOk := d.GetOk("component")
 	if componentOk {
@@ -127,8 +128,7 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	for _, value := range settingReadResponse.Setting {
-		if d.Id() == value.Key {
-			d.SetId(value.Key)
+		if key == value.Key {
 			d.Set("key", value.Key)
 			d.Set("value", value.Value)
 			d.Set("values", value.Values)
@@ -137,6 +137,7 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 			if componentOk {
 				d.Set("component", component.(string))
 			}
+			d.SetId(buildId(d))
 			return nil
 		}
 	}
@@ -147,7 +148,7 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/reset"
 	params := url.Values{
-		"keys": []string{d.Id()},
+		"keys": []string{d.Get("key").(string)},
 	}
 	component, componentOk := d.GetOk("component")
 	if componentOk {
@@ -172,6 +173,12 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	// the ID consists of the key and the component (foo/bar)
+	idSplit := strings.Split(d.Id(), "/")
+	d.Set("key", idSplit[0])
+	if len(idSplit) > 1 {
+		d.Set("component", idSplit[1])
+	}
 	if err := resourceSonarqubeSettingsRead(d, m); err != nil {
 		return nil, err
 	}
@@ -181,8 +188,7 @@ func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([
 func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/set"
-
-	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Id()}, d)
+	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Get("key").(string)}, d)
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -228,4 +234,14 @@ func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string
 		}
 	}
 	return RawQuery.Encode()
+}
+
+func buildId(d *schema.ResourceData) string {
+	component, ok := d.GetOk("component")
+	// the ID consists of the key and the component (foo/bar)
+	if ok {
+		return fmt.Sprintf("%s/%s", d.Get("key").(string), component.(string))
+	} else {
+		return fmt.Sprintf("%s", d.Get("key").(string))
+	}
 }
