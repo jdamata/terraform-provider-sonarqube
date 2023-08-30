@@ -11,16 +11,6 @@ resource "sonarqube_setting" "single_setting" {
 }
 
 ```
-## Example: create a setting associated to a component with a single value
-
-```terraform
-resource "sonarqube_setting" "single_setting" {
-  key       = "sonar.demo"
-  value     = "sonarqube@example.org"
-  component = "sonar.component"
-}
-
-```
 
 ## Example: create a setting with multiple values
 ```terraform
@@ -53,7 +43,6 @@ The following arguments are supported
 - value - (Optional) Single valued setting value
 - values - (Optional) Multi-valued setting values
 - field_values - (Optional) Multi-field setting values
-- component - (Optional) Component key. Only keys for projects, applications, portfolios or subportfolios are accepted.
 
 One of value, values, field_values _must_ be supplied
 ## Attribute Reference

@@ -41,20 +41,6 @@ func testAccSonarqubeSettingConfigMultipleFields(rnd string, key string, fields 
 			field_values = [%[3]s]
 		}`, rnd, key, formattedFields)
 }
-func testAccSonarqubeSettingComponentConfig(rnd string, key string, value string, component string) string {
-	return fmt.Sprintf(`
-		resource "sonarqube_project" "%[1]s" {
-			name       = "%[4]s"
-			project    = "%[4]s"
-			visibility = "public" 
-		}
-
-		resource "sonarqube_setting" "%[1]s" {
-			key       = "%[2]s"
-			value     = "%[3]s"
-			component = sonarqube_project.%[1]s.project
-		}`, rnd, key, value, component)
-}
 
 func TestAccSonarqubeSettingBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
@@ -135,35 +121,6 @@ func TestAccSonarqubeSettingMultipleFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "key", key),
 					resource.TestCheckTypeSetElemNestedAttrs(name, "field_values.*", expected),
-				),
-			},
-		},
-	})
-}
-func TestAccSonarqubeSettingComponent(t *testing.T) {
-	rnd := generateRandomResourceName()
-	name := "sonarqube_setting." + rnd
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSonarqubeSettingComponentConfig(rnd, "sonar.branch.longLivedBranches.regex", ".*", "testAccSonarqubeSettingComponent"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "sonar.branch.longLivedBranches.regex"),
-					resource.TestCheckResourceAttr(name, "value", ".*"),
-					resource.TestCheckResourceAttr(name, "component", "testAccSonarqubeSettingComponent"),
-				),
-			},
-			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "sonar.branch.longLivedBranches.regex"),
-					resource.TestCheckResourceAttr(name, "value", ".*"),
-					resource.TestCheckResourceAttr(name, "component", "testAccSonarqubeSettingComponent"),
 				),
 			},
 		},
