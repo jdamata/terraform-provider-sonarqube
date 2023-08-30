@@ -90,7 +90,6 @@ func resourceSonarqubeProject() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "Setting a value for the supplied key",
-							//ExactlyOneOf: []string{"setting.0.value", "setting.0.values", "setting.0.field_values"},
 						},
 						"values": {
 							Type:        schema.TypeList,
@@ -99,7 +98,6 @@ func resourceSonarqubeProject() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							//ExactlyOneOf: []string{"setting.0.value", "setting.0.values", "setting.0.field_values"},
 						},
 						"field_values": {
 							Type:        schema.TypeList,
@@ -109,7 +107,6 @@ func resourceSonarqubeProject() *schema.Resource {
 								Type: schema.TypeMap,
 								Elem: schema.TypeString,
 							},
-							//ExactlyOneOf: []string{"setting.0.value", "setting.0.values", "setting.0.field_values"},
 						},
 					},
 				},

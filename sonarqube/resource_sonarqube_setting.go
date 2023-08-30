@@ -104,11 +104,10 @@ func resourceSonarqubeSettingsCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error {
-	key := d.Get("key").(string)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/values"
 	sonarQubeURL.RawQuery = url.Values{
-		"keys": []string{key},
+		"keys": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -130,7 +129,7 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	for _, value := range settingReadResponse.Setting {
-		if key == value.Key {
+		if d.Id() == value.Key {
 			d.Set("key", value.Key)
 			d.Set("value", value.Value)
 			d.Set("values", value.Values)
@@ -146,7 +145,7 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/reset"
 	sonarQubeURL.RawQuery = url.Values{
-		"keys": []string{d.Get("key").(string)},
+		"keys": []string{d.Id()},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -175,7 +174,8 @@ func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([
 func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/set"
-	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Get("key").(string)}, d)
+
+	sonarQubeURL.RawQuery = getCreateOrUpdateQueryRawQuery([]string{d.Id()}, d)
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -310,7 +310,7 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 		if len(values) != len(b.FieldValues) {
 			return false
 		}
-		for i, _ := range values {
+		for i := range values {
 			if string(values[i]) != string(b.Values[i]) {
 				return false
 			}
@@ -322,7 +322,7 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 		if len(fieldValues) != len(b.FieldValues) {
 			return false
 		}
-		for i, _ := range fieldValues {
+		for i := range fieldValues {
 			k1, _ := json.Marshal(fieldValues[i])
 			k2, _ := json.Marshal(b.FieldValues[i])
 			if string(k1) != string(k2) {
