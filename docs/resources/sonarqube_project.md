@@ -10,6 +10,20 @@ resource "sonarqube_project" "main" {
 }
 ```
 
+## Example: create a project with associated settings
+```terraform
+resource "sonarqube_project" "main" {
+    name       = "SonarQube"
+    project    = "my_project"
+    visibility = "public" 
+
+    setting {
+        key   = "sonar.demo"
+        value = "sonarqube@example.org"
+    }
+}
+```
+
 ## Argument Reference
 The following arguments are supported:
 

@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,6 +41,21 @@ func testAccSonarqubeProjectTagsConfig(rnd string, name string, project string, 
 		  tags = %[5]s // Note that the "" should be missing since this is a list
 		}
 		`, rnd, name, project, visibility, formattedTags)
+}
+
+func testAccSonarqubeProjectSettingsConfig(rnd string, name string, project string, visibility string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+		  name       = "%[2]s"
+		  project    = "%[3]s"
+		  visibility = "%[4]s"
+
+		  setting {
+			key   = "sonar.demo"
+			value = "sonarqube@example.org"
+		  }
+		}
+		`, rnd, name, project, visibility)
 }
 
 func TestAccSonarqubeProjectBasic(t *testing.T) {
@@ -212,6 +228,56 @@ func TestAccSonarqubeProjectKeyUpdate(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", newKey),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectSettingsCreate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+	expectedSettings := 1
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectSettingsConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedSettings)),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectSettingsUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "setting.#", "0"),
+				),
+			},
+			{
+				Config: testAccSonarqubeProjectSettingsConfig(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "setting.#", "1"),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
 				),
 			},
 		},

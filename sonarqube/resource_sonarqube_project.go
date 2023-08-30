@@ -74,6 +74,46 @@ func resourceSonarqubeProject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"setting": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "A list of settings associated to the project",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Setting key",
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Setting a value for the supplied key",
+							//ExactlyOneOf: []string{"setting.0.value", "setting.0.values", "setting.0.field_values"},
+						},
+						"values": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Setting multi values for the supplied key",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							//ExactlyOneOf: []string{"setting.0.value", "setting.0.values", "setting.0.field_values"},
+						},
+						"field_values": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Setting field values for the supplied key",
+							Elem: &schema.Schema{
+								Type: schema.TypeMap,
+								Elem: schema.TypeString,
+							},
+							//ExactlyOneOf: []string{"setting.0.value", "setting.0.values", "setting.0.field_values"},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -142,6 +182,13 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	}
 
 	d.SetId(projectResponse.Project.Key)
+
+	// Set settings
+	_, err = synchronizeSettings(d, m)
+	if err != nil {
+		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to sync project settings: %+v", err)
+	}
+
 	return resourceSonarqubeProjectRead(d, m)
 }
 
@@ -176,6 +223,28 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("name", projectReadResponse.Component.Name)
 	d.Set("project", projectReadResponse.Component.Key)
 	d.Set("visibility", projectReadResponse.Component.Visibility)
+
+	// Get settings
+	var projectSettings []Setting
+	if settings, ok := d.GetOk("setting"); ok {
+		var keys []string
+		for _, v := range settings.([]interface{}) {
+			s := v.(map[string]interface{})
+			keys = append(keys, fmt.Sprint(s["key"].(string)))
+		}
+		projectSettings, err = getComponentSettings(projectReadResponse.Component.Key, keys, m)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
+		}
+
+		if len(projectSettings) > 0 {
+			settings := make([]interface{}, len(projectSettings))
+			for i, s := range projectSettings {
+				settings[i] = s.ToMap()
+			}
+			d.Set("setting", settings)
+		}
+	}
 
 	if len(projectReadResponse.Component.Tags) > 0 {
 		d.Set("tags", projectReadResponse.Component.Tags)
@@ -240,6 +309,14 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 
 		// Update the id like in github provider (https://github.com/integrations/terraform-provider-github/blob/b7e63d63c59b9b1df9c6d05204bdaa1b349e8c8a/github/resource_github_repository.go#L746-L750)
 		d.SetId(newKey.(string))
+	}
+
+	if d.HasChange("setting") {
+		// Set settings
+		_, err := synchronizeSettings(d, m)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubeProjectUpdate: Failed to sync project settings: %+v", err)
+		}
 	}
 
 	return resourceSonarqubeProjectRead(d, m)
