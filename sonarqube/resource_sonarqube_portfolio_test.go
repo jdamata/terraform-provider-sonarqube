@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -74,6 +75,56 @@ func testAccSonarqubePortfolioConfigSelectionModeRegex(rnd string, key string, n
 
 		}
 		`, rnd, key, name, description, visibility, selectionMode, regexp)
+}
+func testAccSonarqubePortfolioSettingConfig(rnd string, key string, name string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key         = "%[2]s"
+		  name        = "%[3]s"
+		  description = "%[3]s"
+		  visibility  = "public"
+
+		  setting {
+			key   = "sonar.demo"
+			value = "sonarqube@example.org"
+		  }
+		}
+		`, rnd, key, name)
+}
+func testAccSonarqubePortfolioSettingMultiple(rnd string, key string, name string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key         = "%[2]s"
+		  name        = "%[3]s"
+		  description = "%[3]s"
+		  visibility  = "public"
+
+		  setting {
+			key   = "sonar.demo"
+			value = "sonarqube@example.org"
+		  }
+
+		  setting {
+			key    = "sonar.global.exclusions"
+			values = ["foo", "bar/**/*.*"]
+		  }
+
+		  setting {
+			key          = "sonar.issue.ignore.multicriteria"
+			field_values = [
+				{
+				  "ruleKey" : "foo",
+				  "resourceKey" : "bar"
+				},
+				{
+				  "ruleKey" : "foo2",
+				  "resourceKey" : "bar2"
+				}
+			]
+		  }
+		
+		}
+		`, rnd, key, name)
 }
 
 func TestAccSonarqubePortfolioBasic(t *testing.T) {
@@ -376,6 +427,65 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
 					resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
 					resource.TestCheckNoResourceAttr(name, "branch"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSettingsUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioBasicConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolio", "testAccSonarqubePortfolio", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePortfolio"),
+					resource.TestCheckResourceAttr(name, "setting.#", "0"),
+				),
+			},
+			{
+				Config: testAccSonarqubePortfolioSettingConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolio"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePortfolio"),
+					resource.TestCheckResourceAttr(name, "setting.#", "1"),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	expectedConditions := 3
+
+	expectedFieldValues := map[string]string{"ruleKey": "foo", "resourceKey": "bar"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioSettingMultiple(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolio"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
+					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.global.exclusions"),
+					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "foo"),
+					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "bar"),
+					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),
+					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", expectedFieldValues),
 				),
 			},
 		},

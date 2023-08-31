@@ -10,6 +10,20 @@ resource "sonarqube_portfolio" "main" {
 }
 ```
 
+## Example: create a portfolio with associated settings
+```terraform
+resource "sonarqube_project" "main" {
+    key         = "portfolio-key"
+    name        = "portfolio-name"
+    description = "portfolio-description"
+
+    setting {
+        key   = "sonar.demo"
+        value = "sonarqube@example.org"
+    }
+}
+```
+
 ## Argument Reference
 The following arguments are supported:
 
@@ -21,6 +35,16 @@ The following arguments are supported:
 - branch - (Optional) Which branch to analyze. If nothing, or "" is specified, the main branch is used.
 - tags - (Optional) List of Project tags to populate the Portfolio from. Only active when `selection_mode` is `TAGS`
 - regexp - (Optional) A regular expression that is used to match Projects with a matching name OR key. If they match, they are added to the Portfolio
+- setting - (Optional) The definition of a Setting to be used by this Portfolio as documented in the `setting` block below.
+
+A `setting` block supports:
+
+- key - (Required) Setting key
+- value - (Optional) Single valued setting value
+- values - (Optional) Multi-valued setting values
+- field_values - (Optional) Multi-field setting values
+
+One of value, values, field_values _must_ be supplied
 
 ## Attributes Reference
 The following attributes are exported in addition to the arguments above:

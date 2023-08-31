@@ -10,7 +10,7 @@ resource "sonarqube_project" "main" {
 }
 ```
 
-## Example: create a project with associated settings
+## Example: a project with associated settings
 ```terraform
 resource "sonarqube_project" "main" {
     name       = "SonarQube"
@@ -31,6 +31,16 @@ The following arguments are supported:
 - project - (Required) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.
 - visibility - (Optional) Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used.
 - tags - (Optional) A list of tags to put on the project.
+- setting - (Optional) The definition of a Setting to be used by this Portfolio as documented in the `setting` block below.
+
+A `setting` block supports:
+
+- key - (Required) Setting key
+- value - (Optional) Single valued setting value
+- values - (Optional) Multi-valued setting values
+- field_values - (Optional) Multi-field setting values
+
+One of value, values, field_values _must_ be supplied
 
 ## Attributes Reference
 The following attributes are exported:

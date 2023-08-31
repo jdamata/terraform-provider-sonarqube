@@ -183,7 +183,7 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 	// Set settings
 	_, err = synchronizeSettings(d, m)
 	if err != nil {
-		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to sync project settings: %+v", err)
+		return fmt.Errorf("resourceSonarqubeProjectCreate: Failed to sync project settings: %+v", err)
 	}
 
 	return resourceSonarqubeProjectRead(d, m)
@@ -229,7 +229,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 			s := v.(map[string]interface{})
 			keys = append(keys, fmt.Sprint(s["key"].(string)))
 		}
-		projectSettings, err = getComponentSettings(projectReadResponse.Component.Key, keys, m)
+		projectSettings, err = getComponentSettings(d.Id(), keys, m)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
 		}
@@ -309,10 +309,9 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 	}
 
 	if d.HasChange("setting") {
-		// Set settings
 		_, err := synchronizeSettings(d, m)
 		if err != nil {
-			return fmt.Errorf("resourceSonarqubeProjectUpdate: Failed to sync project settings: %+v", err)
+			return fmt.Errorf("Failed to sync project settings: %+v", err)
 		}
 	}
 
