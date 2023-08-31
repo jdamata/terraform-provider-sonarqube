@@ -220,17 +220,13 @@ func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string
 }
 
 /* This content is used for settings parameter in multiple resources ('project', 'portfolio')  */
-func getComponentSettings(component string, keys []string, m interface{}) ([]Setting, error) {
-	if component == "" || len(keys) == 0 {
+func getComponentSettings(component string, m interface{}) ([]Setting, error) {
+	if component == "" {
 		return []Setting{}, nil
 	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/values"
-	sonarQubeURL.RawQuery = url.Values{
-		"keys":      keys,
-		"component": []string{component},
-	}.Encode()
+	sonarQubeURL.RawQuery = url.Values{"component": []string{component}}.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -250,12 +246,20 @@ func getComponentSettings(component string, keys []string, m interface{}) ([]Set
 		return nil, fmt.Errorf("getProjectSettings: Failed to decode json into struct: %+v", err)
 	}
 
+	settingsList := make([]Setting, 0)
+	// Filter settings (removing inherited)
+	for _, e := range settingReadResponse.Setting {
+		if e.Inherited == false {
+			settingsList = append(settingsList, e)
+		}
+	}
+
 	// Make sure the order is always the same for when we are comparing lists of conditions
-	sort.Slice(settingReadResponse.Setting, func(i, j int) bool {
-		return settingReadResponse.Setting[i].Key < settingReadResponse.Setting[j].Key
+	sort.Slice(settingsList, func(i, j int) bool {
+		return settingsList[i].Key < settingsList[j].Key
 	})
 
-	return settingReadResponse.Setting, nil
+	return settingsList, nil
 }
 
 func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
@@ -263,7 +267,7 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	componentId := d.Id()
 	componentSettings := d.Get("setting").([]interface{})
 
-	apiComponentSettings, _ := getComponentSettings(componentId, nil, m)
+	apiComponentSettings, _ := getComponentSettings(componentId, m)
 
 	// Make sure the order is always the same for when we are comparing lists of conditions
 	sort.Slice(componentSettings, func(i, j int) bool {
@@ -387,7 +391,6 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 	var toDelete []string
 	for _, apiSetting := range *apiProjectSettings {
 		found := false
-
 		for _, newSetting := range newSettings {
 			newSetting_ := newSetting.(map[string]interface{})
 			if newSetting_["key"].(string) == apiSetting.Key {
@@ -395,7 +398,6 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 				break
 			}
 		}
-
 		if !found {
 			toDelete = append(toDelete, fmt.Sprint(apiSetting.Key))
 		}
@@ -406,7 +408,7 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/settings/reset"
 		sonarQubeURL.RawQuery = url.Values{
 			"component": []string{component},
-			"keys":      toDelete,
+			"keys":      []string{strings.Join(toDelete, ",")},
 		}.Encode()
 
 		_, err := httpRequestHelper(

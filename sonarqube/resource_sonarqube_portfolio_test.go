@@ -82,7 +82,6 @@ func testAccSonarqubePortfolioSettingConfig(rnd string, key string, name string)
 		  key         = "%[2]s"
 		  name        = "%[3]s"
 		  description = "%[3]s"
-		  visibility  = "public"
 
 		  setting {
 			key   = "sonar.demo"
@@ -97,7 +96,6 @@ func testAccSonarqubePortfolioSettingMultiple(rnd string, key string, name strin
 		  key         = "%[2]s"
 		  name        = "%[3]s"
 		  description = "%[3]s"
-		  visibility  = "public"
 
 		  setting {
 			key   = "sonar.demo"
@@ -467,7 +465,6 @@ func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_portfolio." + rnd
 	expectedConditions := 3
-
 	expectedFieldValues := map[string]string{"ruleKey": "foo", "resourceKey": "bar"}
 
 	resource.Test(t, resource.TestCase{

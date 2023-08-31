@@ -370,15 +370,10 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 
 	// Get settings
 	var projectSettings []Setting
-	if settings, ok := d.GetOk("setting"); ok {
-		var keys []string
-		for _, v := range settings.([]interface{}) {
-			s := v.(map[string]interface{})
-			keys = append(keys, fmt.Sprint(s["key"].(string)))
-		}
-		projectSettings, err = getComponentSettings(d.Id(), keys, m)
+	if _, ok := d.GetOk("setting"); ok {
+		projectSettings, err = getComponentSettings(d.Id(), m)
 		if err != nil {
-			return fmt.Errorf("resourceSonarqubePortfolioRead: Failed to read portfolio settings: %+v", err)
+			return fmt.Errorf("resourceSonarqubePortfolioRead: Failed to read portfolio [%s] settings: %+v", d.Id(), err)
 		}
 
 		if len(projectSettings) > 0 {
@@ -435,7 +430,7 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 	if d.HasChange("setting") {
 		_, err := synchronizeSettings(d, m)
 		if err != nil {
-			return fmt.Errorf("Failed to sync project settings: %+v", err)
+			return fmt.Errorf("failed to sync project settings: %+v", err)
 		}
 	}
 
