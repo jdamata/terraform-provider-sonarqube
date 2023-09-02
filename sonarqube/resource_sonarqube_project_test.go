@@ -58,6 +58,41 @@ func testAccSonarqubeProjectSettingsConfig(rnd string, name string, project stri
 		`, rnd, name, project, visibility)
 }
 
+func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string) string {
+	return fmt.Sprintf(`
+	resource "sonarqube_project" "%[1]s" {
+		name       = "%[2]s"
+		project    = "%[3]s"
+		visibility = "public"
+
+		setting {
+		key   = "sonar.demo"
+		value = "sonarqube@example.org"
+		}
+
+		setting {
+		key    = "sonar.global.exclusions"
+		values = ["foo", "bar/**/*.*"]
+		}
+
+		setting {
+		key          = "sonar.issue.ignore.multicriteria"
+		field_values = [
+			{
+				"ruleKey" : "foo",
+				"resourceKey" : "bar"
+			},
+			{
+				"ruleKey" : "foo2",
+				"resourceKey" : "bar2"
+			}
+		]
+		}
+	
+	}
+	`, rnd, key, name)
+}
+
 func TestAccSonarqubeProjectBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
@@ -278,6 +313,34 @@ func TestAccSonarqubeProjectSettingsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "setting.#", "1"),
 					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
 					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+	expectedConditions := 3
+	expectedFieldValues := map[string]string{"ruleKey": "foo", "resourceKey": "bar"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectSettingsMultiple(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
+					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
+					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.global.exclusions"),
+					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "foo"),
+					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "bar"),
+					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),
+					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", expectedFieldValues),
 				),
 			},
 		},
