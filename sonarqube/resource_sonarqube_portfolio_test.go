@@ -382,25 +382,3 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 		},
 	})
 }
-
-// func TestAccSonarqubePortfolioSettingsUpdate(t *testing.T) {
-// 	rnd := generateRandomResourceName()
-// 	name := "sonarqube_portfolio." + rnd
-
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
-// 		Providers: testAccProviders,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccSonarqubePortfolioSettingConfig(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolio"),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
-// 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubePortfolio"),
-// 					resource.TestCheckResourceAttr(name, "setting.#", "1"),
-// 					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
-// 					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
