@@ -332,7 +332,7 @@ func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
 			{
 				Config: testAccSonarqubeProjectSettingsMultiple(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
 					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
 					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
 					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
