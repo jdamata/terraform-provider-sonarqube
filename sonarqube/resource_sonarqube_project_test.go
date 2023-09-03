@@ -58,7 +58,9 @@ func testAccSonarqubeProjectSettingsConfig(rnd string, name string, project stri
 		`, rnd, name, project, visibility)
 }
 
-func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string) string {
+func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string, values []string, fields map[string]string) string {
+	formattedValues := generateHCLList(values)
+	formattedFields := generateHCLMap(fields)
 	return fmt.Sprintf(`
 	resource "sonarqube_project" "%[1]s" {
 		name       = "%[2]s"
@@ -66,31 +68,22 @@ func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string
 		visibility = "public"
 
 		setting {
-		key   = "sonar.demo"
-		value = "sonarqube@example.org"
+			key   = "sonar.demo"
+			value = "sonarqube@example.org"
 		}
 
 		setting {
-		key    = "sonar.global.exclusions"
-		values = ["foo", "bar/**/*.*"]
+			key    = "sonar.global.exclusions"
+			values = %[4]s
 		}
 
 		setting {
-		key          = "sonar.issue.ignore.multicriteria"
-		field_values = [
-			{
-				"ruleKey" : "foo",
-				"resourceKey" : "bar"
-			},
-			{
-				"ruleKey" : "foo2",
-				"resourceKey" : "bar2"
-			}
-		]
+			key          = "sonar.issue.ignore.multicriteria"
+			field_values = [%[5]s]
 		}
 	
 	}
-	`, rnd, key, name)
+	`, rnd, key, name, formattedValues, formattedFields)
 }
 
 func TestAccSonarqubeProjectBasic(t *testing.T) {
@@ -323,14 +316,15 @@ func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
 	expectedConditions := 3
-	expectedFieldValues := map[string]string{"ruleKey": "foo", "resourceKey": "bar"}
+	values := []string{"foo", "bar"}
+	fieldValues := map[string]string{"ruleKey": "foo", "resourceKey": "bar"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeProjectSettingsMultiple(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
+				Config: testAccSonarqubeProjectSettingsMultiple(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", values, fieldValues),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
 					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
@@ -340,7 +334,7 @@ func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "foo"),
 					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "bar"),
 					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),
-					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", expectedFieldValues),
+					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", fieldValues),
 				),
 			},
 		},
