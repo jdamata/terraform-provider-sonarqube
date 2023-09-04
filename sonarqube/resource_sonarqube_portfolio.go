@@ -109,7 +109,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 
 func checkPortfolioSupport(conf *ProviderConfiguration) error {
 	if strings.ToLower(conf.sonarQubeEdition) != "enterprise" {
-		return fmt.Errorf("Portfolios are only supported in the Enterprise edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+		return fmt.Errorf("portfolios are only supported in the Enterprise edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
 	}
 	return nil
 }
