@@ -24,6 +24,14 @@ type Portfolio struct {
 	Regexp        string   `json:"regexp"`
 }
 
+const (
+	NONE = "NONE"
+	MANUAL = "MANUAL"
+	TAGS = "TAGS"
+	REGEXP = "REGEXP"
+	REST = "REST"
+)
+
 // Returns the resource represented by this file.
 func resourceSonarqubePortfolio() *schema.Resource {
 	return &schema.Resource{
@@ -66,9 +74,9 @@ func resourceSonarqubePortfolio() *schema.Resource {
 			"selection_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "NONE",
+				Default:      NONE,
 				ForceNew:     false,
-				ValidateFunc: validation.StringInSlice([]string{"NONE", "MANUAL", "TAGS", "REGEXP", "REST"}, false),
+				ValidateFunc: validation.StringInSlice([]string{NONE, MANUAL, TAGS, REGEXP, REST}, false),
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:     schema.TypeString,
@@ -109,10 +117,11 @@ func checkPortfolioSupport(conf *ProviderConfiguration) error {
 // Validate the regexp and tag fields if the corresponding selection_mode is chosen
 func validatePortfolioResource(d *schema.ResourceData) error {
 	switch selectionMode := d.Get("selection_mode"); selectionMode {
-	case "NONE", "MANUAL", "REST":
+	// TODO: Validate MANUAL properly
+	case NONE, MANUAL, REST:
 		return nil
 
-	case "TAGS":
+	case TAGS:
 		tags := d.Get("tags").([]interface{})
 		if len(tags) == 0 {
 			return fmt.Errorf("validatePortfolioResource: When selection_mode is set to TAGS, you need atleast 1 tag, got: %+v", d.Get("tags"))
@@ -126,7 +135,7 @@ func validatePortfolioResource(d *schema.ResourceData) error {
 		}
 		return nil
 
-	case "REGEXP":
+	case REGEXP:
 		regexp := d.Get("regexp").(string)
 		if len(regexp) == 0 {
 			return fmt.Errorf("validatePortfolioResource: When selection_mode is set to REGEXP, regexp must be set, got: \"%s\"", regexp)
@@ -141,19 +150,19 @@ func validatePortfolioResource(d *schema.ResourceData) error {
 func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeURL url.URL) error {
 	var endpoint string
 	switch selectionMode := d.Get("selection_mode"); selectionMode {
-	case "NONE":
+	case NONE:
 		endpoint = "/api/views/set_none_mode"
 		sonarQubeURL.RawQuery = url.Values{
 			"portfolio": []string{d.Get("key").(string)},
 		}.Encode()
 
-	case "MANUAL":
+	case MANUAL:
 		endpoint = "/api/views/set_manual_mode"
 		sonarQubeURL.RawQuery = url.Values{
 			"portfolio": []string{d.Get("key").(string)},
 		}.Encode()
 
-	case "TAGS":
+	case TAGS:
 		endpoint = "/api/views/set_tags_mode"
 
 		var tags []string
@@ -175,7 +184,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 
 		sonarQubeURL.RawQuery = urlParameters.Encode()
 
-	case "REGEXP":
+	case REGEXP:
 		endpoint = "/api/views/set_regexp_mode"
 
 		urlParameters := url.Values{
@@ -191,7 +200,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 
 		sonarQubeURL.RawQuery = urlParameters.Encode()
 
-	case "REST":
+	case REST:
 		endpoint = "/api/views/set_remaining_projects_mode"
 
 		urlParameters := url.Values{
