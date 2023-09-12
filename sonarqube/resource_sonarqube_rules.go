@@ -154,15 +154,15 @@ func resourceSonarqubeRuleCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/rules/create"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"customKey":            []string{d.Get("custom_key").(string)},
-		"markdownDescription":  []string{d.Get("markdown_description").(string)},
-		"name":                 []string{d.Get("name").(string)},
-		"params":               []string{d.Get("params").(string)},
-		"preventReactivation":  []string{d.Get("prevent_reactivation").(string)},
-		"severity":             []string{d.Get("severity").(string)},
-		"status":               []string{d.Get("status").(string)},
-		"templateKey":          []string{d.Get("template_key").(string)},
-		"type":                 []string{d.Get("type").(string)},
+		"customKey":           []string{d.Get("custom_key").(string)},
+		"markdownDescription": []string{d.Get("markdown_description").(string)},
+		"name":                []string{d.Get("name").(string)},
+		"params":              []string{d.Get("params").(string)},
+		"preventReactivation": []string{d.Get("prevent_reactivation").(string)},
+		"severity":            []string{d.Get("severity").(string)},
+		"status":              []string{d.Get("status").(string)},
+		"templateKey":         []string{d.Get("template_key").(string)},
+		"type":                []string{d.Get("type").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
