@@ -112,6 +112,7 @@ func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", name, project),
 				ImportStateVerify: true,
 				// Version 10.1 of sonarqube does not return the secret in the api response anymore. Field 'secret' replaced by flag 'hasSecret' in response
 				ImportStateVerifyIgnore: []string{"secret"},
