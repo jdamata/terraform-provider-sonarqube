@@ -111,7 +111,7 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 
 	if project, ok := d.GetOk("project"); ok {
 		rawQuery := url.Values{
-			"project": []string{project.(string)},
+			"project": []string{string(project.(string))},
 		}
 		sonarQubeURL.RawQuery = rawQuery.Encode()
 	}
