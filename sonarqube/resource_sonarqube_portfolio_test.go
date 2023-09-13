@@ -92,6 +92,7 @@ func TestAccSonarqubePortfolioBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "qualifier", "VW"), // Qualifier for Portfolios seems to always be "VW" (views)
 					resource.TestCheckResourceAttr(name, "description", "testAccSonarqubePortfolioDescription"),
 					resource.TestCheckResourceAttr(name, "visibility", "public"),
+					resource.TestCheckResourceAttr(name, "setting.#", "0"),
 				),
 			},
 			{

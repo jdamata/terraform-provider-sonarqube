@@ -25,7 +25,6 @@ func testAccSonarqubeSettingBasicConfig(rnd string, key string, value string) st
 			value = "%[3]s"
 		}`, rnd, key, value)
 }
-
 func testAccSonarqubeSettingConfigMultipleValues(rnd string, key string, values []string) string {
 	formattedValues := generateHCLList(values)
 	return fmt.Sprintf(`
@@ -42,6 +41,7 @@ func testAccSonarqubeSettingConfigMultipleFields(rnd string, key string, fields 
 			field_values = [%[3]s]
 		}`, rnd, key, formattedFields)
 }
+
 func TestAccSonarqubeSettingBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_setting." + rnd
