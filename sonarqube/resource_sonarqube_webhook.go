@@ -135,6 +135,7 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	for _, webhook := range webhookResponse.Webhooks {
+		log.Printf("[DEBUG][resourceSonarqubeWebhookRead] webhook.Key: '%s' vs %s ", webhook.Key, d.Id())
 		if webhook.Key == d.Id() {
 			d.Set("name", webhook.Name)
 			d.Set("url", webhook.Url)
