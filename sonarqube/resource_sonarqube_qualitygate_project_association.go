@@ -12,15 +12,11 @@ import (
 
 // GetQualityGateAssociation for unmarshalling response body from getting quality gate association
 type GetQualityGateAssociation struct {
-	Paging  Paging                              `json:"paging"`
-	Results []GetQualityGateAssociationProjects `json:"results"`
-}
-
-// GetQualityGateAssociationProjects used in GetQualityGateAssociation
-type GetQualityGateAssociationProjects struct {
-	Name     string `json:"name"`
-	Key      string `json:"key"`
-	Selected bool   `json:"selected"`
+	QualityGate struct {
+		Id      string `json:"id"`
+		Name    string `json:"name"`
+		Default bool   `json:"default"`
+	} `json:"qualityGate"`
 }
 
 // Returns the resource represented by this file.
@@ -84,10 +80,10 @@ func resourceSonarqubeQualityGateProjectAssociationCreate(d *schema.ResourceData
 func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, m interface{}) error {
 	idSlice := strings.Split(d.Id(), "/")
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/search"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/get_by_project"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"gateName": []string{idSlice[0]},
+		"project": []string{idSlice[1]},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -109,15 +105,9 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 		return fmt.Errorf("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct: %+v", err)
 	}
 
-	for _, value := range qualityGateAssociationReadResponse.Results {
-		if idSlice[1] == value.Key {
-			d.Set("gatename", idSlice[0])
-			d.Set("projectkey", value.Key)
-			return nil
-		}
-	}
-
-	return fmt.Errorf("resourceSonarqubeQualityGateProjectAssociationRead: Failed to find project association: %+v", d.Id())
+	d.Set("projectkey", idSlice[1])
+	d.Set("gatename", qualityGateAssociationReadResponse.QualityGate.Name)
+	return nil
 }
 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
