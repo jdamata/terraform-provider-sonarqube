@@ -76,8 +76,8 @@ The following attributes are exported:
 
 ## Import
 
-Quality Gates can be imported using their numeric value
+Quality Gates can be imported using its name
 
 ```terraform
-terraform import sonarqube_qualitygate.main 11
+terraform import sonarqube_qualitygate.main my-cool-gate
 ```
