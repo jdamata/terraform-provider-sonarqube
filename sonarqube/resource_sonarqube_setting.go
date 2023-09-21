@@ -381,7 +381,7 @@ func setComponentSetting(component string, setting map[string]interface{}, m int
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"setComponentSettings",
 	)
 	if err != nil {
@@ -407,7 +407,7 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 				break
 			}
 		}
-		if !found && apiSetting.Inherited == false {
+		if !found && !apiSetting.Inherited {
 			toDelete = append(toDelete, fmt.Sprint(apiSetting.Key))
 		}
 	}
