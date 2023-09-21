@@ -220,7 +220,7 @@ func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string
 }
 
 /* This content is used for settings parameter in multiple resources ('project', 'portfolio')  */
-func getComponentSettings(component string, m interface{}) ([]Setting, error) {
+func getComponentSettings(component string, m interface{}, filterInherited bool) ([]Setting, error) {
 	if component == "" {
 		return []Setting{}, nil
 	}
@@ -247,9 +247,9 @@ func getComponentSettings(component string, m interface{}) ([]Setting, error) {
 	}
 
 	settingsList := make([]Setting, 0)
-	// Filter settings (removing inherited)
+	// Filter settings by parameter inherited
 	for _, e := range settingReadResponse.Setting {
-		if e.Inherited == false {
+		if filterInherited == false || (filterInherited == true && e.Inherited == false) {
 			settingsList = append(settingsList, e)
 		}
 	}
@@ -267,7 +267,7 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	componentId := d.Id()
 	componentSettings := d.Get("setting").([]interface{})
 
-	apiComponentSettings, _ := getComponentSettings(componentId, m)
+	apiComponentSettings, _ := getComponentSettings(componentId, m, false)
 
 	// Make sure the order is always the same for when we are comparing lists of conditions
 	sort.Slice(componentSettings, func(i, j int) bool {
@@ -280,14 +280,23 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 		key := setting["key"].(string)
 
 		// Update the condition if it already exists
+		exists := false
 		for _, apiSetting := range apiComponentSettings {
 			if key == apiSetting.Key {
+				exists = true
 				if checkSettingDiff(setting, apiSetting) {
 					err := setComponentSetting(componentId, setting, m, &changed)
 					if err != nil {
-						return false, fmt.Errorf("addOrUpdateCondition: Failed to update setting '%s': %+v", key, err)
+						return false, fmt.Errorf("synchronizeSettings: Failed to update setting '%s': %+v", key, err)
 					}
 				}
+			}
+		}
+		// Add the condition because it does not already exist
+		if !exists {
+			err := setComponentSetting(componentId, setting, m, &changed)
+			if err != nil {
+				return false, fmt.Errorf("synchronizeSettings: Failed to create setting '%s': %+v", key, err)
 			}
 		}
 	}
