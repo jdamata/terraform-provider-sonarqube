@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -249,7 +250,7 @@ func getComponentSettings(component string, m interface{}, filterInherited bool)
 	settingsList := make([]Setting, 0)
 	// Filter settings by parameter inherited
 	for _, e := range settingReadResponse.Setting {
-		if filterInherited == false || (filterInherited == true && e.Inherited == false) {
+		if !filterInherited || (filterInherited && e.Inherited) {
 			settingsList = append(settingsList, e)
 		}
 	}
@@ -319,8 +320,8 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 		return a["value"].(string) != b.Value
 	} else if a["values"] != nil {
 		// array of strings
-		values := a["field_values"].([]string)
-		if len(values) != len(b.FieldValues) {
+		values := a["values"].([]string)
+		if len(values) != len(b.Values) {
 			return false
 		}
 		for i := range values {
@@ -351,6 +352,9 @@ func getComponentSettingUrlEncode(setting map[string]interface{}) url.Values {
 	raw := url.Values{
 		"key": []string{setting["key"].(string)},
 	}
+	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.value '%s'", setting["value"])
+	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.values '%s'", setting["values"])
+	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.field_values '%s'", setting["field_values"])
 	if setting["value"] != nil {
 		raw.Add("value", setting["value"].(string))
 	} else if setting["values"] != nil {

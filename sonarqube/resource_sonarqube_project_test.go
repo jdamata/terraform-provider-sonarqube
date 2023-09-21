@@ -312,7 +312,7 @@ func TestAccSonarqubeProjectSettingsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccSonarqubePortfolioSettingsTypes(t *testing.T) {
+func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
 	expectedConditions := 3
