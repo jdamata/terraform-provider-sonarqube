@@ -224,7 +224,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	// Get settings
 	var projectSettings []Setting
 	if _, ok := d.GetOk("setting"); ok {
-		projectSettings, err = getComponentSettings(d.Id(), m)
+		projectSettings, err = getComponentSettings(d.Id(), m, true)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
 		}
