@@ -407,7 +407,7 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 				break
 			}
 		}
-		if !found {
+		if !found && apiSetting.Inherited == false {
 			toDelete = append(toDelete, fmt.Sprint(apiSetting.Key))
 		}
 	}
