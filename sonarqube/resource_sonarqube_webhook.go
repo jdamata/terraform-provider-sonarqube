@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -134,6 +135,7 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	for _, webhook := range webhookResponse.Webhooks {
+		log.Printf("[DEBUG][resourceSonarqubeWebhookRead] webhook.Key: '%s' vs %s ", webhook.Key, d.Id())
 		if webhook.Key == d.Id() {
 			d.Set("name", webhook.Name)
 			d.Set("url", webhook.Url)
@@ -210,6 +212,20 @@ func resourceSonarqubeWebhookDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceSonarqubeWebhookImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	// import id in format {key}/{project}
+	importIdComponents := strings.SplitN(d.Id(), "/", 2)
+
+	if len(importIdComponents) == 2 {
+		log.Printf("[DEBUG][resourceSonarqubeWebhookImport] Import id: '%+v' is in format {key/project:%s/%s}", d.Id(), importIdComponents[0], importIdComponents[1])
+		d.Set("project", importIdComponents[1])
+	} else if len(importIdComponents) == 1 {
+		log.Printf("[DEBUG][resourceSonarqubeWebhookImport] Import id: '%+v' is in format {key:%s}", d.Id(), importIdComponents[0])
+	} else {
+		return nil, fmt.Errorf("resourceSonarqubeWebhookImport: Import id: '%+v' is not in format {key}/{project} or {key}", d.Id())
+	}
+
+	// set Id to key for Read
+	d.SetId(importIdComponents[0])
 	if err := resourceSonarqubeWebhookRead(d, m); err != nil {
 		return nil, err
 	}

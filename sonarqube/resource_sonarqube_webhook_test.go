@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSonarqubeWebhookBasic(t *testing.T) {
@@ -109,8 +109,25 @@ func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project", project),
 				),
 			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc:       testAccSonarqubeWebhookProjectImportID(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
 		},
 	})
+}
+
+func testAccSonarqubeWebhookProjectImportID(resourceNode string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceNode]
+		if !ok {
+			return "", fmt.Errorf("Resource node not found: %s", resourceNode)
+		}
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["id"], rs.Primary.Attributes["project"]), nil
+	}
 }
 
 func testAccSonarqubeWebhookProjectBasicConfig(rnd string, name string, url string, project string) string {
