@@ -215,7 +215,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
-		sonarQubeURL.String(),
+		sonarQubeURL,
 		http.StatusNoContent,
 		"resourceSonarqubePortfolioCreate",
 	)
@@ -250,7 +250,7 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
-		sonarQubeURL.String(),
+		sonarQubeURL,
 		http.StatusOK,
 		"resourceSonarqubePortfolioCreate",
 	)
@@ -290,7 +290,7 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"GET",
-		sonarQubeURL.String(),
+		sonarQubeURL,
 		http.StatusOK,
 		"resourceSonarqubePortfolioRead",
 	)
@@ -350,7 +350,7 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 		resp, err := httpRequestHelper(
 			m.(*ProviderConfiguration).httpClient,
 			"POST",
-			sonarQubeURL.String(),
+			sonarQubeURL,
 			http.StatusOK,
 			"resourceSonarqubePortfolioUpdate",
 		)
@@ -384,7 +384,7 @@ func resourceSonarqubePortfolioDelete(d *schema.ResourceData, m interface{}) err
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
-		sonarQubeURL.String(),
+		sonarQubeURL,
 		http.StatusNoContent,
 		"resourceSonarqubePortfolioDelete",
 	)

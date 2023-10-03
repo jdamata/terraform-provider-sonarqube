@@ -2,8 +2,11 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
 )
@@ -26,17 +29,17 @@ type Paging struct {
 }
 
 // helper function to make api request to sonarqube
-func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) (http.Response, error) {
+func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL url.URL, expectedResponseCode int, errormsg string) (http.Response, error) {
 	// Prepare request
-	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
+	req, err := retryablehttp.NewRequest(method, sonarqubeURL.String(), http.NoBody)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to prepare http request: %v. Request: %v", err, req)
+		return http.Response{}, fmt.Errorf("failed to prepare http request: %v", censorError(err, sonarqubeURL.User.String()))
 	}
 
 	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v", err, req)
+		return http.Response{}, fmt.Errorf("failed to execute http request: %v", censorError(err, sonarqubeURL.User.String()))
 	}
 
 	// Check response code
@@ -56,4 +59,26 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 	}
 
 	return *resp, nil
+}
+
+// https://github.com/jdamata/terraform-provider-sonarqube/issues/201
+// go-retryablehttp error contains the token/user:pass in plaintext.
+// We want to censor that secret before logging the error
+func censorError(err error, secret string) error {
+	// convert http api text response into a []string slice
+	strSlice := strings.Split(err.Error(), ":")
+
+	// check each words in strSlice against token
+	var newSlice []string
+	for position, word := range strSlice {
+		if strings.EqualFold(strings.ToLower(fmt.Sprintf("//%v", word)), secret) {
+			// replace token with equal number of #
+			replacement := strings.Repeat("#", len(word))
+			strSlice[position] = replacement
+			newSlice = append(strSlice[:position], strSlice[position:]...)
+		}
+	}
+
+	// convert []string slice back to string
+	return errors.New(strings.Join(newSlice, ":"))
 }
