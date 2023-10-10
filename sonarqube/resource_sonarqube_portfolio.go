@@ -13,23 +13,30 @@ import (
 
 // Portfolio used in Portfolio
 type Portfolio struct {
-	Key           string   `json:"key"`
-	Name          string   `json:"name"`
-	Desc          string   `json:"desc"`
-	Qualifier     string   `json:"qualifier"`
-	Visibility    string   `json:"visibility"`
-	SelectionMode string   `json:"selectionMode"`
-	Branch        string   `json:"branch"`
-	Tags          []string `json:"tags"`
-	Regexp        string   `json:"regexp"`
+	Key              string             `json:"key"`
+	Name             string             `json:"name"`
+	Desc             string             `json:"desc"`
+	Qualifier        string             `json:"qualifier"`
+	Visibility       string             `json:"visibility"`
+	SelectionMode    string             `json:"selectionMode"`
+	Branch           string             `json:"branch"`
+	Tags             []string           `json:"tags"`
+	Regexp           string             `json:"regexp"`
+	SelectedProjects []PortfolioProject `json:"selectedProjects,omitempty"`
+}
+
+// Portfolio project
+type PortfolioProject struct {
+	ProjectKey       string   `json:"projectKey"`
+	SelectedBranches []string `json:"selectedBranches,omitempty"`
 }
 
 const (
-	NONE = "NONE"
+	NONE   = "NONE"
 	MANUAL = "MANUAL"
-	TAGS = "TAGS"
+	TAGS   = "TAGS"
 	REGEXP = "REGEXP"
-	REST = "REST"
+	REST   = "REST"
 )
 
 // Returns the resource represented by this file.
@@ -88,7 +95,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      false,
-				ConflictsWith: []string{"regexp"},
+				ConflictsWith: []string{"regexp", "selected_projects"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -97,12 +104,37 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      false,
-				ConflictsWith: []string{"tags"},
+				ConflictsWith: []string{"selected_projects", "tags"},
 				ValidateFunc:  validation.StringIsValidRegExp,
 			},
-			// TODO: MANUAL
-			// "selectedProjects": [],
-			// "projects": [],
+			"selected_projects": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:      false,
+				ConflictsWith: []string{"tags", "regexp"},
+				Description: "A list of projects to add to the portfolio.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"project_key": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The project key of the project to add to the portfolio",
+						},
+						"selected_branches": {
+							Type:        schema.TypeList,
+							Required:    false,
+							Description: "A list of branches for the project to add to the portfolio",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"projects": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
