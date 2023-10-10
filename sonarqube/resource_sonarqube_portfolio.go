@@ -122,7 +122,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 						},
 						"selected_branches": {
 							Type:        schema.TypeList,
-							Required:    false,
+							Optional:    true,
 							Description: "A list of branches for the project to add to the portfolio",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
