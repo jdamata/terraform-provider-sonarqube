@@ -282,6 +282,7 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 		}
 
 		// If we did make any changes then re-read the portfolio from the API.
+		// TODO: Remove changes bs ?
 		if changes {
 			portfolioReadResponse, err = readPortfolioFromApi(d, m)
 			if err != nil {
@@ -386,7 +387,7 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 		defer resp.Body.Close()
 	}
 
-	if d.HasChanges("selection_mode", "branch", "tags", "regexp") {
+	if d.HasChanges("selection_mode", "branch", "tags", "regexp", "selected_projects") {
 		err := portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
@@ -508,12 +509,12 @@ func synchronizeSelectedProjects(d *schema.ResourceData, m interface{}, apiPortf
 		}
 	}
 
-	// TODO: Delete incorrect projects
 	// Determine if any conditions have been removed and delete them
-	// err := removeDeletedConditions(apiPortfolioSelectedProjects, portfolioSelectedProjects, m, &changed)
-	// if err != nil {
-	// 	return changed, err
-	// }
+	portfolioKey := d.Get("key").(string)
+	err := removeDeletedSelectedProject(portfolioKey, apiPortfolioSelectedProjects, portfolioSelectedProjects, m, &changed)
+	if err != nil {
+		return changed, err
+	}
 
 	return changed, nil
 }
@@ -564,7 +565,7 @@ func addSelectedProject(portfolioKey, projectKey string, selectedBranches []stri
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusNoContent, // For some reason this endpoint returns 204 on success... 
+		http.StatusNoContent, // For some reason this endpoint returns 204 on success...
 		"addSelectedProject",
 	)
 	if err != nil {
@@ -575,6 +576,51 @@ func addSelectedProject(portfolioKey, projectKey string, selectedBranches []stri
 	// TODO: Add branches
 	// for _, branch := range selectedBranches {
 	// }
+
+	return nil
+}
+
+func removeDeletedSelectedProject(portfolioKey string, apiPortfolioSelectedProjects *[]PortfolioProject, portfolioSelectedProjects []interface{}, m interface{}, changed *bool) error {
+	for _, apiProject := range *apiPortfolioSelectedProjects {
+		found := false
+
+		for _, project := range portfolioSelectedProjects {
+			if project.(map[string]interface{})["project_key"] == apiProject.ProjectKey {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			err := deleteSelectedProject(portfolioKey, apiProject.ProjectKey, m)
+			if err != nil {
+				return fmt.Errorf("removeDeletedSelectedProject: Failed to delete project from portfolio '%s': %+v", apiProject.ProjectKey, err)
+			}
+			*changed = true
+		}
+	}
+	return nil
+}
+
+func deleteSelectedProject(portfolioKey, projectKey string, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/remove_project"
+	sonarQubeURL.RawQuery = url.Values{
+		"key":     []string{portfolioKey},
+		"project": []string{projectKey},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"deleteCondition",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
 	return nil
 }
