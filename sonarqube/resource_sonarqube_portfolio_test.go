@@ -394,7 +394,7 @@ func testAccSonarqubePortfolioConfigManualProject(rnd, portfolioName, projectNam
 		  name    		= "%[2]s"
 		  selection_mode = "MANUAL"
 		  selected_projects {
-			project_key = sonarqube_project.%[3]s.project
+			project_key = sonarqube_project.%[1]s.project
 			selected_branches = ["main"]
 		  }
 		}
