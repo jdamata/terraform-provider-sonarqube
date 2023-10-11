@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/exp/slices"
 )
 
 // Portfolio used in Portfolio
@@ -530,20 +531,22 @@ func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfo
 		}
 	}
 
-	// Update the project if it already exists, and the selected branches has changed
+	// Update the project if it already exists and the selected branches has changed, otherwise do nothing
 	for _, apiProject := range *apiPortfolioSelectedProjects {
-		if projectKey == apiProject.ProjectKey && !stringSlicesEqual(selectedBranches, apiProject.SelectedBranches, true) {
-			// TODO: Handle branch level updates
-			// err := addSelectedProject(portfolioKey, projectKey, selectedBranches, m)
-			// if err != nil {
-			// 	return "", fmt.Errorf("addOrUpdateSelectedProject: Failed to update project '%s': %+v", projectKey, err)
-			// }
-			// *changed = true
+		if projectKey == apiProject.ProjectKey  {
+			if !stringSlicesEqual(selectedBranches, apiProject.SelectedBranches, true) {
+				err := updateSelectedProject(portfolioKey, projectKey, selectedBranches, apiProject.SelectedBranches, m)
+				if err != nil {
+					return fmt.Errorf("addOrUpdateSelectedProject: Failed to update project '%s': %+v", projectKey, err)
+				}
+				*changed = true
+				return nil
+			}
 			return nil
 		}
 	}
 
-	// Add the condition because it does not already exist
+	// Add the project because it does not already exist
 	err := addSelectedProject(portfolioKey, projectKey, selectedBranches, m)
 	if err != nil {
 		return fmt.Errorf("addOrUpdateCondition: Failed to add project '%s': %+v", projectKey, err)
@@ -573,9 +576,77 @@ func addSelectedProject(portfolioKey, projectKey string, selectedBranches []stri
 	}
 	defer resp.Body.Close()
 
-	// TODO: Add branches
-	// for _, branch := range selectedBranches {
-	// }
+	for _, branch := range selectedBranches {
+		addSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+	}
+
+	return nil
+}
+
+func updateSelectedProject(portfolioKey, projectKey string, selectedBranches, apiSelectedBranches []string, m interface{}) error {
+	// For each branch in the terraform schema, make sure they are also in SonarQube
+	for _, branch := range selectedBranches {
+		if !slices.Contains(apiSelectedBranches, branch) {
+			addSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+		}
+	}
+
+	// For each branch in SonarQube, ensure it exists in the terraform schema, otherwise remove it
+	for _, branch := range apiSelectedBranches {
+		if !slices.Contains(selectedBranches, branch) {
+			deleteSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+		}
+	}
+
+	return nil
+}
+
+func addSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) (error) {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/add_project_branch"
+
+	sonarQubeURL.RawQuery = url.Values{
+		"key":     []string{portfolioKey},
+		"project": []string{projectKey},
+		"branch": []string{branch},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent, // For some reason this endpoint returns 204 on success...
+		"addSelectedProject",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+func deleteSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) (error) {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/remove_project_branch"
+
+	sonarQubeURL.RawQuery = url.Values{
+		"key":     []string{portfolioKey},
+		"project": []string{projectKey},
+		"branch": []string{branch},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent, // For some reason this endpoint returns 204 on success...
+		"addSelectedProject",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
 	return nil
 }
@@ -624,33 +695,6 @@ func deleteSelectedProject(portfolioKey, projectKey string, m interface{}) error
 
 	return nil
 }
-
-// TODO: branches
-// func updateSlectedProjectBranches(portfolioKey, projectKey, branch string, m interface{}) error {
-
-// 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-// 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/add_project_branch"
-
-// 	sonarQubeURL.RawQuery = url.Values{
-// 		:     []string{portfolioKey},
-// 		"project": []string{projectKey},
-// 		"branch": []string{projectKey},
-// 	}.Encode()
-
-// 	resp, err := httpRequestHelper(
-// 		m.(*ProviderConfiguration).httpClient,
-// 		"POST",
-// 		sonarQubeURL.String(),
-// 		http.StatusOK,
-// 		"updateSlectedProject",
-// 	)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer resp.Body.Close()
-
-// 	return nil
-// }
 
 func flattenReadPortfolioSelectedProjectsResponse(input *[]PortfolioProject) []interface{} {
 	if input == nil || len(*input) == 0 {
