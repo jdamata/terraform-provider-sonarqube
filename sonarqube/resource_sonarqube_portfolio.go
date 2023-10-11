@@ -16,7 +16,7 @@ import (
 
 // Portfolio used in Portfolio
 type Portfolio struct {
-	Key              string             `json:`
+	Key              string             `json:"key"`
 	Name             string             `json:"name"`
 	Desc             string             `json:"desc,omitempty"`
 	Qualifier        string             `json:"qualifier"`
