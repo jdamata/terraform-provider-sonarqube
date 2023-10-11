@@ -382,3 +382,65 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 		},
 	})
 }
+
+func testAccSonarqubePortfolioConfigManualProject(rnd, portfolioName, projectName string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+		  name       = "%[3]s"
+		  project    = "%[3]s"
+		}
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       	= "%[2]s"
+		  name    		= "%[2]s"
+		  selection_mode = "MANUAL"
+		  selected_projects {
+			project_key = sonarqube_project.%[3]s.project
+			selected_branches = ["main"]
+		  }
+		}
+		`, rnd, portfolioName, projectName)
+}
+
+func TestAccSonarqubePortfolioManualProjects(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioConfigManualProject(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubeProjectKey"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+					resource.TestCheckResourceAttr(name, "selection_mode", "MANUAL"),
+					resource.TestCheckResourceAttrSet(name, "selected_projects.0"),
+					resource.TestCheckResourceAttrSet(name, "selected_projects.0.selected_branches"),
+				),
+			},
+			// {
+			// 	Config: testAccSonarqubePortfolioConfigSelectionModeTags(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "TAGS", tags),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+			// 		resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
+			// 		resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+			// 		resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+			// 		resource.TestCheckNoResourceAttr(name, "branch"),
+			// 	),
+			// },
+			// {
+			// 	ResourceName:      name,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
+			// 		resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
+			// 		resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
+			// 		resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
+			// 		resource.TestCheckNoResourceAttr(name, "branch"),
+			// 	),
+			// },
+		},
+	})
+}
