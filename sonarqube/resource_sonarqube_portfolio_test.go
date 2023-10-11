@@ -392,6 +392,7 @@ func testAccSonarqubePortfolioConfigManualProject(rnd, portfolioName, projectNam
 		resource "sonarqube_portfolio" "%[1]s" {
 		  key       	= "%[2]s"
 		  name    		= "%[2]s"
+    		  description = "test"
 		  selection_mode = "MANUAL"
 		  selected_projects {
 			project_key = sonarqube_project.%[1]s.project
