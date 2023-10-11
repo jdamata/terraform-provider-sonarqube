@@ -3,8 +3,10 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,15 +15,15 @@ import (
 
 // Portfolio used in Portfolio
 type Portfolio struct {
-	Key              string             `json:"key"`
+	Key              string             `json:`
 	Name             string             `json:"name"`
-	Desc             string             `json:"desc"`
+	Desc             string             `json:"desc,omitempty"`
 	Qualifier        string             `json:"qualifier"`
 	Visibility       string             `json:"visibility"`
 	SelectionMode    string             `json:"selectionMode"`
-	Branch           string             `json:"branch"`
-	Tags             []string           `json:"tags"`
-	Regexp           string             `json:"regexp"`
+	Branch           string             `json:"branch,omitempty"`
+	Tags             []string           `json:"tags,omitempty"`
+	Regexp           string             `json:"regexp,omitempty"`
 	SelectedProjects []PortfolioProject `json:"selectedProjects,omitempty"`
 }
 
@@ -108,11 +110,11 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				ValidateFunc:  validation.StringIsValidRegExp,
 			},
 			"selected_projects": {
-				Type:        schema.TypeList,
-				Optional:    true,
+				Type:          schema.TypeList,
+				Optional:      true,
 				ForceNew:      false,
 				ConflictsWith: []string{"tags", "regexp"},
-				Description: "A list of projects to add to the portfolio.",
+				Description:   "A list of projects to add to the portfolio.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"project_key": {
@@ -265,6 +267,29 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 	}
 	defer resp.Body.Close()
 
+	// The rest of the options populate the portfolio in the "setMode" call. MANUAL portfolios needs to be manually populated afterwards
+	if selectionMode := d.Get("selection_mode").(string); selectionMode == MANUAL {
+		log.Printf("[DEBUG] Updating selectedProjects for portfolio: %s", d.Get("key").(string))
+
+		portfolioReadResponse, err := readPortfolioFromApi(d, m)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to read the portfolio from the API: %+v", err)
+		}
+
+		changes, err := synchronizeSelectedProjects(d, m, &portfolioReadResponse.SelectedProjects)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to synchronise portfolio projects: %+v", err)
+		}
+
+		// If we did make any changes then re-read the portfolio from the API.
+		if changes {
+			portfolioReadResponse, err = readPortfolioFromApi(d, m)
+			if err != nil {
+				return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to read the portfolio after projects were updated: %+v", err)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -300,11 +325,6 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 	}
 	defer resp.Body.Close()
 
-	err = portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
-	if err != nil {
-		return err
-	}
-
 	// Decode response into struct
 	portfolioResponse := Portfolio{}
 	err = json.NewDecoder(resp.Body).Decode(&portfolioResponse)
@@ -314,6 +334,11 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 
 	d.SetId(portfolioResponse.Key)
 
+	err = portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
+	if err != nil {
+		return err
+	}
+
 	return resourceSonarqubePortfolioRead(d, m)
 }
 
@@ -321,51 +346,11 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	if err := checkPortfolioSupport(m.(*ProviderConfiguration)); err != nil {
 		return err
 	}
-
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/show"
-	sonarQubeURL.RawQuery = url.Values{
-		"key": []string{d.Id()},
-	}.Encode()
-
-	resp, err := httpRequestHelper(
-		m.(*ProviderConfiguration).httpClient,
-		"GET",
-		sonarQubeURL.String(),
-		http.StatusOK,
-		"resourceSonarqubePortfolioRead",
-	)
+	portfolioReadResponse, err := readPortfolioFromApi(d, m)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	// Decode response into struct
-	portfolioReadResponse := Portfolio{}
-	err = json.NewDecoder(resp.Body).Decode(&portfolioReadResponse)
-	if err != nil {
-		return fmt.Errorf("resourceSonarqubePortfolioRead: Failed to decode json into struct: %+v", err)
-	}
-
-	d.SetId(portfolioReadResponse.Key)
-	d.Set("key", portfolioReadResponse.Key)
-	d.Set("name", portfolioReadResponse.Name)
-	d.Set("description", portfolioReadResponse.Desc)
-	d.Set("qualifier", portfolioReadResponse.Qualifier)
-	d.Set("visibility", portfolioReadResponse.Visibility)
-	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
-
-	// These fields may or may not be set in the reposnse from SonarQube
-	if len(portfolioReadResponse.Tags) > 0 {
-		d.Set("tags", portfolioReadResponse.Tags)
-	}
-	if len(portfolioReadResponse.Branch) > 0 {
-		d.Set("branch", portfolioReadResponse.Branch)
-	}
-	if len(portfolioReadResponse.Regexp) > 0 {
-		d.Set("regexp", portfolioReadResponse.Regexp)
-	}
-
+	updateResourceDataFromPortfolioReadResponse(d, portfolioReadResponse)
 	return nil
 }
 
@@ -442,4 +427,200 @@ func resourceSonarqubePortfolioImport(d *schema.ResourceData, m interface{}) ([]
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
+}
+
+func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfolioReadResponse *Portfolio) {
+
+	d.SetId(portfolioReadResponse.Key)
+	d.Set("key", portfolioReadResponse.Key)
+	d.Set("name", portfolioReadResponse.Name)
+	d.Set("description", portfolioReadResponse.Desc)
+	d.Set("qualifier", portfolioReadResponse.Qualifier)
+	d.Set("visibility", portfolioReadResponse.Visibility)
+	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
+
+	// These fields may or may not be set in the reposnse from SonarQube
+	if len(portfolioReadResponse.Tags) > 0 {
+		d.Set("tags", portfolioReadResponse.Tags)
+	}
+	if len(portfolioReadResponse.Branch) > 0 {
+		d.Set("branch", portfolioReadResponse.Branch)
+	}
+	if len(portfolioReadResponse.Regexp) > 0 {
+		d.Set("regexp", portfolioReadResponse.Regexp)
+	}
+
+	if len(portfolioReadResponse.SelectedProjects) > 0 {
+		d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects))
+	}
+
+}
+
+func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, error) {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/show"
+
+	sonarQubeURL.RawQuery = url.Values{
+		"key": []string{d.Id()},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"GET",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"readPortfolioFromApi",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("readPortfolioFromApi: Failed to call api/views/show: %+v", err)
+	}
+	defer resp.Body.Close()
+
+	// Decode response into struct
+	portfolioReadResponse := Portfolio{}
+	err = json.NewDecoder(resp.Body).Decode(&portfolioReadResponse)
+	if err != nil {
+		return nil, fmt.Errorf("readPortfolioFromApi: Failed to decode json into struct: %+v", err)
+	}
+
+	// Make sure the order is always the same for when we are comparing lists of conditions
+	sort.Slice(portfolioReadResponse.SelectedProjects, func(i, j int) bool {
+		return portfolioReadResponse.SelectedProjects[i].ProjectKey < portfolioReadResponse.SelectedProjects[j].ProjectKey
+	})
+
+	return &portfolioReadResponse, nil
+}
+
+func synchronizeSelectedProjects(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject) (bool, error) {
+	changed := false
+	portfolioSelectedProjects := d.Get("selected_projects").([]interface{})
+
+	// Make sure the order is always the same for when we are comparing lists of projects
+	sort.Slice(portfolioSelectedProjects, func(i, j int) bool {
+		return portfolioSelectedProjects[i].(map[string]interface{})["project_key"].(string) < portfolioSelectedProjects[j].(map[string]interface{})["project_key"].(string)
+	})
+
+	// Determine which conditions have been added or changed and update those
+	for _, project := range portfolioSelectedProjects {
+		err := addOrUpdateSelectedProject(d, m, apiPortfolioSelectedProjects, project, &changed)
+		if err != nil {
+			return changed, err
+		}
+	}
+
+	// TODO: Delete incorrect projects
+	// Determine if any conditions have been removed and delete them
+	// err := removeDeletedConditions(apiPortfolioSelectedProjects, portfolioSelectedProjects, m, &changed)
+	// if err != nil {
+	// 	return changed, err
+	// }
+
+	return changed, nil
+}
+
+func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject, project interface{}, changed *bool) error {
+	portfolioKey := d.Get("key").(string)
+	projectKey := project.(map[string]interface{})["project_key"].(string)
+
+	selectedBranches := make([]string, 0)
+	for _, v := range project.(map[string]interface{})["selected_branches"].([]interface{}) {
+		if v != nil {
+			selectedBranches = append(selectedBranches, v.(string))
+		}
+	}
+
+	// Update the project if it already exists, and the selected branches has changed
+	for _, apiProject := range *apiPortfolioSelectedProjects {
+		if projectKey == apiProject.ProjectKey && !stringSlicesEqual(selectedBranches, apiProject.SelectedBranches, true) {
+			// TODO: Handle branch level updates
+			// err := addSelectedProject(portfolioKey, projectKey, selectedBranches, m)
+			// if err != nil {
+			// 	return "", fmt.Errorf("addOrUpdateSelectedProject: Failed to update project '%s': %+v", projectKey, err)
+			// }
+			// *changed = true
+			return nil
+		}
+	}
+
+	// Add the condition because it does not already exist
+	err := addSelectedProject(portfolioKey, projectKey, selectedBranches, m)
+	if err != nil {
+		return fmt.Errorf("addOrUpdateCondition: Failed to add project '%s': %+v", projectKey, err)
+	}
+	*changed = true
+	return nil
+}
+
+func addSelectedProject(portfolioKey, projectKey string, selectedBranches []string, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/add_project"
+
+	sonarQubeURL.RawQuery = url.Values{
+		"key":     []string{portfolioKey},
+		"project": []string{projectKey},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent, // For some reason this endpoint returns 204 on success... 
+		"addSelectedProject",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// TODO: Add branches
+	// for _, branch := range selectedBranches {
+	// }
+
+	return nil
+}
+
+// TODO: branches
+// func updateSlectedProjectBranches(portfolioKey, projectKey, branch string, m interface{}) error {
+
+// 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+// 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/add_project_branch"
+
+// 	sonarQubeURL.RawQuery = url.Values{
+// 		:     []string{portfolioKey},
+// 		"project": []string{projectKey},
+// 		"branch": []string{projectKey},
+// 	}.Encode()
+
+// 	resp, err := httpRequestHelper(
+// 		m.(*ProviderConfiguration).httpClient,
+// 		"POST",
+// 		sonarQubeURL.String(),
+// 		http.StatusOK,
+// 		"updateSlectedProject",
+// 	)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer resp.Body.Close()
+
+// 	return nil
+// }
+
+func flattenReadPortfolioSelectedProjectsResponse(input *[]PortfolioProject) []interface{} {
+	if input == nil || len(*input) == 0 {
+		return make([]interface{}, 0)
+	}
+
+	flatSelectedProjects := make([]interface{}, len(*input))
+
+	for i, project := range *input {
+		p := make(map[string]interface{})
+
+		p["project_key"] = project.ProjectKey
+		p["selected_branches"] = project.SelectedBranches
+
+		flatSelectedProjects[i] = p
+	}
+
+	return flatSelectedProjects
 }
