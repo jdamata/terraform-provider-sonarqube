@@ -124,7 +124,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 							Description: "The project key of the project to add to the portfolio",
 						},
 						"selected_branches": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "A list of branches for the project to add to the portfolio",
 							Elem: &schema.Schema{
@@ -525,7 +525,7 @@ func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfo
 	projectKey := project.(map[string]interface{})["project_key"].(string)
 
 	selectedBranches := make([]string, 0)
-	for _, v := range project.(map[string]interface{})["selected_branches"].([]interface{}) {
+	for _, v := range project.(map[string]interface{})["selected_branches"].(*schema.Set).List() {
 		if v != nil {
 			selectedBranches = append(selectedBranches, v.(string))
 		}
