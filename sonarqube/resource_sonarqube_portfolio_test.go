@@ -416,14 +416,14 @@ func TestAccSonarqubePortfolioManualProjectsReplaceProject(t *testing.T) {
 		"before": resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
 			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
-				"project_key": "testAccSonarqubeProjectKey",
+				"project_key": oldProjectKey,
 				"selected_branches.#": "1",
 			}),
 		),
 		"after": resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
 			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
-				"project_key": "testAccSonarqubeProjectKey",
+				"project_key": newProjectKey,
 				"selected_branches.#": "1",
 			}),
 		),
