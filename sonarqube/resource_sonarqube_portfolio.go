@@ -3,7 +3,6 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -270,8 +269,6 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 
 	// The rest of the options populate the portfolio in the "setMode" call. MANUAL portfolios needs to be manually populated afterwards
 	if selectionMode := d.Get("selection_mode").(string); selectionMode == MANUAL {
-		log.Printf("[DEBUG] Updating selectedProjects for portfolio: %s", d.Get("key").(string))
-
 		portfolioReadResponse, err := readPortfolioFromApi(d, m)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to read the portfolio from the API: %+v", err)
