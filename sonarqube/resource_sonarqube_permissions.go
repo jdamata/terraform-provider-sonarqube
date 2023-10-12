@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	permissionsConst "github.com/jdamata/terraform-provider-sonarqube/constants/permissions"
 	"github.com/satori/uuid"
 )
 
@@ -149,6 +151,7 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 
 func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	permissionsFilter := permissionsConst.PERMISSIONS_ORDER_FOR_PROJECT
 
 	// build the base query
 	RawQuery := url.Values{
@@ -176,6 +179,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/template_users"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
+			if !RawQuery.Has("projectKey") {
+				permissionsFilter = permissionsConst.PERMISSIONS_ORDER_GLOBAL
+			}
 			// direct user permission
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/users"
 		}
@@ -205,7 +211,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		for _, value := range users.Users {
 			if strings.EqualFold(value.Login, loginName) {
 				d.Set("login_name", value.Login)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
+				d.Set("permissions", flattenPermissions(&value.Permissions, &permissionsFilter))
 				return nil
 			}
 		}
@@ -220,6 +226,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/template_groups"
 			RawQuery.Add("templateName", templateName.(string))
 		} else {
+			if !RawQuery.Has("projectKey") {
+				permissionsFilter = permissionsConst.PERMISSIONS_ORDER_GLOBAL
+			}
 			// direct group permission
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/groups"
 		}
@@ -249,7 +258,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
+				d.Set("permissions", flattenPermissions(&value.Permissions, &permissionsFilter))
 				return nil
 			}
 		}
@@ -339,14 +348,16 @@ func expandPermissions(d *schema.ResourceData) []string {
 	return expandedPermissions
 }
 
-func flattenPermissions(input *[]string) []interface{} {
+func flattenPermissions(input *[]string, filter *[]string) []interface{} {
 	flatPermissions := make([]interface{}, 0)
 	if input == nil {
 		return flatPermissions
 	}
 
 	for _, permission := range *input {
-		flatPermissions = append(flatPermissions, permission)
+		if len(*filter) == 0 || slices.Contains(*filter, permission) {
+			flatPermissions = append(flatPermissions, permission)
+		}
 	}
 
 	return flatPermissions
