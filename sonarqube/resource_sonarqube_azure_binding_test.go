@@ -18,11 +18,6 @@ func init() {
 func testSweepSonarqubeAzureBinding(r string) error {
 	return nil
 }
-func testAccPreCheckAzureBindingSupport(t *testing.T) {
-	if err := checkAzureBindingSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
-		t.Skipf("Skipping test of unsupported feature (Azure Binding)")
-	}
-}
 
 func testAccSonarqubeAzureBindingName(rnd string, projKey string, almSetting string, projName string, repoName string) string {
 	return fmt.Sprintf(`
@@ -52,7 +47,7 @@ func TestAccSonarqubeAzureBindingName(t *testing.T) {
 	name := "sonarqube_azure_binding." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAzureBindingSupport(t) },
+		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
