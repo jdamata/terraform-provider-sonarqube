@@ -445,11 +445,71 @@ func TestAccSonarqubePortfolioManualProjectsReplaceProject(t *testing.T) {
 	})
 }
 
+func TestAccSonarqubePortfolioManualProjectsRemoveSelectedBranches(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	portfolioKey := "testAccSonarqubePortfolioKey"
+	projectKey := "testAccSonarqubeProjectKey"
+
+	configBefore := fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+		  name       = "%[3]s"
+		  project    = "%[3]s"
+		}
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       	= "%[2]s"
+		  name    		= "%[2]s"
+    		  description = "test"
+		  selection_mode = "MANUAL"
+		  selected_projects {
+			project_key = sonarqube_project.%[1]s.project
+			selected_branches = ["main"]
+		  }
+		}
+		`, rnd, portfolioKey, projectKey)
+	configAfter := strings.Replace(
+		configBefore,
+		"selected_branches",
+		"# selected_branches", 1) // comment out the selected_branches to remove them
+
+	checks := map[string]resource.TestCheckFunc{
+		"before": resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key":         projectKey,
+				"selected_branches.#": "1",
+			}),
+		),
+		"after": resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key":         projectKey,
+				"selected_branches.#": "0",
+			}),
+		),
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: configBefore,
+				Check:  checks["before"],
+			},
+			{
+				Config: configAfter,
+				Check:  checks["after"],
+			},
+		},
+	})
+}
+
 func TestAccSonarqubePortfolioManualImport(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_portfolio." + rnd
 	portfolioKey := "testAccSonarqubePortfolioKey"
-	projectKey := "testAccSonarqubeProjectKeyOld"
+	projectKey := "testAccSonarqubeProjectKey"
 
 	config := fmt.Sprintf(`
 		resource "sonarqube_project" "%[1]s" {
