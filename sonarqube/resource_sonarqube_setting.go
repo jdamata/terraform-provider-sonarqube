@@ -250,7 +250,7 @@ func getComponentSettings(component string, m interface{}, filterInherited bool)
 	settingsList := make([]Setting, 0)
 	// Filter settings by parameter inherited
 	for _, e := range settingReadResponse.Setting {
-		if !filterInherited || (filterInherited && e.Inherited) {
+		if !filterInherited || (filterInherited && !e.Inherited) {
 			settingsList = append(settingsList, e)
 		}
 	}
@@ -316,21 +316,7 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 }
 
 func checkSettingDiff(a map[string]interface{}, b Setting) bool {
-	if a["value"] != nil {
-		return a["value"].(string) != b.Value
-	} else if a["values"] != nil {
-		// array of strings
-		values := a["values"].([]string)
-		if len(values) != len(b.Values) {
-			return false
-		}
-		for i := range values {
-			if string(values[i]) != string(b.Values[i]) {
-				return false
-			}
-		}
-		return true
-	} else if a["field_values"] != nil {
+	if a["field_values"] != nil {
 		// array of objects of key/value pairs
 		fieldValues := a["field_values"].([]interface{})
 		if len(fieldValues) != len(b.FieldValues) {
@@ -344,6 +330,20 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 			}
 		}
 		return true
+	} else if a["values"] != nil {
+		// array of strings
+		values := a["values"].([]string)
+		if len(values) != len(b.Values) {
+			return false
+		}
+		for i := range values {
+			if string(values[i]) != string(b.Values[i]) {
+				return false
+			}
+		}
+		return true
+	} else if a["value"] != nil && a["value"] != "" {
+		return a["value"].(string) != b.Value
 	}
 	return false
 }
@@ -355,7 +355,7 @@ func getComponentSettingUrlEncode(setting map[string]interface{}) url.Values {
 	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.value '%s'", setting["value"])
 	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.values '%s'", setting["values"])
 	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.field_values '%s'", setting["field_values"])
-	if setting["value"] != nil {
+	if setting["value"] != nil && setting["value"] != "" {
 		raw.Add("value", setting["value"].(string))
 	} else if setting["values"] != nil {
 		// array of strings
