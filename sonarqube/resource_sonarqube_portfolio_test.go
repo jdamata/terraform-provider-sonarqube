@@ -435,25 +435,60 @@ func TestAccSonarqubePortfolioManualProjectsReplaceProject(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: configBefore,
-				Check: checks["before"],
+				Check:  checks["before"],
 			},
 			{
 				Config: configAfter,
-				Check: checks["after"],
+				Check:  checks["after"],
 			},
+		},
+	})
+}
 
-			// {
-			// 	ResourceName:      name,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
-			// 		resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
-			// 		resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
-			// 		resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
-			// 		resource.TestCheckNoResourceAttr(name, "branch"),
-			// 	),
-			// },
+func TestAccSonarqubePortfolioManualImport(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	portfolioKey := "testAccSonarqubePortfolioKey"
+	projectKey := "testAccSonarqubeProjectKeyOld"
+
+	config := fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+		  name       = "%[3]s"
+		  project    = "%[3]s"
+		}
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       	= "%[2]s"
+		  name    		= "%[2]s"
+    		  description = "test"
+		  selection_mode = "MANUAL"
+		  selected_projects {
+			project_key = sonarqube_project.%[1]s.project
+			selected_branches = ["main"]
+		  }
+		}
+		`, rnd, portfolioKey, projectKey)
+
+	checks := resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+		resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+			"project_key":         projectKey,
+			"selected_branches.#": "1",
+		}),
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  checks,
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
