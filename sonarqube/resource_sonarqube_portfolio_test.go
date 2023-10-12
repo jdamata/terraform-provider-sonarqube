@@ -418,7 +418,7 @@ func TestAccSonarqubePortfolioManualProjects(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "selection_mode", "MANUAL"),
 					resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
-						"project_key": "testAccSonarqubeProjectKeyss",
+						"project_key": "testAccSonarqubeProjectKey",
 						"selected_branches.#": "1",
 					}),
 					// resource.TestCheckResourceAttrSet(name, "selected_projects"),
