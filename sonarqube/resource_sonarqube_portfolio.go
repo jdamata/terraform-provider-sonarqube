@@ -274,18 +274,9 @@ func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeU
 			return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to read the portfolio from the API: %+v", err)
 		}
 
-		changes, err := synchronizeSelectedProjects(d, m, &portfolioReadResponse.SelectedProjects)
+		err = synchronizeSelectedProjects(d, m, &portfolioReadResponse.SelectedProjects)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to synchronise portfolio projects: %+v", err)
-		}
-
-		// If we did make any changes then re-read the portfolio from the API.
-		// TODO: Remove changes bs ?
-		if changes {
-			portfolioReadResponse, err = readPortfolioFromApi(d, m)
-			if err != nil {
-				return fmt.Errorf("resourceSonarqubePortfolioCreate: Failed to read the portfolio after projects were updated: %+v", err)
-			}
 		}
 	}
 
@@ -490,8 +481,7 @@ func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, er
 	return &portfolioReadResponse, nil
 }
 
-func synchronizeSelectedProjects(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject) (bool, error) {
-	changed := false
+func synchronizeSelectedProjects(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject) error {
 	portfolioSelectedProjects := d.Get("selected_projects").(*schema.Set).List()
 
 	// Make sure the order is always the same for when we are comparing lists of projects
@@ -501,23 +491,23 @@ func synchronizeSelectedProjects(d *schema.ResourceData, m interface{}, apiPortf
 
 	// Determine which conditions have been added or changed and update those
 	for _, project := range portfolioSelectedProjects {
-		err := addOrUpdateSelectedProject(d, m, apiPortfolioSelectedProjects, project, &changed)
+		err := addOrUpdateSelectedProject(d, m, apiPortfolioSelectedProjects, project)
 		if err != nil {
-			return changed, err
+			return err
 		}
 	}
 
 	// Determine if any conditions have been removed and delete them
 	portfolioKey := d.Get("key").(string)
-	err := removeDeletedSelectedProject(portfolioKey, apiPortfolioSelectedProjects, portfolioSelectedProjects, m, &changed)
+	err := removeDeletedSelectedProject(portfolioKey, apiPortfolioSelectedProjects, portfolioSelectedProjects, m)
 	if err != nil {
-		return changed, err
+		return err
 	}
 
-	return changed, nil
+	return nil
 }
 
-func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject, project interface{}, changed *bool) error {
+func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject, project interface{}) error {
 	portfolioKey := d.Get("key").(string)
 	projectKey := project.(map[string]interface{})["project_key"].(string)
 
@@ -530,13 +520,12 @@ func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfo
 
 	// Update the project if it already exists and the selected branches has changed, otherwise do nothing
 	for _, apiProject := range *apiPortfolioSelectedProjects {
-		if projectKey == apiProject.ProjectKey  {
+		if projectKey == apiProject.ProjectKey {
 			if !stringSlicesEqual(selectedBranches, apiProject.SelectedBranches, true) {
 				err := updateSelectedProject(portfolioKey, projectKey, selectedBranches, apiProject.SelectedBranches, m)
 				if err != nil {
 					return fmt.Errorf("addOrUpdateSelectedProject: Failed to update project '%s': %+v", projectKey, err)
 				}
-				*changed = true
 				return nil
 			}
 			return nil
@@ -548,7 +537,6 @@ func addOrUpdateSelectedProject(d *schema.ResourceData, m interface{}, apiPortfo
 	if err != nil {
 		return fmt.Errorf("addOrUpdateCondition: Failed to add project '%s': %+v", projectKey, err)
 	}
-	*changed = true
 	return nil
 }
 
@@ -598,14 +586,14 @@ func updateSelectedProject(portfolioKey, projectKey string, selectedBranches, ap
 	return nil
 }
 
-func addSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) (error) {
+func addSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/add_project_branch"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"key":     []string{portfolioKey},
 		"project": []string{projectKey},
-		"branch": []string{branch},
+		"branch":  []string{branch},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -623,14 +611,14 @@ func addSelectedProjectBranch(portfolioKey, projectKey, branch string, m interfa
 	return nil
 }
 
-func deleteSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) (error) {
+func deleteSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/views/remove_project_branch"
 
 	sonarQubeURL.RawQuery = url.Values{
 		"key":     []string{portfolioKey},
 		"project": []string{projectKey},
-		"branch": []string{branch},
+		"branch":  []string{branch},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -648,23 +636,20 @@ func deleteSelectedProjectBranch(portfolioKey, projectKey, branch string, m inte
 	return nil
 }
 
-func removeDeletedSelectedProject(portfolioKey string, apiPortfolioSelectedProjects *[]PortfolioProject, portfolioSelectedProjects []interface{}, m interface{}, changed *bool) error {
+func removeDeletedSelectedProject(portfolioKey string, apiPortfolioSelectedProjects *[]PortfolioProject, portfolioSelectedProjects []interface{}, m interface{}) error {
 	for _, apiProject := range *apiPortfolioSelectedProjects {
 		found := false
-
 		for _, project := range portfolioSelectedProjects {
 			if project.(map[string]interface{})["project_key"] == apiProject.ProjectKey {
 				found = true
 				break
 			}
 		}
-
 		if !found {
 			err := deleteSelectedProject(portfolioKey, apiProject.ProjectKey, m)
 			if err != nil {
 				return fmt.Errorf("removeDeletedSelectedProject: Failed to delete project from portfolio '%s': %+v", apiProject.ProjectKey, err)
 			}
-			*changed = true
 		}
 	}
 	return nil
