@@ -111,11 +111,11 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				ValidateFunc:  validation.StringIsValidRegExp,
 			},
 			"selected_projects": {
-				Type:          schema.TypeList,
+				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      false,
 				ConflictsWith: []string{"tags", "regexp"},
-				Description:   "A list of projects to add to the portfolio.",
+				Description:   "A set of projects to add to the portfolio.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"project_key": {
@@ -126,7 +126,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 						"selected_branches": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "A list of branches for the project to add to the portfolio",
+							Description: "A set of branches for the project to add to the portfolio",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -495,7 +495,7 @@ func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, er
 
 func synchronizeSelectedProjects(d *schema.ResourceData, m interface{}, apiPortfolioSelectedProjects *[]PortfolioProject) (bool, error) {
 	changed := false
-	portfolioSelectedProjects := d.Get("selected_projects").([]interface{})
+	portfolioSelectedProjects := d.Get("selected_projects").(*schema.Set).List()
 
 	// Make sure the order is always the same for when we are comparing lists of projects
 	sort.Slice(portfolioSelectedProjects, func(i, j int) bool {
