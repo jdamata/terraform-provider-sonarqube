@@ -505,7 +505,7 @@ func TestAccSonarqubePortfolioManualProjectsRemoveSelectedBranches(t *testing.T)
 	})
 }
 
-func TestAccSonarqubePortfolioManualAddAndUpdateMultipleProjects(t *testing.T) {
+func TestAccSonarqubePortfolioManualAddAndRemoveMultipleProjects(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_portfolio." + rnd
 	portfolioKey := "testAccSonarqubePortfolioKey"
