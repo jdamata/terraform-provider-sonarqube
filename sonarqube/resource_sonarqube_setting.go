@@ -33,7 +33,7 @@ func (a Setting) ToMap() map[string]interface{} {
 		obj["values"] = a.Values
 	}
 	if a.FieldValues != nil {
-		obj["fieldValues"] = a.FieldValues
+		obj["field_values"] = a.FieldValues
 	}
 	return obj
 }
@@ -330,7 +330,7 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 			}
 		}
 		return true
-	} else if a["values"] != nil {
+	} else if a["values"] != nil && len(a["values"].([]string)) > 0 {
 		// array of strings
 		values := a["values"].([]string)
 		if len(values) != len(b.Values) {
@@ -352,23 +352,31 @@ func getComponentSettingUrlEncode(setting map[string]interface{}) url.Values {
 	raw := url.Values{
 		"key": []string{setting["key"].(string)},
 	}
-	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.value '%s'", setting["value"])
-	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.values '%s'", setting["values"])
-	log.Printf("[DEBUG][getComponentSettingUrlEncode] setting.field_values '%s'", setting["field_values"])
+	addedSetting := false
+	log.Printf("[DEBUG] setting.value '%s'", setting["value"])
+	log.Printf("[DEBUG] setting.values '%s'", setting["values"])
+	log.Printf("[DEBUG] setting.field_values '%s'", setting["field_values"])
 	if setting["value"] != nil && setting["value"] != "" {
 		raw.Add("value", setting["value"].(string))
-	} else if setting["values"] != nil {
+		addedSetting = true
+	}
+
+	if setting["values"] != nil && !addedSetting {
 		// array of strings
 		for _, value := range setting["values"].([]interface{}) {
 			raw.Add("values", value.(string))
+			addedSetting = true
 		}
-	} else if setting["field_values"] != nil {
+	}
+
+	if setting["field_values"] != nil && !addedSetting {
 		// array of objects of key/value pairs
 		fieldValues := setting["field_values"].([]interface{})
 		for _, value := range fieldValues {
 			b, _ := json.Marshal(value)
 			fv := string(b)
 			raw.Add("fieldValues", fv)
+			addedSetting = true
 		}
 	}
 	return raw

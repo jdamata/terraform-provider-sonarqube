@@ -73,7 +73,7 @@ func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string
 		}
 
 		setting {
-			key    = "sonar.global.exclusions"
+			key    = "sonar.dbcleaner.branchesToKeepWhenInactive"
 			values = %[4]s
 		}
 
@@ -330,7 +330,7 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
 					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.demo"),
 					resource.TestCheckResourceAttr(name, "setting.0.value", "sonarqube@example.org"),
-					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.global.exclusions"),
+					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.dbcleaner.branchesToKeepWhenInactive"),
 					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "foo"),
 					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "bar"),
 					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),

@@ -15,8 +15,8 @@ resource "sonarqube_setting" "single_setting" {
 ## Example: create a setting with multiple values
 ```terraform
 resource "sonarqube_setting" "multi_value_setting" {
-  key   = "sonar.global.exclusions"
-  values = ["foo", "bar/**/*.*"]
+  key   = "sonar.dbcleaner.branchesToKeepWhenInactive"
+  values = ["main", "release/.*"]
 }
 ```
 ## Example: create a setting with multiple field values
