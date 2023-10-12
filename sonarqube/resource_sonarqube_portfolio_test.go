@@ -505,6 +505,90 @@ func TestAccSonarqubePortfolioManualProjectsRemoveSelectedBranches(t *testing.T)
 	})
 }
 
+func TestAccSonarqubePortfolioManualAddAndUpdateMultipleProjects(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	portfolioKey := "testAccSonarqubePortfolioKey"
+	firstProjectKey := "testAccSonarqubeProjectKeyFirst"
+	secondProjectKey := "testAccSonarqubeProjectKeyNewSecond"
+
+	configBefore := fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s-1" {
+		  name       = "%[3]s"
+		  project    = "%[3]s"
+		}
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       	= "%[2]s"
+		  name    		= "%[2]s"
+    		  description = "test"
+		  selection_mode = "MANUAL"
+		  selected_projects {
+			project_key = sonarqube_project.%[1]s-1.project
+		  }
+		}
+		`, rnd, portfolioKey, firstProjectKey, secondProjectKey)
+	// Add a second project to the portfolio
+	configAfter := fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s-1" {
+		  name       = "%[3]s"
+		  project    = "%[3]s"
+		}
+		resource "sonarqube_project" "%[1]s-2" {
+			name       = "%[4]s"
+			project    = "%[4]s"
+		  }
+		resource "sonarqube_portfolio" "%[1]s" {
+		  key       	= "%[2]s"
+		  name    		= "%[2]s"
+    		  description = "test"
+		  selection_mode = "MANUAL"
+		  selected_projects {
+			project_key = sonarqube_project.%[1]s-1.project
+		  }
+		  selected_projects {
+			project_key = sonarqube_project.%[1]s-2.project
+		  }
+		}
+		`, rnd, portfolioKey, firstProjectKey, secondProjectKey)
+
+	checks := map[string]resource.TestCheckFunc{
+		"before": resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key": firstProjectKey,
+			}),
+		),
+		"after": resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key": firstProjectKey,
+			}),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key": secondProjectKey,
+			}),
+		),
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: configBefore,
+				Check:  checks["before"],
+			},
+			{
+				Config: configAfter,
+				Check:  checks["after"],
+			},
+			// Tests removing the project as well
+			{
+				Config: configBefore,
+				Check:  checks["before"],
+			},
+		},
+	})
+}
+
 func TestAccSonarqubePortfolioManualImport(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_portfolio." + rnd
