@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -383,8 +384,14 @@ func TestAccSonarqubePortfolioSelectionModeUpdate(t *testing.T) {
 	})
 }
 
-func testAccSonarqubePortfolioConfigManualProject(rnd, portfolioName, projectName string) string {
-	return fmt.Sprintf(`
+func TestAccSonarqubePortfolioManualProjectsReplaceProject(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+	portfolioKey := "testAccSonarqubePortfolioKey"
+	oldProjectKey := "testAccSonarqubeProjectKeyOld"
+	newProjectKey := "testAccSonarqubeProjectKeyNew"
+
+	configBefore := fmt.Sprintf(`
 		resource "sonarqube_project" "%[1]s" {
 		  name       = "%[3]s"
 		  project    = "%[3]s"
@@ -399,43 +406,42 @@ func testAccSonarqubePortfolioConfigManualProject(rnd, portfolioName, projectNam
 			selected_branches = ["main"]
 		  }
 		}
-		`, rnd, portfolioName, projectName)
-}
+		`, rnd, portfolioKey, oldProjectKey)
+	configAfter := strings.Replace(
+		configBefore,
+		newProjectKey,
+		newProjectKey, -1) // -1 => replace all occurences
 
-func TestAccSonarqubePortfolioManualProjects(t *testing.T) {
-	rnd := generateRandomResourceName()
-	name := "sonarqube_portfolio." + rnd
-
+	checks := map[string]resource.TestCheckFunc{
+		"before": resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key": "testAccSonarqubeProjectKey",
+				"selected_branches.#": "1",
+			}),
+		),
+		"after": resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
+				"project_key": "testAccSonarqubeProjectKey",
+				"selected_branches.#": "1",
+			}),
+		),
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubePortfolioConfigManualProject(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubeProjectKey"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
-					resource.TestCheckResourceAttr(name, "selection_mode", "MANUAL"),
-					resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
-						"project_key": "testAccSonarqubeProjectKey",
-						"selected_branches.#": "1",
-					}),
-					// resource.TestCheckResourceAttrSet(name, "selected_projects"),
-					// resource.TestCheckResourceAttr(name, "selected_projects.0.project_key", "testAccSonarqubeProjectKey"),
-					// resource.TestCheckResourceAttr(name, "selected_projects.0.selected_branches.0", "main"),
-				),
+				Config: configBefore,
+				Check: checks["before"],
 			},
-			// {
-			// 	Config: testAccSonarqubePortfolioConfigSelectionModeTags(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "TAGS", tags),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
-			// 		resource.TestCheckResourceAttr(name, "selection_mode", "TAGS"),
-			// 		resource.TestCheckResourceAttr(name, "tags.0", tags[0]),
-			// 		resource.TestCheckResourceAttr(name, "tags.1", tags[1]),
-			// 		resource.TestCheckNoResourceAttr(name, "branch"),
-			// 	),
-			// },
+			{
+				Config: configAfter,
+				Check: checks["after"],
+			},
+
 			// {
 			// 	ResourceName:      name,
 			// 	ImportState:       true,
