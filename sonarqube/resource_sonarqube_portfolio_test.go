@@ -559,7 +559,7 @@ func TestAccSonarqubePortfolioManualAddAndRemoveMultipleProjects(t *testing.T) {
 			}),
 		),
 		"after": resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
+			resource.TestCheckResourceAttr(name, "selected_projects.#", "2"),
 			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
 				"project_key": firstProjectKey,
 			}),
