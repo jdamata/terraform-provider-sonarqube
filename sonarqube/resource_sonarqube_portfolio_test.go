@@ -409,21 +409,21 @@ func TestAccSonarqubePortfolioManualProjectsReplaceProject(t *testing.T) {
 		`, rnd, portfolioKey, oldProjectKey)
 	configAfter := strings.Replace(
 		configBefore,
-		newProjectKey,
+		oldProjectKey,
 		newProjectKey, -1) // -1 => replace all occurences
 
 	checks := map[string]resource.TestCheckFunc{
 		"before": resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
 			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
-				"project_key": oldProjectKey,
+				"project_key":         oldProjectKey,
 				"selected_branches.#": "1",
 			}),
 		),
 		"after": resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr(name, "selected_projects.#", "1"),
 			resource.TestCheckTypeSetElemNestedAttrs(name, "selected_projects.*", map[string]string{
-				"project_key": newProjectKey,
+				"project_key":         newProjectKey,
 				"selected_branches.#": "1",
 			}),
 		),
