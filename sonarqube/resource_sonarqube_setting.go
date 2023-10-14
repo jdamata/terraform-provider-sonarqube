@@ -28,6 +28,7 @@ type GetSettings struct {
 func (a Setting) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
+	obj["key"] = a.Key
 	obj["value"] = a.Value
 	if a.Values != nil {
 		obj["values"] = a.Values
@@ -221,7 +222,7 @@ func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string
 }
 
 /* This content is used for settings parameter in multiple resources ('project', 'portfolio')  */
-func getComponentSettings(component string, m interface{}, filterInherited bool) ([]Setting, error) {
+func getComponentSettings(component string, m interface{}) ([]Setting, error) {
 	if component == "" {
 		return []Setting{}, nil
 	}
@@ -249,11 +250,10 @@ func getComponentSettings(component string, m interface{}, filterInherited bool)
 
 	settingsList := make([]Setting, 0)
 	// Filter settings by parameter inherited
-	for _, e := range settingReadResponse.Setting {
-		if !filterInherited || (filterInherited && !e.Inherited) {
-			settingsList = append(settingsList, e)
-		}
-	}
+	settingsList = append(settingsList, settingReadResponse.Setting...)
+	// for _, e := range settingReadResponse.Setting {
+	// 	settingsList = append(settingsList, e)
+	// }
 
 	// Make sure the order is always the same for when we are comparing lists of conditions
 	sort.Slice(settingsList, func(i, j int) bool {
@@ -268,12 +268,12 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	componentId := d.Id()
 	componentSettings := d.Get("setting").([]interface{})
 
-	apiComponentSettings, _ := getComponentSettings(componentId, m, false)
+	apiComponentSettings, _ := getComponentSettings(componentId, m)
 
 	// Make sure the order is always the same for when we are comparing lists of conditions
-	sort.Slice(componentSettings, func(i, j int) bool {
-		return componentSettings[i].(map[string]interface{})["key"].(string) < componentSettings[j].(map[string]interface{})["key"].(string)
-	})
+	// sort.Slice(componentSettings, func(i, j int) bool {
+	// 	return componentSettings[i].(map[string]interface{})["key"].(string) < componentSettings[j].(map[string]interface{})["key"].(string)
+	// })
 
 	// Determine which conditions have been added or changed and update those
 	for _, s := range componentSettings {
