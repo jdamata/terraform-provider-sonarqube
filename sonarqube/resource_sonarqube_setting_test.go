@@ -70,7 +70,7 @@ func TestAccSonarqubeSettingBasic(t *testing.T) {
 	})
 }
 func TestAccSonarqubeSettingMultipleValues(t *testing.T) {
-	key := "sonar.dbcleaner.branchesToKeepWhenInactive" // Needs to be a setting that accepts multiple values
+	key := "sonar.global.exclusions" // Needs to be a setting that accepts multiple values
 	rnd := generateRandomResourceName()
 	name := "sonarqube_setting." + rnd
 	resource.Test(t, resource.TestCase{
