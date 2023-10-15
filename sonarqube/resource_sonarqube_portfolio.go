@@ -133,10 +133,6 @@ func resourceSonarqubePortfolio() *schema.Resource {
 					},
 				},
 			},
-			"projects": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
