@@ -73,7 +73,7 @@ func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string
 		}
 
 		setting {
-			key    = "sonar.dbcleaner.branchesToKeepWhenInactive"
+			key    = "sonar.terraform.file.suffixes"
 			values = %[4]s
 		}
 
@@ -316,7 +316,7 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
 	expectedConditions := 3
-	values := []string{"main", "release"}
+	values := []string{".tf", ".tfvars"}
 	fieldValues := map[string]string{"ruleKey": "foo", "resourceKey": "bar"}
 
 	resource.Test(t, resource.TestCase{
@@ -330,9 +330,9 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
 					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.terraform.activate"),
 					resource.TestCheckResourceAttr(name, "setting.0.value", "true"),
-					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.dbcleaner.branchesToKeepWhenInactive"),
-					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "main"),
-					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", "release"),
+					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.terraform.file.suffixes"),
+					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", ".tf"),
+					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", ".tfvars"),
 					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),
 					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", fieldValues),
 				),
