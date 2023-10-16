@@ -251,9 +251,6 @@ func getComponentSettings(component string, m interface{}) ([]Setting, error) {
 	settingsList := make([]Setting, 0)
 	// Filter settings by parameter inherited
 	settingsList = append(settingsList, settingReadResponse.Setting...)
-	// for _, e := range settingReadResponse.Setting {
-	// 	settingsList = append(settingsList, e)
-	// }
 
 	// Make sure the order is always the same for when we are comparing lists of conditions
 	sort.Slice(settingsList, func(i, j int) bool {
@@ -267,13 +264,7 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	changed := false
 	componentId := d.Id()
 	componentSettings := d.Get("setting").([]interface{})
-
 	apiComponentSettings, _ := getComponentSettings(componentId, m)
-
-	// Make sure the order is always the same for when we are comparing lists of conditions
-	// sort.Slice(componentSettings, func(i, j int) bool {
-	// 	return componentSettings[i].(map[string]interface{})["key"].(string) < componentSettings[j].(map[string]interface{})["key"].(string)
-	// })
 
 	// Determine which conditions have been added or changed and update those
 	for _, s := range componentSettings {
