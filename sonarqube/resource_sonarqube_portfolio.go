@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/slices"
@@ -51,6 +53,45 @@ func resourceSonarqubePortfolio() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubePortfolioImport,
 		},
+        CustomizeDiff: customdiff.All(
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				switch selectionMode := d.Get("selection_mode"); selectionMode {
+				case NONE, REST:
+					return nil
+			
+				case MANUAL:
+					selectedProjects := d.Get("selected_projects").(*schema.Set).List()
+					if len(selectedProjects) == 0 {
+						return fmt.Errorf("validatePortfolioResource: When selection_mode is set to MANUAL, you need atleast 1 selected_project, got: %+v", selectedProjects)
+					}
+					return nil
+			
+				case TAGS:
+					tags := d.Get("tags").([]interface{})
+					if len(tags) == 0 {
+						return fmt.Errorf("validatePortfolioResource: When selection_mode is set to TAGS, you need atleast 1 tag, got: %+v", d.Get("tags"))
+					}
+			
+					for _, tag := range d.Get("tags").([]interface{}) {
+						tagString := fmt.Sprint(tag)
+						if len(tagString) == 0 {
+							return fmt.Errorf("validatePortfolioResource: When selection_mode is set to TAGS, each tag must be non 0, got: %s", tagString)
+						}
+					}
+					return nil
+			
+				case REGEXP:
+					regexp := d.Get("regexp").(string)
+					if len(regexp) == 0 {
+						return fmt.Errorf("validatePortfolioResource: When selection_mode is set to REGEXP, regexp must be set, got: \"%s\"", regexp)
+					}
+					return nil
+			
+				default:
+					return fmt.Errorf("resourceSonarqubePortfolioCreate: selection_mode needs to be set to one of NONE, MANUAL, TAGS, REGEXP, REST")
+				}
+			},
+       ),
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -86,6 +127,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Default:      NONE,
 				ForceNew:     false,
 				ValidateFunc: validation.StringInSlice([]string{NONE, MANUAL, TAGS, REGEXP, REST}, false),
+				
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:        schema.TypeString,
