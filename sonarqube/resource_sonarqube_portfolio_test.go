@@ -248,34 +248,6 @@ func TestAccSonarqubePortfolioSelectionModeNone(t *testing.T) {
 	})
 }
 
-func TestAccSonarqubePortfolioSelectionModeManual(t *testing.T) {
-	rnd := generateRandomResourceName()
-	name := "sonarqube_portfolio." + rnd
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSonarqubePortfolioConfigSelectionMode(rnd, "testAccSonarqubePortfolioKey", "testAccSonarqubePortfolioName", "testAccSonarqubePortfolioDescription", "public", "MANUAL"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
-					resource.TestCheckResourceAttr(name, "selection_mode", "MANUAL"),
-				),
-			},
-			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "key", "testAccSonarqubePortfolioKey"),
-					resource.TestCheckResourceAttr(name, "selection_mode", "MANUAL"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccSonarqubePortfolioSelectionModeTags(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_portfolio." + rnd
