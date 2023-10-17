@@ -604,6 +604,7 @@ func TestAccSonarqubePortfolioManualImport(t *testing.T) {
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
+				Check: checks,
 			},
 		},
 	})
