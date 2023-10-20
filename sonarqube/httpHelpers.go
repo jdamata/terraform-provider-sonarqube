@@ -65,20 +65,8 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 // go-retryablehttp error contains the token/user:pass in plaintext.
 // We want to censor that secret before logging the error
 func censorError(err error, secret string) error {
-	// convert http api text response into a []string slice
-	strSlice := strings.Split(err.Error(), ":")
-
-	// check each words in strSlice against token
-	var newSlice []string
-	for position, word := range strSlice {
-		if strings.EqualFold(strings.ToLower(fmt.Sprintf("//%v", word)), secret) {
-			// replace token with equal number of #
-			replacement := strings.Repeat("#", len(word))
-			strSlice[position] = replacement
-			newSlice = append(strSlice[:position], strSlice[position:]...)
-		}
-	}
-
-	// convert []string slice back to string
-	return errors.New(strings.Join(newSlice, ":"))
+	// Replace the secret with asterisks of the same length
+	asterisks := strings.Repeat("*", len(secret))
+	result := strings.Replace(err.Error(), secret, asterisks, -1)
+	return errors.New(result)
 }
