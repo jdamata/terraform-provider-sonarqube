@@ -23,8 +23,10 @@ services:
       SONAR_CLUSTER_SEARCH_HOSTS: "search-1,search-2,search-3"
       SONAR_CLUSTER_HOSTS: "sonarqube"
       SONAR_AUTH_JWTBASE64HS256SECRET: "dZ0EB0KxnF++nr5+4vfTCaun/eWbv6gOoXodiAMqcFo="
-      VIRTUAL_HOST: sonarqube.local
+      VIRTUAL_HOST: sonarqube.dev.local
       VIRTUAL_PORT: 9000
+    ports:
+      - "9000:9000"  
     volumes:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
@@ -47,7 +49,7 @@ services:
     volumes:
       - search-data-1:/opt/sonarqube/data
     healthcheck:
-        test: wget --no-proxy -qO- "http://$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3
@@ -71,7 +73,7 @@ services:
     volumes:
       - search-data-2:/opt/sonarqube/data
     healthcheck:
-        test: wget --no-proxy -qO- "http://$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3
@@ -95,7 +97,7 @@ services:
     volumes:
       - search-data-3:/opt/sonarqube/data
     healthcheck:
-        test: wget --no-proxy -qO- "http://$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
         interval: 25s
         timeout: 1s
         retries: 3
@@ -111,11 +113,16 @@ services:
       - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
   proxy:
-    image: jwilder/nginx-proxy
+    image: nginxproxy/nginx-proxy
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/proxy.conf:/etc/nginx/conf.d/proxy.conf
+      - ./nginx/internal_network.conf:/etc/nginx/conf.d/internal_network.conf
+    environment:
+        - DEFAULT_HOST=sonarqube.dev.local
+        - TRUST_DOWNSTREAM_PROXY=false
     networks:
       - sonar-network
       - sonar-public
@@ -125,7 +132,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 192.168.65.0/24
+        - subnet: 172.28.2.0/24
   sonar-public:
     driver: bridge
 
@@ -137,3 +144,5 @@ volumes:
   search-data-3:
   postgresql:
   postgresql_data:
+
+
