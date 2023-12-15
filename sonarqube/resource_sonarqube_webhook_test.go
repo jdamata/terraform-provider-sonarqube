@@ -110,8 +110,8 @@ func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
+				ResourceName:            resourceName,
+				ImportState:             true,
 				ImportStateIdFunc:       testAccSonarqubeWebhookProjectImportID(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"secret"},
