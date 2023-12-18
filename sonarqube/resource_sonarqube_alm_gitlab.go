@@ -127,7 +127,7 @@ func resourceSonarqubeAlmGitlabUpdate(d *schema.ResourceData, m interface{}) err
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"resourceSonarqubeAlmGitlabUpdate",
 	)
 	if err != nil {
