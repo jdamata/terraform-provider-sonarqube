@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -27,12 +28,13 @@ type GetSettings struct {
 func (a Setting) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
+	obj["key"] = a.Key
 	obj["value"] = a.Value
 	if a.Values != nil {
 		obj["values"] = a.Values
 	}
 	if a.FieldValues != nil {
-		obj["fieldValues"] = a.FieldValues
+		obj["field_values"] = a.FieldValues
 	}
 	return obj
 }
@@ -247,12 +249,8 @@ func getComponentSettings(component string, m interface{}) ([]Setting, error) {
 	}
 
 	settingsList := make([]Setting, 0)
-	// Filter settings (removing inherited)
-	for _, e := range settingReadResponse.Setting {
-		if e.Inherited == false {
-			settingsList = append(settingsList, e)
-		}
-	}
+	// Filter settings by parameter inherited
+	settingsList = append(settingsList, settingReadResponse.Setting...)
 
 	// Make sure the order is always the same for when we are comparing lists of conditions
 	sort.Slice(settingsList, func(i, j int) bool {
@@ -266,13 +264,7 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	changed := false
 	componentId := d.Id()
 	componentSettings := d.Get("setting").([]interface{})
-
 	apiComponentSettings, _ := getComponentSettings(componentId, m)
-
-	// Make sure the order is always the same for when we are comparing lists of conditions
-	sort.Slice(componentSettings, func(i, j int) bool {
-		return componentSettings[i].(map[string]interface{})["key"].(string) < componentSettings[j].(map[string]interface{})["key"].(string)
-	})
 
 	// Determine which conditions have been added or changed and update those
 	for _, s := range componentSettings {
@@ -280,14 +272,23 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 		key := setting["key"].(string)
 
 		// Update the condition if it already exists
+		exists := false
 		for _, apiSetting := range apiComponentSettings {
 			if key == apiSetting.Key {
+				exists = true
 				if checkSettingDiff(setting, apiSetting) {
 					err := setComponentSetting(componentId, setting, m, &changed)
 					if err != nil {
-						return false, fmt.Errorf("addOrUpdateCondition: Failed to update setting '%s': %+v", key, err)
+						return false, fmt.Errorf("synchronizeSettings: Failed to update setting '%s': %+v", key, err)
 					}
 				}
+			}
+		}
+		// Add the condition because it does not already exist
+		if !exists {
+			err := setComponentSetting(componentId, setting, m, &changed)
+			if err != nil {
+				return false, fmt.Errorf("synchronizeSettings: Failed to create setting '%s': %+v", key, err)
 			}
 		}
 	}
@@ -306,21 +307,7 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 }
 
 func checkSettingDiff(a map[string]interface{}, b Setting) bool {
-	if a["value"] != nil {
-		return a["value"].(string) != b.Value
-	} else if a["values"] != nil {
-		// array of strings
-		values := a["field_values"].([]string)
-		if len(values) != len(b.FieldValues) {
-			return false
-		}
-		for i := range values {
-			if string(values[i]) != string(b.Values[i]) {
-				return false
-			}
-		}
-		return true
-	} else if a["field_values"] != nil {
+	if a["field_values"] != nil {
 		// array of objects of key/value pairs
 		fieldValues := a["field_values"].([]interface{})
 		if len(fieldValues) != len(b.FieldValues) {
@@ -334,6 +321,20 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 			}
 		}
 		return true
+	} else if a["values"] != nil && len(a["values"].([]string)) > 0 {
+		// array of strings
+		values := a["values"].([]string)
+		if len(values) != len(b.Values) {
+			return false
+		}
+		for i := range values {
+			if string(values[i]) != string(b.Values[i]) {
+				return false
+			}
+		}
+		return true
+	} else if a["value"] != nil && a["value"] != "" {
+		return a["value"].(string) != b.Value
 	}
 	return false
 }
@@ -342,20 +343,31 @@ func getComponentSettingUrlEncode(setting map[string]interface{}) url.Values {
 	raw := url.Values{
 		"key": []string{setting["key"].(string)},
 	}
-	if setting["value"] != nil {
+	addedSetting := false
+	log.Printf("[DEBUG] setting.value '%s'", setting["value"])
+	log.Printf("[DEBUG] setting.values '%s'", setting["values"])
+	log.Printf("[DEBUG] setting.field_values '%s'", setting["field_values"])
+	if setting["value"] != nil && setting["value"] != "" {
 		raw.Add("value", setting["value"].(string))
-	} else if setting["values"] != nil {
+		addedSetting = true
+	}
+
+	if setting["values"] != nil && !addedSetting {
 		// array of strings
 		for _, value := range setting["values"].([]interface{}) {
 			raw.Add("values", value.(string))
+			addedSetting = true
 		}
-	} else if setting["field_values"] != nil {
+	}
+
+	if setting["field_values"] != nil && !addedSetting {
 		// array of objects of key/value pairs
 		fieldValues := setting["field_values"].([]interface{})
 		for _, value := range fieldValues {
 			b, _ := json.Marshal(value)
 			fv := string(b)
 			raw.Add("fieldValues", fv)
+			addedSetting = true
 		}
 	}
 	return raw
@@ -372,7 +384,7 @@ func setComponentSetting(component string, setting map[string]interface{}, m int
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
-		http.StatusOK,
+		http.StatusNoContent,
 		"setComponentSettings",
 	)
 	if err != nil {
@@ -398,7 +410,7 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 				break
 			}
 		}
-		if !found {
+		if !found && !apiSetting.Inherited {
 			toDelete = append(toDelete, fmt.Sprint(apiSetting.Key))
 		}
 	}
