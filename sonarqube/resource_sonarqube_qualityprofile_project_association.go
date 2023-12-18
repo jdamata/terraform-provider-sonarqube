@@ -97,7 +97,6 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	// Id is composed of qualityProfile name and project name
 	idSlice := strings.Split(d.Id(), "/")
-
 	// Call api/qualityprofiles/search to return the qualityProfileID
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURLSubPath := sonarQubeURL.Path
@@ -124,10 +123,18 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 
 	var qualityProfileID string
 	for _, value := range getQualityProfileResponse.Profiles {
-		if idSlice[0] == value.Name && idSlice[2] == value.Language {
-			qualityProfileID = value.Key
-			language = value.Language
-			qualityProfile = value.Name
+		if len(idSlice) == 3 {
+			if idSlice[0] == value.Name && idSlice[2] == value.Language {
+				qualityProfileID = value.Key
+				language = value.Language
+				qualityProfile = value.Name
+			}
+		} else {
+			if idSlice[0] == value.Name && d.Get("language").(string) == value.Language {
+				qualityProfileID = value.Key
+				language = value.Language
+				qualityProfile = value.Name
+			}
 		}
 	}
 
