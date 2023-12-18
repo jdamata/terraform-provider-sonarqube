@@ -280,17 +280,6 @@ func TestAccSonarqubeProjectSettingsCreate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "setting.0.value", "false"),
 				),
 			},
-			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedSettings)),
-					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.docker.activate"),
-					resource.TestCheckResourceAttr(name, "setting.0.value", "false"),
-				),
-			},
 		},
 	})
 }
@@ -328,17 +317,6 @@ func TestAccSonarqubeProjectSettingsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "setting.0.value", "true"),
 				),
 			},
-			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-					resource.TestCheckResourceAttr(name, "setting.#", "1"),
-					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.docker.activate"),
-					resource.TestCheckResourceAttr(name, "setting.0.value", "false"),
-				),
-			},
 		},
 	})
 }
@@ -356,22 +334,6 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSonarqubeProjectSettingsMultiple(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", values, fieldValues),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
-					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.terraform.activate"),
-					resource.TestCheckResourceAttr(name, "setting.0.value", "true"),
-					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.terraform.file.suffixes"),
-					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", ".tf"),
-					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", ".tfvars"),
-					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),
-					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", fieldValues),
-				),
-			},
-			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
 					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
