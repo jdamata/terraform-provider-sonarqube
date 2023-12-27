@@ -54,11 +54,11 @@ func resourceSonarqubePortfolio() *schema.Resource {
 			State: resourceSonarqubePortfolioImport,
 		},
 		// Validation that runs after the read in plan has completed (https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/customizing-differences)
-        CustomizeDiff: customdiff.All(
+		CustomizeDiff: customdiff.All(
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				return validatePortfolioResource(d)
 			},
-       ),
+		),
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -94,7 +94,6 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Default:      NONE,
 				ForceNew:     false,
 				ValidateFunc: validation.StringInSlice([]string{NONE, MANUAL, TAGS, REGEXP, REST}, false),
-				
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:        schema.TypeString,
@@ -147,8 +146,9 @@ func resourceSonarqubePortfolio() *schema.Resource {
 }
 
 func checkPortfolioSupport(conf *ProviderConfiguration) error {
-	if strings.ToLower(conf.sonarQubeEdition) != "enterprise" {
-		return fmt.Errorf("portfolios are only supported in the Enterprise edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+	edition := strings.ToLower(conf.sonarQubeEdition)
+	if edition != "enterprise" && edition != "data center" {
+		return fmt.Errorf("portfolios are only supported in the Enterprise and Datacenter editions of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
 	}
 	return nil
 }

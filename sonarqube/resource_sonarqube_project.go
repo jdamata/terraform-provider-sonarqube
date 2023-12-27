@@ -224,18 +224,22 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	// Get settings
 	var projectSettings []Setting
 	if _, ok := d.GetOk("setting"); ok {
+		componentSettings := d.Get("setting").([]interface{})
 		projectSettings, err = getComponentSettings(d.Id(), m)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
 		}
 
-		if len(projectSettings) > 0 {
-			settings := make([]interface{}, len(projectSettings))
-			for i, s := range projectSettings {
-				settings[i] = s.ToMap()
+		settings := make([]interface{}, len(componentSettings))
+		for i, s := range componentSettings {
+			key := s.(map[string]interface{})["key"].(string)
+			for _, apiSetting := range projectSettings {
+				if key == apiSetting.Key {
+					settings[i] = apiSetting.ToMap()
+				}
 			}
-			d.Set("setting", settings)
 		}
+		d.Set("setting", settings)
 	}
 
 	if len(projectReadResponse.Component.Tags) > 0 {
