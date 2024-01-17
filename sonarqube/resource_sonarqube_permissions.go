@@ -101,6 +101,10 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 			// template user permission
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_user_to_template"
 			RawQuery.Add("templateId", templateID.(string))
+			// name provide instead of id
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_user_to_template"
+			RawQuery.Add("templateName", templateName.(string))
 		} else {
 			// direct user permission
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_user"
