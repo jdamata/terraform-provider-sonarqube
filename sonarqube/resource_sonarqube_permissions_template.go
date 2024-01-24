@@ -100,6 +100,7 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 
 	// If default is set to true, set this permission template as the default.
 	if d.Get("default").(bool) {
+		sonarQubeURL = m.(*ProviderConfiguration).sonarQubeURL
 		err = resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL, d.Id(), m)
 		if err != nil {
 			return err
@@ -189,6 +190,7 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 
 	// If default is set to true, set this permission template as the default.
 	if d.Get("default").(bool) {
+		sonarQubeURL = m.(*ProviderConfiguration).sonarQubeURL
 		err = resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL, d.Id(), m)
 		if err != nil {
 			return err
