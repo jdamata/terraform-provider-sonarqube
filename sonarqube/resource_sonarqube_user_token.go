@@ -101,7 +101,7 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 		"type": []string{string(tokenType)},
 	}
 
-	if tokenType == UserToken {
+	if (tokenType == UserToken) || (tokenType == GlobalAnalysisToken) {
 		loginName := d.Get("login_name").(string)
 		if loginName != "" {
 			rawQuery.Add("login", loginName)
