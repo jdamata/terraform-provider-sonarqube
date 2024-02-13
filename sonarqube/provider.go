@@ -98,6 +98,7 @@ func Provider() *schema.Provider {
 			"sonarqube_rule":                               resourceSonarqubeRule(),
 			"sonarqube_setting":                            resourceSonarqubeSettings(),
 			"sonarqube_qualityprofile_activate_rule":       resourceSonarqubeQualityProfileRule(),
+			"sonarqube_qualityprofile_deactivate_rule":     resourceSonarqubeQualityProfileRuleDeactivate(),
 			"sonarqube_alm_github":                         resourceSonarqubeAlmGithub(),
 			"sonarqube_github_binding":                     resourceSonarqubeGithubBinding(),
 			"sonarqube_alm_gitlab":                         resourceSonarqubeAlmGitlab(),
