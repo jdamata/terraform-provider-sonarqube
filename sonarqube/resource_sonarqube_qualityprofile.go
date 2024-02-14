@@ -101,6 +101,30 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"active_rules": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateDiagFunc: validation.ToDiagFunc(
+						validation.StringInSlice(
+							[]string{"INFO", "MINOR", "MAJOR", "CRITICAL", "BLOCKER"},
+							false,
+						),
+					),
+				},
+				Description: "Map of rules to activate with specify severity",
+			},
+			"inactive_rules": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "List of rules to deactivate for QualityProfile",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -145,6 +169,22 @@ func resourceSonarqubeQualityProfileCreate(d *schema.ResourceData, m interface{}
 	}
 
 	d.SetId(qualityProfileResponse.Profile.Key)
+	rulesList := d.Get("inactive_rules").([]interface{})
+	for _, rule := range rulesList {
+		ruleValue := rule.(string)
+		err := setRuleInactiveQualityProfile(d, m, ruleValue)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubeQualityProfileCreate: Failed to deactivate rule: %+v", err)
+		}
+	}
+	activeRulesList := d.Get("active_rules").(map[string]interface{})
+	for key, value := range activeRulesList {
+		err := setRuleActiveQualityProfile(d, m, key, value.(string))
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubeQualityProfileCreate: Failed to activate rule: %+v", err)
+		}
+	}
+
 	return resourceSonarqubeQualityProfileRead(d, m)
 }
 
@@ -273,5 +313,53 @@ func setParentQualityProfile(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	defer resp.Body.Close()
+	return nil
+}
+
+func setRuleInactiveQualityProfile(d *schema.ResourceData, m interface{}, rule string) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/deactivate_rule"
+	sonarQubeURL.RawQuery = url.Values{
+		"key":  []string{d.Id()},
+		"rule": []string{rule},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"setRuleInactiveQualityProfile",
+	)
+	if err != nil {
+		return fmt.Errorf("setRuleInactiveQualityProfile: Failed to deactivate rule: %+v", err)
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+func setRuleActiveQualityProfile(d *schema.ResourceData, m interface{}, rule string, severity string) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/activate_rule"
+
+	sonarQubeURL.RawQuery = url.Values{
+		"key":      []string{d.Id()},
+		"rule":     []string{rule},
+		"severity": []string{severity},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"setRuleActiveQualityProfile",
+	)
+	if err != nil {
+		return fmt.Errorf("setRuleActiveQualityProfile: Failed to delete quality profile: %+v", err)
+	}
+	defer resp.Body.Close()
+
 	return nil
 }
