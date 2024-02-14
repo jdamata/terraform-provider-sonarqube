@@ -8,6 +8,13 @@ resource "sonarqube_qualityprofile" "main" {
     language = "js"
     is_default = false
     parent = "sonar way"
+    active_rules = {
+      "javascript:S126" = "CRITICAL",
+    }
+    inactive_rules = [
+      "javascript:S6836",
+      "javascript:S2870",
+    ]
 }
 ```
 
@@ -18,6 +25,8 @@ The following arguments are supported:
 - language - (Required) Quality profile language. Must be one of "cs", "css", "flex", "go", "java", "js", "jsp", "kotlin", "php", "py", "ruby", "scala", "ts", "vbnet", "web", "xml"
 - is_default - (Optional) When set to true this will make the added Quality Profile default
 - parent - (Optional) When a parent is provided the quality profile will inherit it's rules
+- active_rules - (Optional) Whan list of active is provided the quality profile will have them activated
+- inactive_rules - (Optional) When list of inactive rules is provided the quality profile will have them deactivated
 
 ## Attributes Reference
 The following attributes are exported:
