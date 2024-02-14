@@ -26,6 +26,7 @@ The following arguments are supported:
 - is_default - (Optional) When set to true this will make the added Quality Profile default
 - parent - (Optional) When a parent is provided the quality profile will inherit it's rules
 - active_rules - (Optional) When list of active rules is provided the quality profile will have them activated
+    - Possible severity values - INFO, MINOR, MAJOR, CRITICAL, BLOCKER
 - inactive_rules - (Optional) When list of inactive rules is provided the quality profile will have them deactivated
 
 ## Attributes Reference
