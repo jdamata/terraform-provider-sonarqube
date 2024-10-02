@@ -17,7 +17,7 @@ func main() {
 	plugin.Serve(
 		&plugin.ServeOpts{
 			Debug:        debug,
-			ProviderAddr: "registry.terraform.io/jdamata/sonarqube",
+			ProviderAddr: "natj/sonarqube",
 			ProviderFunc: sonarqube.Provider,
 		},
 	)

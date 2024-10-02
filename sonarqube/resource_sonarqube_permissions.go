@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -158,6 +159,8 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 	RawQuery := url.Values{
 		// set the page size to 100
 		"ps": []string{"100"},
+		// start with the first page
+		"p": []string{"1"},
 	}
 
 	// if the permissions should be applied to a project
@@ -227,30 +230,44 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			// direct group permission
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/groups"
 		}
-		sonarQubeURL.RawQuery = RawQuery.Encode()
 
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"GET",
-			sonarQubeURL.String(),
-			http.StatusOK,
-			"resourceSonarqubePermissionsRead",
-		)
-		if err != nil {
-			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
-		}
-		defer resp.Body.Close()
+		var allGroups []GroupPermission
+		for {
+			sonarQubeURL.RawQuery = RawQuery.Encode()
 
-		// Decode response into struct
-		groups := GetGroupPermissions{}
-		err = json.NewDecoder(resp.Body).Decode(&groups)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+			resp, err := httpRequestHelper(
+				m.(*ProviderConfiguration).httpClient,
+				"GET",
+				sonarQubeURL.String(),
+				http.StatusOK,
+				"resourceSonarqubePermissionsRead",
+			)
+			if err != nil {
+				return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
+			}
+			defer resp.Body.Close()
+
+			// Decode response into struct
+			groups := GetGroupPermissions{}
+			err = json.NewDecoder(resp.Body).Decode(&groups)
+			if err != nil {
+				return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+			}
+
+			allGroups = append(allGroups, groups.Groups...)
+
+			// Check if there are more pages
+			if groups.Paging.Total <= groups.Paging.PageIndex {
+				break
+			}
+
+			// Increment the page number for the next request
+			RawQuery.Set("p", strconv.Itoa(int(groups.Paging.PageIndex+1)))
 		}
 
 		// Loop over all groups to see if the group we need exists.
 		groupName := d.Get("group_name").(string)
-		for _, value := range groups.Groups {
+		for _, value := range allGroups {
 			if strings.EqualFold(value.Name, groupName) {
 				d.Set("group_name", value.Name)
 				d.Set("permissions", flattenPermissions(&value.Permissions))
