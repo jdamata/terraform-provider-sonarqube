@@ -79,7 +79,7 @@ func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interfac
 }
 
 func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{}) error {
-	idSlice := strings.Split(d.Id(), "/")
+	idSlice := strings.SplitN(d.Id(), "/", 2)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/list"
 	sonarQubeURL.RawQuery = url.Values{
