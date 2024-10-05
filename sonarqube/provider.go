@@ -165,9 +165,13 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	installedVersion := d.Get("installed_version").(string)
 	installedEdition := d.Get("installed_edition").(string)
 	if installedVersion == "" || installedEdition == "" {
-		installedVersionAPI, installedEditionAPI, err := sonarqubeSystemInfo(client, sonarQubeURL)
+		installedVersionAPI, installedEditionAPI, err := sonarqubeSystemInfo(client, sonarQubeURL, "/api/system/info")
 		if err != nil {
-			return nil, err
+			// In the case for developer and enterprise, the /api/system/info endpoint is not available 
+			installedVersionAPI, installedEditionAPI, err := sonarqubeSystemInfo(client, sonarQubeURL, "/api/editions/show_license")
+			if err != nil {
+				return nil, err
+			}	
 		}
 
 		if installedVersion == "" {
@@ -201,9 +205,9 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}, nil
 }
 
-func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (string, string, error) {
+func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL, infoEndpoint string) (string, string, error) {
 	// Make request to sonarqube version endpoint
-	sonarqube.Path = strings.TrimSuffix(sonarqube.Path, "/") + "/api/system/info"
+	sonarqube.Path = strings.TrimSuffix(sonarqube.Path, "/") + infoEndpoint
 	resp, err := httpRequestHelper(
 		client,
 		"GET",
