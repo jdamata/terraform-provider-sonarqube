@@ -25,7 +25,7 @@ You will also need to correctly setup a [GOPATH](http://golang.org/doc/code.html
 
 To compile the provider, run `make`. This will install the provider into your GOPATH.
 
-In order to run the full suite of Acceptance tests, run `make -i testacc`. These tests require Docker to be installed on the machine that runs them, and do not create any remote resources.
+In order to run the full suite of Acceptance tests, run `make -i testacc`. These tests require Docker to be installed on the machine that runs them. The tests do not create any remote resources.
 
 ```sh
 $ make -i testacc
