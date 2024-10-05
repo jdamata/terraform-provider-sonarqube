@@ -231,11 +231,13 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		settings := make([]interface{}, len(componentSettings))
-		for i, s := range componentSettings {
-			key := s.(map[string]interface{})["key"].(string)
-			for _, apiSetting := range projectSettings {
-				if key == apiSetting.Key {
-					settings[i] = apiSetting.ToMap()
+		if len(componentSettings) >= 1 {
+			for i, s := range componentSettings {
+				key := s.(map[string]interface{})["key"].(string)
+				for _, apiSetting := range projectSettings {
+					if key == apiSetting.Key {
+						settings[i] = apiSetting.ToMap()
+					}
 				}
 			}
 		}
