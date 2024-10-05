@@ -168,7 +168,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		installedVersionAPI, installedEditionAPI, err := sonarqubeSystemInfo(client, sonarQubeURL, "/api/system/info")
 		if err != nil {
 			// In the case for developer and enterprise, the /api/system/info endpoint is not available 
-			installedVersionAPI, installedEditionAPI, err := sonarqubeSystemInfo(client, sonarQubeURL, "/api/editions/show_license")
+			installedVersionAPI, installedEditionAPI, err = sonarqubeSystemInfo(client, sonarQubeURL, "/api/editions/show_license")
 			if err != nil {
 				return nil, err
 			}	
