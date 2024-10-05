@@ -28,6 +28,7 @@ jobs:
           terraform_wrapper: false
       - name: run acceptance tests
         run: |
+          while [[ "$(curl -s -o /dev/null -w "%{http_code}" admin:admin@localhost:9000/api/system/info)" != "200" ]]; do echo "waiting for SonarQube to start"; sleep 15; done
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           TF_ACC: 1
