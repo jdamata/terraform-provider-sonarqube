@@ -13,9 +13,9 @@ func TestAccSonarqubeWebhookBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	resourceName := "sonarqube_webhook." + rnd
 
-	name := acctest.RandString(10)
+	name := acctest.RandString(16)
 	url := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(16, acctest.CharSetAlpha))
-	secret := acctest.RandString(10)
+	secret := acctest.RandString(16)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -47,13 +47,13 @@ func TestAccSonarqubeWebhookUpdate(t *testing.T) {
 	rnd := generateRandomResourceName()
 	resourceName := "sonarqube_webhook." + rnd
 
-	firstName := acctest.RandString(10)
+	firstName := acctest.RandString(16)
 	firstUrl := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(16, acctest.CharSetAlpha))
-	firstSecret := acctest.RandString(10)
+	firstSecret := acctest.RandString(16)
 
-	secondName := acctest.RandString(10)
+	secondName := acctest.RandString(16)
 	secondUrl := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(16, acctest.CharSetAlpha))
-	secondSecret := acctest.RandString(10)
+	secondSecret := acctest.RandString(16)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -93,7 +93,7 @@ func TestAccSonarqubeWebhookProjectBasic(t *testing.T) {
 	rnd := generateRandomResourceName()
 	resourceName := "sonarqube_webhook." + rnd
 
-	name := acctest.RandString(10)
+	name := acctest.RandString(16)
 	url := fmt.Sprintf("https://%s.com", acctest.RandStringFromCharSet(16, acctest.CharSetAlpha))
 	project := "testAccSonarqubeWebhookProject"
 
