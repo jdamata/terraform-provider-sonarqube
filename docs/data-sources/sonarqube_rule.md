@@ -1,4 +1,11 @@
-# Data Source: sonarqube_rule
+---
+page_title: "sonarqube_rule Data Source - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Use this data source to get a Sonarqube rule resource
+---
+
+# sonarqube_rule (Data Source)
 
 Use this data source to get a Sonarqube rule resource
 

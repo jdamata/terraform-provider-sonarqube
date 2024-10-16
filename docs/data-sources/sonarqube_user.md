@@ -1,4 +1,11 @@
-# Data Source: sonarqube_user
+---
+page_title: "sonarqube_user Data Source - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Use this data source to get a Sonarqube User resource
+---
+
+# sonarqube_user (Data Source)
 
 Use this data source to get a Sonarqube User resource
 
@@ -9,7 +16,6 @@ data "sonarqube_user" "user" {
   login_name = "terraform-test"
 }
 ```
-
 
 ## Argument Reference
 

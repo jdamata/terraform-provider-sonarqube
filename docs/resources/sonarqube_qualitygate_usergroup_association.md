@@ -1,9 +1,18 @@
-# sonarqube_qualitygate_usergroup_association
+---
+page_title: "sonarqube_qualitygate_usergroup_association Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Quality Gate Usergroup association resource. This can be used to associate a Quality Gate to an User or to a Group.
+  The feature is available on SonarQube 9.2 or newer.
+---
+
+# sonarqube_qualitygate_usergroup_association (Resource)
 
 Provides a Sonarqube Quality Gate Usergroup association resource. This can be used to associate a Quality Gate to an User or to a Group.
 The feature is available on SonarQube 9.2 or newer.
 
 ## Example: create a quality gate group association
+
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
@@ -27,6 +36,7 @@ resource "sonarqube_qualitygate_usergroup_association" "main" {
 ```
 
 ## Example: create a quality gate user association
+
 ```terraform
 resource "sonarqube_qualitygate" "main" {
     name = "my_qualitygate"
@@ -51,6 +61,7 @@ resource "sonarqube_qualitygate_usergroup_association" "main" {
 ```
 
 ## Argument Reference
+
 The following arguments are supported:
 
 - `gatename` - (Required) The name of the Quality Gate

@@ -1,9 +1,17 @@
-# sonarqube_user_external_entity
+---
+page_title: "sonarqube_user_external_entity Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Updates the *external identity* of a *non local* Sonarqube User. This can be used to set the *Identity Provider* which should be used to
+  authenticate a specific user.
+---
 
-Updates the *external identity* of a *non local* Sonarqube User. This can be used to set the *Identity Provider* which should be used to
+# sonarqube_user_external_entity (Resource)
+
+Updates the _external identity_ of a _non local_ Sonarqube User. This can be used to set the _Identity Provider_ which should be used to
 authenticate a specific user.
 
-The Sonarqube API currently does not provide an endpoint to read the *external identity* setting of an user. 
+The Sonarqube API currently does not provide an endpoint to read the _external identity_ setting of an user.
 
 ## Example: change the external identity to SAML
 
@@ -27,7 +35,7 @@ resource "sonarqube_user_external_identity" "remote_user" {
 The following arguments are supported:
 
 - `login_name` - (Required) The login name of the User to update. Changing this forces a new resource to be created.
-- `external_identity` - (Required) The identifier of the User used by the Authentication Provider. Changing this forces a new resource to be 
+- `external_identity` - (Required) The identifier of the User used by the Authentication Provider. Changing this forces a new resource to be
   created.
-- `external_provider` - (Required) The key of the Authentication Provider. The Authentication Provider must be activated on Sonarqube. Changing 
+- `external_provider` - (Required) The key of the Authentication Provider. The Authentication Provider must be activated on Sonarqube. Changing
   this forces a new resource to be created.

@@ -1,4 +1,11 @@
-# Data Source: sonarqube_project
+---
+page_title: "sonarqube_project Data Source - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Use this data source to get a Sonarqube project resource
+---
+
+# sonarqube_project (Data Source)
 
 Use this data source to get a Sonarqube project resource
 

@@ -1,4 +1,11 @@
-# sonarqube_webhook
+---
+page_title: "sonarqube_webhook Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Webhook resource. This can be used to manage Sonarqube webhooks.
+---
+
+# sonarqube_webhook (Resource)
 
 Provides a Sonarqube Webhook resource. This can be used to manage Sonarqube webhooks.
 
@@ -17,7 +24,7 @@ resource "sonarqube_webhook" "webhook" {
 resource "sonarqube_project" "project" {
 	name       = "project"
 	project    = "project"
-	visibility = "public" 
+	visibility = "public"
 }
 
 resource "sonarqube_webhook" "webhook" {
@@ -35,7 +42,6 @@ The following arguments are supported:
 - url - (Required) The URL to send event payloads to. This must begin with either `https://` or `http://`.
 - project - (Optional) The key of the project that will own the webhook.
 - secret - (Optional) The secret to send with the event payload.
-
 
 ## Attributes Reference
 

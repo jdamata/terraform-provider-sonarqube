@@ -1,4 +1,12 @@
-# sonarqube_alm_azure
+---
+page_title: "sonarqube_alm_azure Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Azure Devops Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
+  Platform Integration for Azure Devops.
+---
+
+# sonarqube_alm_azure (Resource)
 
 Provides a Sonarqube Azure Devops Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
 Platform Integration for Azure Devops.

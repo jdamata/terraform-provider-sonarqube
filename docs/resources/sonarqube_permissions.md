@@ -1,4 +1,11 @@
-# sonarqube_permissions
+---
+page_title: "sonarqube_permissions Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Permissions resource. This can be used to manage global and project permissions.
+---
+
+# sonarqube_permissions (Resource)
 
 Provides a Sonarqube Permissions resource. This can be used to manage global and project permissions.
 

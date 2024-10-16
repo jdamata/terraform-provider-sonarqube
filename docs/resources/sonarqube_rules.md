@@ -1,4 +1,11 @@
-# sonarqube_rules
+---
+page_title: "sonarqube_rules Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
+---
+
+# sonarqube_rules (Resource)
 
 Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
 
@@ -23,7 +30,7 @@ resource "sonarqube_rule" "rule" {
 
 The following arguments are supported
 
-- key - (Required) key of the custom rule should only contain : a-z, 0-9, _ 
+- key - (Required) key of the custom rule should only contain : a-z, 0-9, \_
 - markdown_description - (Required) Rule description
 - name - (Required) Rule name
 - params - (Optional) Parameters as semi-colon list of =, for example 'params=key1=v1;key2=v2' (Only for custom rule)

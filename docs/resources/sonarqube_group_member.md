@@ -1,4 +1,11 @@
-# sonarqube_group_member
+---
+page_title: "sonarqube_group_member Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Group Member resource. This can be used to add or remove user to or from Sonarqube Groups.
+---
+
+# sonarqube_group_member (Resource)
 
 Provides a Sonarqube Group Member resource. This can be used to add or remove user to or from Sonarqube Groups.
 

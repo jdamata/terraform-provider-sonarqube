@@ -1,4 +1,12 @@
-# sonarqube_alm_github
+---
+page_title: "sonarqube_alm_github Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube GitHub Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
+  Platform Integration for GitHub.
+---
+
+# sonarqube_alm_github (Resource)
 
 Provides a Sonarqube GitHub Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
 Platform Integration for GitHub.
@@ -37,4 +45,3 @@ The following attributes are exported:
 - client_id - GitHub App Client ID.
 - key - The unique key of the GitHub instance setting.
 - url - GitHub API URL.
-

@@ -1,4 +1,11 @@
-# Data Source: sonarqube_portfolio
+---
+page_title: "sonarqube_portfolio Data Source - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Use this data source to get a Sonarqube portfolio resource
+---
+
+# sonarqube_portfolio (Data Source)
 
 Use this data source to get a Sonarqube portfolio resource
 
@@ -24,7 +31,7 @@ The following attributes are exported:
 - description - Description of the portfolio
 - qualifier - `VW` (portfolios always have this qualifier)
 - visibility - Portfolio visibility
-- selection_mode - How the Portfolio is populated. Possible values are ``NONE``, ``MANUAL``, ``TAGS``, ``REGEXP`` or ``REST``. [See docs](https://docs.sonarqube.org/9.8/project-administration/managing-portfolios/#populating-portfolios) for how Portfolio population works
+- selection_mode - How the Portfolio is populated. Possible values are `NONE`, `MANUAL`, `TAGS`, `REGEXP` or `REST`. [See docs](https://docs.sonarqube.org/9.8/project-administration/managing-portfolios/#populating-portfolios) for how Portfolio population works
 - branch - Which branch is analyzed
 - tags - The list of tags used to populate the Portfolio. Only active when `selection_mode` is `TAGS`
 - regexp - The regular expression used to populate the portfolio. Only active when `selection_mode` is `REGEXP`

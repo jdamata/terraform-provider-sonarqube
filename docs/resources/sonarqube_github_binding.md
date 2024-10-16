@@ -1,4 +1,12 @@
-# sonarqube_github_binding
+---
+page_title: "sonarqube_github_binding Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube GitHub binding resource. This can be used to create and manage the binding between a
+  GitHub repository and a SonarQube project
+---
+
+# sonarqube_github_binding (Resource)
 
 Provides a Sonarqube GitHub binding resource. This can be used to create and manage the binding between a
 GitHub repository and a SonarQube project

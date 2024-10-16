@@ -1,4 +1,11 @@
-# sonarqube_qualitygate
+---
+page_title: "sonarqube_qualitygate Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Quality Gate resource. This can be used to create and manage Sonarqube Quality Gates and their Conditions.
+---
+
+# sonarqube_qualitygate (Resource)
 
 Provides a Sonarqube Quality Gate resource. This can be used to create and manage Sonarqube Quality Gates and their Conditions.
 
@@ -30,13 +37,14 @@ The following arguments are supported:
 - name - (Required) The name of the Quality Gate to create. Maximum length 100
 - copy_from - (Optional) Name of an existing Quality Gate to copy from
 - is_default - (Optional) When set to true this will make the added Quality Gate default
-- condition - (Required) The definition of a Condition to be used by this Quality Gate as documented in the `condition` block below.  At least one condition is required for a Quality Gate.
+- condition - (Required) The definition of a Condition to be used by this Quality Gate as documented in the `condition` block below. At least one condition is required for a Quality Gate.
 
 A `condition` block supports:
 
 - metric - (Required) Condition metric.
 
   Only metrics of the following types are allowed:
+
   - INT
   - MILLISEC
   - RATING
@@ -46,6 +54,7 @@ A `condition` block supports:
   - LEVEL.
 
   The following metrics are forbidden:
+
   - alert_status
   - security_hotspots
   - new_security_hotspots

@@ -1,7 +1,16 @@
-# sonarqube_qualityprofile_project_association
+---
+page_title: "sonarqube_qualityprofile_project_association Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Quality Profile Project association resource. This can be used to associate a Quality Profile to a Project
+---
+
+# sonarqube_qualityprofile_project_association (Resource)
+
 Provides a Sonarqube Quality Profile Project association resource. This can be used to associate a Quality Profile to a Project
 
 ## Example: create a quality profile project association
+
 ```terraform
 resource "sonarqube_qualityprofile" "main" {
 	name     = "my_quality_profile"
@@ -11,7 +20,7 @@ resource "sonarqube_qualityprofile" "main" {
 resource "sonarqube_project" "main" {
     name       = "SonarQube"
     project    = "my_project"
-    visibility = "public" 
+    visibility = "public"
 }
 
 resource "sonarqube_qualityprofile_project_association" "main" {
@@ -22,13 +31,15 @@ resource "sonarqube_qualityprofile_project_association" "main" {
 ```
 
 ## Argument Reference
+
 The following arguments are supported:
 
 - quality_profile - (Required) Name of the Quality Profile
-- project         - (Required) Name of the project
-- language        - (Required) Quality profile language. Must be a langauge in this list https://next.sonarqube.com/sonarqube/web_api/api/languages/list
+- project - (Required) Name of the project
+- language - (Required) Quality profile language. Must be a langauge in this list https://next.sonarqube.com/sonarqube/web_api/api/languages/list
 
-## Import 
+## Import
+
 Quality Profiles Project Associations can be imported using a combination of quality profile name, project name and language
 
 ```terraform

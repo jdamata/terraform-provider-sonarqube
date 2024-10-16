@@ -1,4 +1,11 @@
-# sonarqube_settings
+---
+page_title: "sonarqube_settings Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Settings resource. This can be used to manage Sonarqube settings.
+---
+
+# sonarqube_settings (Resource)
 
 Provides a Sonarqube Settings resource. This can be used to manage Sonarqube settings.
 
@@ -13,13 +20,16 @@ resource "sonarqube_setting" "single_setting" {
 ```
 
 ## Example: create a setting with multiple values
+
 ```terraform
 resource "sonarqube_setting" "multi_value_setting" {
   key    = "sonar.global.exclusions"
   values = ["foo", "bar/**/*.*"]
 }
 ```
+
 ## Example: create a setting with multiple field values
+
 ```terraform
 resource "sonarqube_setting" "multi_field_setting" {
   key   = "sonar.issue.ignore.multicriteria"
@@ -35,6 +45,7 @@ resource "sonarqube_setting" "multi_field_setting" {
   ]
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported
@@ -44,7 +55,8 @@ The following arguments are supported
 - values - (Optional) Multi-valued setting values
 - field_values - (Optional) Multi-field setting values
 
-One of value, values, field_values _must_ be supplied
+One of value, values, field*values \_must* be supplied
+
 ## Attribute Reference
 
 The following attributes are exported:

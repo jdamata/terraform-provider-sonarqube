@@ -1,4 +1,12 @@
-# sonarqube_azure_binding
+---
+page_title: "sonarqube_azure_binding Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Azure Devops binding resource. This can be used to create and manage the binding between an
+  Azure Devops repository and a SonarQube project
+---
+
+# sonarqube_azure_binding (Resource)
 
 Provides a Sonarqube Azure Devops binding resource. This can be used to create and manage the binding between an
 Azure Devops repository and a SonarQube project

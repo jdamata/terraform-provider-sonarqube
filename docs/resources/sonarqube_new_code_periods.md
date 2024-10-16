@@ -1,4 +1,11 @@
-# sonarqube_new_code_periods
+---
+page_title: "sonarqube_new_code_periods Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube New Code Periods resource. This can be used to manage Sonarqube New Code Periods.
+---
+
+# sonarqube_new_code_periods (Resource)
 
 Provides a Sonarqube New Code Periods resource. This can be used to manage Sonarqube New Code Periods.
 

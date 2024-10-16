@@ -1,4 +1,11 @@
-# sonarqube_qualityprofile_activate_rule
+---
+page_title: "sonarqube_qualityprofile_activate_rule Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
+---
+
+# sonarqube_qualityprofile_activate_rule (Resource)
 
 Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
 
@@ -8,7 +15,7 @@ Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.
 
 resource "sonarqube_rule" "allowed_maven_dependencies" {
   custom_key = "Only_use_allowed_Maven_dependencies"
-  markdown_description = "Description"  
+  markdown_description = "Description"
   name = "Only use allowed Maven dependencies"
   params = "FilePattern=**/pom.xml"
   severity = "BLOCKER"
@@ -36,7 +43,7 @@ resource "sonarqube_qualityprofile_activate_rule" "xml_rule" {
 
 The following arguments are supported
 
-- key - (Required) Quality Profile key. Can be obtained through api/qualityprofiles/search 
+- key - (Required) Quality Profile key. Can be obtained through api/qualityprofiles/search
 - params - (Optional) Parameters as semi-colon list of key=value. Ignored if parameter reset is true.
 - reset - (Optional) Reset severity and parameters of activated rule. Set the values defined on parent profile or from rule default values.
   - Possible values true false yes no (Default false)

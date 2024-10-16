@@ -1,4 +1,11 @@
-# Data Source: sonarqube_group
+---
+page_title: "sonarqube_group Data Source - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Use this data source to get a Sonarqube Group resource
+---
+
+# sonarqube_group (Data Source)
 
 Use this data source to get a Sonarqube Group resource
 
@@ -9,7 +16,6 @@ data "sonarqube_group" "group" {
   name = "terraform-test"
 }
 ```
-
 
 ## Argument Reference
 

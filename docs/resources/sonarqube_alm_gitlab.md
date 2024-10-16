@@ -1,4 +1,12 @@
-# sonarqube_alm_gitlab
+---
+page_title: "sonarqube_alm_gitlab Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube GitLab Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
+  Platform Integration for GitLab.
+---
+
+# sonarqube_alm_gitlab (Resource)
 
 Provides a Sonarqube GitLab Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
 Platform Integration for GitLab.
@@ -27,4 +35,3 @@ The following attributes are exported:
 
 - key - The unique key of the GitLab instance setting.
 - url - GitLab API URL.
-

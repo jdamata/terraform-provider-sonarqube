@@ -1,8 +1,15 @@
-# sonarqube_user
+---
+page_title: "sonarqube_user Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube User resource. This can be used to manage Sonarqube Users.
+---
+
+# sonarqube_user (Resource)
 
 Provides a Sonarqube User resource. This can be used to manage Sonarqube Users.
 
-**Note**: By default Sonarqube only *deactivates* a user on `destroy` but keeps its personal data in the database. Since release `9.7` it
+**Note**: By default Sonarqube only _deactivates_ a user on `destroy` but keeps its personal data in the database. Since release `9.7` it
 is possible to automatically anonymize the data. This can be helpful to comply with regulations like [GDPR](https://en.wikipedia.org/wiki/General_Data_Protection_Regulation).
 This behaviour can be activated with the `anonymize_user_on_delete` flag on the `provider` configuration.
 

@@ -1,4 +1,12 @@
-# sonarqube_gitlab_binding
+---
+page_title: "sonarqube_gitlab_binding Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube GitLab binding resource. This can be used to create and manage the binding between a
+  GitLab repository and a SonarQube project
+---
+
+# sonarqube_gitlab_binding (Resource)
 
 Provides a Sonarqube GitLab binding resource. This can be used to create and manage the binding between a
 GitLab repository and a SonarQube project

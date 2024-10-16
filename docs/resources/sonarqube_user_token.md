@@ -1,4 +1,11 @@
-# sonarqube_user_token
+---
+page_title: "sonarqube_user_token Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.
+---
+
+# sonarqube_user_token (Resource)
 
 Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.
 

@@ -1,4 +1,11 @@
-# sonarqube_group
+---
+page_title: "sonarqube_group Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Group resource. This can be used to create and manage Sonarqube Groups.
+---
+
+# sonarqube_group (Resource)
 
 Provides a Sonarqube Group resource. This can be used to create and manage Sonarqube Groups.
 

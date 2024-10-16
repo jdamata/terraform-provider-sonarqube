@@ -1,4 +1,12 @@
-# sonarqube_permission_template
+---
+page_title: "sonarqube_permission_template Resource - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Provides a Sonarqube Permission template resource. This can be used to create and manage Sonarqube Permission
+  templates.
+---
+
+# sonarqube_permission_template (Resource)
 
 Provides a Sonarqube Permission template resource. This can be used to create and manage Sonarqube Permission
 templates.

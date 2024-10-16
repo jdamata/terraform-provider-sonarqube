@@ -1,4 +1,11 @@
-# Data Source: sonarqube_qualitygate
+---
+page_title: "sonarqube_qualitygate Data Source - terraform-provider-sonarqube"
+subcategory: ""
+description: |-
+  Use this data source to get a Sonarqube qualitygate resource
+---
+
+# sonarqube_qualitygate (Data Source)
 
 Use this data source to get a Sonarqube qualitygate resource
 
@@ -20,7 +27,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-- name       - The name of the Quality Gate.
-- copy_from  - Origin of Quality Gate.
+- name - The name of the Quality Gate.
+- copy_from - Origin of Quality Gate.
 - is_default - Quality Gate default.
-- condition  - List of Quality Gate conditions.
+- condition - List of Quality Gate conditions.
