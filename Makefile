@@ -8,6 +8,15 @@ SONARQUBE_START_SLEEP?=60
 
 all: fmt vet build
 
+tools:
+	$(GO_VER) install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+
+docs:
+	rm -f docs/data-sources/*.md
+	rm -f docs/resources/*.md
+	rm -f docs/*.md
+	@tfplugindocs generate
+
 build:
 	go build -a -tags netgo -o terraform-provider-sonarqube
 
