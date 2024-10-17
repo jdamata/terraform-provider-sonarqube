@@ -9,7 +9,7 @@ SONARQUBE_START_SLEEP?=60
 all: fmt vet build
 
 tools:
-	$(GO_VER) install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	$(GOVERSION) install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 docs:
 	rm -f docs/data-sources/*.md
