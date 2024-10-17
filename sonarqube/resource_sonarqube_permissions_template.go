@@ -33,6 +33,8 @@ type PermissionTemplate struct {
 // Returns the resource represented by this file.
 func resourceSonarqubePermissionTemplate() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube Permission template resource. This can be used to create and manage Sonarqube Permission
+templates.`,
 		Create: resourceSonarqubePermissionTemplateCreate,
 		Read:   resourceSonarqubePermissionTemplateRead,
 		Update: resourceSonarqubePermissionTemplateUpdate,
@@ -44,21 +46,25 @@ func resourceSonarqubePermissionTemplate() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the Permission template to create. Do not use names with `/`. If needed, use `replace(var.permission_template_name, \"/\", \"_\")`. Changing this forces a new resource to be created.",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the Template.",
 			},
 			"project_key_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The project key pattern. Must be a valid Java regular expression.",
 			},
 			"default": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set the template as the default. This can only be set for one template.",
 			},
 		},
 	}
@@ -150,7 +156,6 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 	}
 
 	return fmt.Errorf("resourceSonarqubePermissionTemplateRead: Failed to find template with ID: %+v", d.Id())
-
 }
 
 func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interface{}) error {

@@ -35,10 +35,11 @@ type CreateUserResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeUserCreate,
-		Read:   resourceSonarqubeUserRead,
-		Update: resourceSonarqubeUserUpdate,
-		Delete: resourceSonarqubeUserDelete,
+		Description: "Provides a Sonarqube User resource. This can be used to manage Sonarqube Users.",
+		Create:      resourceSonarqubeUserCreate,
+		Read:        resourceSonarqubeUserRead,
+		Update:      resourceSonarqubeUserUpdate,
+		Delete:      resourceSonarqubeUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeUserImport,
 		},
@@ -46,29 +47,34 @@ func resourceSonarqubeUser() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"login_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The login name of the User to create. Changing this forces a new resource to be created.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the User to create. Changing this forces a new resource to be created.",
 			},
 			"email": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The email of the User to create.",
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "The password of User to create. This is only used if the user is of type `local`.",
 			},
 			"is_local": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				ForceNew:    true,
+				Description: "`True` if the User should be of type `local`. Defaults to `true`.",
 			},
 		},
 	}

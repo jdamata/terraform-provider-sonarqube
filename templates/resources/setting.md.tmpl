@@ -1,0 +1,19 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+### Example: create a setting with multiple values
+{{ tffile "examples/resources/sonarqube_setting/multi-value.tf" }}
+
+### Example: create a setting with multiple field values
+{{ tffile "examples/resources/sonarqube_setting/multi-field-values.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

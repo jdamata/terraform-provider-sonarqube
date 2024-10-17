@@ -42,10 +42,11 @@ type CreateProjectResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeProjectCreate,
-		Read:   resourceSonarqubeProjectRead,
-		Update: resourceSonarqubeProjectUpdate,
-		Delete: resourceSonarqubeProjectDelete,
+		Description: "Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.",
+		Create:      resourceSonarqubeProjectCreate,
+		Read:        resourceSonarqubeProjectRead,
+		Update:      resourceSonarqubeProjectUpdate,
+		Delete:      resourceSonarqubeProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectImport,
 		},
@@ -53,18 +54,21 @@ func resourceSonarqubeProject() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the Project to create",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
 			},
 			"visibility": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "public",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "public",
+				Description: "Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used. Valid values are `public` and `private`.",
 			},
 			"tags": {
 				Type:     schema.TypeList,
@@ -73,6 +77,7 @@ func resourceSonarqubeProject() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Description: "A list of tags to put on the project.",
 			},
 			"setting": {
 				Type:        schema.TypeList,
@@ -109,6 +114,7 @@ func resourceSonarqubeProject() *schema.Resource {
 							},
 						},
 					},
+					Description: "The definition of a Setting to be used by this Portfolio as documented in the `setting` block below.",
 				},
 			},
 		},
@@ -252,7 +258,6 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
-
 	// handle default updates (api/users/update)
 	if d.HasChange("visibility") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL

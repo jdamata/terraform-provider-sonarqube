@@ -1,7 +1,7 @@
 ---
-page_title: "Sonarqube Provider"
-subcategory: ""
+page_title: "Provider: sonarqube"
 description: |-
+  The sonarqube provider is used to configure sonarqube. The provider needs to be configured with a url, and either with user and password or token.
 ---
 
 # Provider configuration
