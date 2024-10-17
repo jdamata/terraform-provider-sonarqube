@@ -11,15 +11,16 @@ Terraform provider for managing Sonarqube configuration
 This is a community provider and is not supported by Hashicorp.
 
 ## Installation
+
 This provider has been published to the Terraform Registry at https://registry.terraform.io/providers/jdamata/sonarqube. Please visit the registry for documentation and installation instructions.
 
 ## Developing the Provider
 
 Working on this provider requires the following:
 
-* [Terraform](https://www.terraform.io/downloads.html)
-* [Go](http://www.golang.org)
-* [Docker Engine](https://docs.docker.com/engine/install/)
+- [Terraform](https://www.terraform.io/downloads.html)
+- [Go](http://www.golang.org)
+- [Docker Engine](https://docs.docker.com/engine/install/)
 
 You will also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `${GOPATH}/bin` to your `$PATH`.
 
@@ -29,6 +30,14 @@ In order to run the full suite of Acceptance tests, run `make -i testacc`. These
 
 ```sh
 $ make -i testacc
+```
+
+## Generate documentation
+
+Documentation is generated using `tfplugindocs`. To generate documentation, run the following command before committing changes:
+
+```sh
+$ make docs
 ```
 
 ## Debugging the Provider
