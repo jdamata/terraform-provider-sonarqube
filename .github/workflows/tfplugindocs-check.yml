@@ -3,7 +3,7 @@ name: Check if tfplugindocs result matches /docs
 on:
   push:
     branches:
-      - main
+      - master
       - "release/**"
   pull_request:
     paths:
