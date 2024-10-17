@@ -10,7 +10,12 @@ GO_VER ?= go
 all: fmt vet build
 
 tools:
-	$(GO_VER) install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	@if ! [ -x "$$(command -v tfplugindocs)" ]; then \
+		echo "Installing tfplugindocs..."; \
+		$(GO_VER) get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs && $(GO_VER) install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs; \
+	else \
+		echo "tfplugindocs is already installed."; \
+	fi
 
 docs:
 	rm -f docs/data-sources/*.md
