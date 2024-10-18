@@ -1,0 +1,48 @@
+name: tfplugindocs generate
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/tfplugindocs-check.yml
+      - Makefile
+      - docs/**
+      - examples/**
+      - templates/**
+      - sonarqube/**
+
+jobs:
+  tfplugindocs_generate:
+    name: tfplugindocs generate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+      - uses: actions/setup-go@v5.0.2
+        with:
+          go-version-file: tools/go.mod
+      - name: GOCACHE
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: |
+          make tools
+          make docs
+      - uses: actions-js/push@v1.5
+        name: Github commit and push
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.head_ref }}
+          message: "[bot][skip ci] docs: tfplugindocs generate"
