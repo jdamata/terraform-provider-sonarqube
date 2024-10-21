@@ -23,7 +23,7 @@ resource "sonarqube_plugin" "main" {
 
 ### Required
 
-- `key` (String) The key identifying the plugin to uninstall
+- `key` (String) The key identifying the plugin to uninstall.
 
 ### Read-Only
 
