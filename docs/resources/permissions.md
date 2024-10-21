@@ -56,7 +56,7 @@ resource "sonarqube_permissions" "john_project_read" {
 ### Optional
 
 - `group_name` (String) The name of the Group that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `login_name`
-- `login_name` (String) The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`
+- `login_name` (String) The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`.
 - `project_key` (String) Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `template_id & template_name`
 - `template_id` (String) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_name`
 - `template_name` (String) Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_id`
