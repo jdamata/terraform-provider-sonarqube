@@ -52,7 +52,7 @@ func resourceSonarqubePlugin() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The key identifying the plugin to uninstall",
+				Description: "The key identifying the plugin to uninstall.",
 			},
 		},
 	}
