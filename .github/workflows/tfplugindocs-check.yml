@@ -4,17 +4,7 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    paths:
-      - .github/workflows/tfplugindocs-check.yml
-      - go.sum
-      - Makefile
-      - sonarqube/**
-      - main.go
-      - examples/**
-      - docs/**
-      - templates/**
-
+  
 jobs:
   tfplugindocs_check:
     name: tfplugindocs check
