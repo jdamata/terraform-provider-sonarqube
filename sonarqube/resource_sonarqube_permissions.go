@@ -40,7 +40,7 @@ func resourceSonarqubePermissions() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"login_name", "group_name"},
-				Description:  "The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`",
+				Description:  "The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`.",
 			},
 			"group_name": {
 				Type:         schema.TypeString,
