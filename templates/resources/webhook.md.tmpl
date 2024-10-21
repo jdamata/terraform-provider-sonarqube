@@ -1,0 +1,19 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+### Example: create a webhook
+{{ tffile "examples/resources/sonarqube_webhook/webhook.tf" }}
+
+### Example: create a webhook owned by a project
+{{ tffile "examples/resources/sonarqube_webhook/project-webhook.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

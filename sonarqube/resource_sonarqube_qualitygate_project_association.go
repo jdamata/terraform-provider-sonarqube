@@ -22,9 +22,10 @@ type GetQualityGateAssociation struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeQualityGateProjectAssociationCreate,
-		Read:   resourceSonarqubeQualityGateProjectAssociationRead,
-		Delete: resourceSonarqubeQualityGateProjectAssociationDelete,
+		Description: "Provides a Sonarqube Quality Gate Project association resource. This can be used to associate a Quality Gate to a Project",
+		Create:      resourceSonarqubeQualityGateProjectAssociationCreate,
+		Read:        resourceSonarqubeQualityGateProjectAssociationRead,
+		Delete:      resourceSonarqubeQualityGateProjectAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeQualityGateProjectAssociationImport,
 		},
@@ -37,14 +38,16 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 			"gatename": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The name of the Quality Gate",
 			},
 			"projectkey": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
 			},
 		},
 	}

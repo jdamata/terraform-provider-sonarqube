@@ -25,9 +25,10 @@ type GetActiveRules struct {
 
 func resourceSonarqubeQualityProfileRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeQualityProfileRuleCreate,
-		Delete: resourceSonarqubeQualityProfileRuleDelete,
-		Read:   resourceSonarqubeQualityProfileRuleRead,
+		Description: "Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.",
+		Create:      resourceSonarqubeQualityProfileRuleCreate,
+		Delete:      resourceSonarqubeQualityProfileRuleDelete,
+		Read:        resourceSonarqubeQualityProfileRuleRead,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeQualityProfileRuleImporter,
 		},
@@ -49,11 +50,12 @@ func resourceSonarqubeQualityProfileRule() *schema.Resource {
 				},
 			},
 			"reset": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Reset severity and parameters of activated rule. Set the values defined on parent profile or from rule default values.",
-				Default:     "false",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: `Reset severity and parameters of activated rule. Set the values defined on parent profile or from rule default values.
+  - Possible values true false yes no (Default false)`,
+				Default: "false",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{"true", "false", "yes", "no"},
@@ -68,10 +70,11 @@ func resourceSonarqubeQualityProfileRule() *schema.Resource {
 				Description: "Rule key",
 			},
 			"severity": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Rule severity",
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `Severity. Ignored if parameter reset is true.
+  - Possible values - INFO, MINOR, MAJOR, CRITICAL, BLOCKER`,
+				ForceNew: true,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{"INFO", "MINOR", "MAJOR", "CRITICAL", "BLOCKER"},
@@ -148,7 +151,6 @@ func resourceSonarqubeQualityProfileRuleRead(d *schema.ResourceData, m interface
 		http.StatusOK,
 		"resourceSonarqubeQualityProfileRuleRead",
 	)
-
 	if err != nil {
 		return err
 	}

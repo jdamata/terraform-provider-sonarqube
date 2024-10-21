@@ -28,9 +28,10 @@ type GroupPermission struct {
 // Returns the resource represented by this file.
 func resourceSonarqubePermissions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubePermissionsCreate,
-		Read:   resourceSonarqubePermissionsRead,
-		Delete: resourceSonarqubePermissionsDelete,
+		Description: "Provides a Sonarqube Permissions resource. This can be used to manage global and project permissions.",
+		Create:      resourceSonarqubePermissionsCreate,
+		Read:        resourceSonarqubePermissionsRead,
+		Delete:      resourceSonarqubePermissionsDelete,
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -39,30 +40,35 @@ func resourceSonarqubePermissions() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"login_name", "group_name"},
+				Description:  "The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`.",
 			},
 			"group_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"login_name", "group_name"},
+				Description:  "The name of the Group that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `login_name`",
 			},
 			"project_key": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				ConflictsWith: []string{"template_id", "template_name"},
+				Description:   "Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `template_id & template_name`",
 			},
 			"template_id": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				ConflictsWith: []string{"project_key", "template_name"},
+				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_name`",
 			},
 			"template_name": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				ConflictsWith: []string{"project_key", "template_id"},
+				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_id`",
 			},
 			"permissions": {
 				Type:     schema.TypeList,
@@ -72,13 +78,13 @@ func resourceSonarqubePermissions() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Description: "A list of permissions that should be applied. Changing this forces a new resource to be created. Possible values are: `admin`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `scan`, `user`.",
 			},
 		},
 	}
 }
 
 func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) error {
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	permissions := expandPermissions(d)
 

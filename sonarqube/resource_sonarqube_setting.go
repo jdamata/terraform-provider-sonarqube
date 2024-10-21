@@ -41,10 +41,11 @@ func (a Setting) ToMap() map[string]interface{} {
 
 func resourceSonarqubeSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeSettingsCreate,
-		Read:   resourceSonarqubeSettingsRead,
-		Update: resourceSonarqubeSettingsUpdate,
-		Delete: resourceSonarqubeSettingsDelete,
+		Description: "Provides a Sonarqube Settings resource. This can be used to manage Sonarqube settings.",
+		Create:      resourceSonarqubeSettingsCreate,
+		Read:        resourceSonarqubeSettingsRead,
+		Update:      resourceSonarqubeSettingsUpdate,
+		Delete:      resourceSonarqubeSettingsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeSettingsImporter,
 		},
@@ -193,6 +194,7 @@ func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) erro
 
 	return resourceSonarqubeSettingsRead(d, m)
 }
+
 func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string {
 	// build the base query
 	RawQuery := url.Values{
@@ -430,7 +432,6 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 			http.StatusNoContent,
 			"deleteSetting",
 		)
-
 		if err != nil {
 			return fmt.Errorf("removeComponentSettings: Failed to delete setting %s: %+v", component, err)
 		}

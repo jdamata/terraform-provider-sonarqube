@@ -29,6 +29,8 @@ type GetQualityGateUsergroupAssociationProjects struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityGateUsergroupAssociation() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube Quality Gate Usergroup association resource. This can be used to associate a Quality Gate to an User or to a Group.
+The feature is available on SonarQube 9.2 or newer.`,
 		Create: resourceSonarqubeQualityGateUsergroupAssociationCreate,
 		Read:   resourceSonarqubeQualityGateUsergroupAssociationRead,
 		Delete: resourceSonarqubeQualityGateUsergroupAssociationDelete,
@@ -40,17 +42,20 @@ func resourceSonarqubeQualityGateUsergroupAssociation() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"login_name", "group_name"},
+				Description:  "The name of the User to associate. Either `group_name` or `login_name` should be provided.",
 			},
 			"group_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"login_name", "group_name"},
+				Description:  "The name of the Group to associate. Either `group_name` or `login_name` should be provided.",
 			},
 			"gatename": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the Quality Gate",
 			},
 		},
 	}

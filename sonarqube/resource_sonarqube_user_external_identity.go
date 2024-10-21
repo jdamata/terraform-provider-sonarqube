@@ -13,6 +13,10 @@ import (
 // Returns the resource represented by this file.
 func resourceSonarqubeUserExternalIdentity() *schema.Resource {
 	return &schema.Resource{
+		Description: `Updates the _external identity_ of a _non local_ Sonarqube User. This can be used to set the _Identity Provider_ which should be used to
+authenticate a specific user.
+
+The Sonarqube API currently does not provide an endpoint to read the _external identity_ setting of an user.`,
 		Create: resourceSonarqubeUserExternalIdentityCreate,
 		Read:   resourceSonarqubeUserExternalIdentityRead,
 		Delete: resourceSonarqubeUserExternalIdentityDelete,
@@ -20,19 +24,22 @@ func resourceSonarqubeUserExternalIdentity() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"login_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The login name of the User to update. Changing this forces a new resource to be created.",
 			},
 			"external_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The identifier of the User used by the Authentication Provider. Changing this forces a new resource to be created.",
 			},
 			"external_provider": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The key of the Authentication Provider. The Authentication Provider must be activated on Sonarqube. Changing this forces a new resource to be created.",
 			},
 		},
 	}
@@ -77,12 +84,10 @@ func resourceSonarqubeUserExternalIdentityCreate(d *schema.ResourceData, m inter
 }
 
 func resourceSonarqubeUserExternalIdentityRead(d *schema.ResourceData, m interface{}) error {
-
 	return nil
 }
 
 func resourceSonarqubeUserExternalIdentityDelete(d *schema.ResourceData, m interface{}) error {
-
 	return nil
 }
 

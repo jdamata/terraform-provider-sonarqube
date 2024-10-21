@@ -6,23 +6,28 @@ import (
 
 func dataSourceSonarqubeQualityProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSonarqubeQualityProfileRead,
+		Description: "Use this data source to get a Sonarqube qualityprofile resource",
+		Read:        dataSourceSonarqubeQualityProfileRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the Quality Profile",
 			},
 			"key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The key of the Quality Profile",
 			},
 			"language": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Quality Profile language",
 			},
 			"is_default": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Quality Profile default",
 			},
 		},
 	}

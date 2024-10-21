@@ -6,15 +6,18 @@ import (
 
 func dataSourceSonarqubeGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSonarqubeGroupRead,
+		Description: "Use this data source to get a Sonarqube Group resource",
+		Read:        dataSourceSonarqubeGroupRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the group.",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The group description.",
 			},
 		},
 	}

@@ -6,23 +6,28 @@ import (
 
 func dataSourceSonarqubeUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSonarqubeUserRead,
+		Description: "Use this data source to get a Sonarqube User resource",
+		Read:        dataSourceSonarqubeUserRead,
 		Schema: map[string]*schema.Schema{
 			"login_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The login name of the user",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the user",
 			},
 			"email": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The email of the user",
 			},
 			"is_local": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the user is local",
 			},
 		},
 	}

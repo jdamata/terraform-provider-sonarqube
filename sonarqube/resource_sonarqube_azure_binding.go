@@ -24,6 +24,8 @@ type GetAzureBinding struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeAzureBinding() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube Azure Devops binding resource. This can be used to create and manage the binding between an
+Azure Devops repository and a SonarQube project`,
 		Create: resourceSonarqubeAzureBindingCreate,
 		Read:   resourceSonarqubeAzureBindingRead,
 		Delete: resourceSonarqubeAzureBindingDelete,
