@@ -5,7 +5,7 @@ SONARQUBE_IMAGE?=sonarqube:latest
 SONARQUBE_START_SLEEP?=60
 GO_VER ?= go
 
-.PHONY: all vet build test
+.PHONY: all vet build test tools docs
 
 all: fmt vet build
 
@@ -13,9 +13,6 @@ tools:
 	cd tools && $(GO_VER) install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 docs:
-	rm -f docs/data-sources/*.md
-	rm -f docs/resources/*.md
-	rm -f docs/*.md
 	@tfplugindocs generate
 
 build:

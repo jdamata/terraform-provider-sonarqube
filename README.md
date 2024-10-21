@@ -34,12 +34,15 @@ $ make -i testacc
 
 ## Generate documentation
 
-Documentation is generated using `tfplugindocs`. To generate documentation, run the following command before committing changes:
+Documentation is generated using `tfplugindocs`. These are auto-generated when creating a PR to the project. 
+
+If you wish to generate documentation locally to verify it's accuracy, run the following commands:
 
 ```sh
+$ make tools
 $ make docs
 ```
 
 ## Debugging the Provider
 
-See [debugging.md](docs/debugging.md)
+See [debugging.md](debugging.md)
