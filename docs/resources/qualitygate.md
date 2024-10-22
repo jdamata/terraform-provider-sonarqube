@@ -50,13 +50,13 @@ For example, if you are using a grade rating metric such as `new_reliability_rat
 
 ### Required
 
-- `name` (String) The name of the Quality Gate to create. Maximum length 100
+- `name` (String) The name of the Quality Gate to create. Maximum length 100.
 
 ### Optional
 
-- `condition` (Block List) A list of conditions that the gate uses (see [below for nested schema](#nestedblock--condition))
-- `copy_from` (String) Name of an existing Quality Gate to copy from
-- `is_default` (Boolean) When set to true this Quality Gate is set as default
+- `condition` (Block List) A list of conditions that the gate uses. (see [below for nested schema](#nestedblock--condition))
+- `copy_from` (String) Name of an existing Quality Gate to copy from.
+- `is_default` (Boolean) When set to true this Quality Gate is set as default.
 
 ### Read-Only
 

@@ -61,25 +61,25 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the Quality Gate to create. Maximum length 100",
+				Description: "The name of the Quality Gate to create. Maximum length 100.",
 			},
 			"copy_from": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"condition"},
-				Description:   "Name of an existing Quality Gate to copy from",
+				Description:   "Name of an existing Quality Gate to copy from.",
 			},
 			"is_default": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "When set to true this Quality Gate is set as default",
+				Description: "When set to true this Quality Gate is set as default.",
 				Default:     false,
 			},
 			"condition": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of conditions that the gate uses",
+				Description: "A list of conditions that the gate uses.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
