@@ -35,10 +35,11 @@ type Group struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeGroupCreate,
-		Read:   resourceSonarqubeGroupRead,
-		Update: resourceSonarqubeGroupUpdate,
-		Delete: resourceSonarqubeGroupDelete,
+		Description: "Provides a Sonarqube Group resource. This can be used to create and manage Sonarqube Groups.",
+		Create:      resourceSonarqubeGroupCreate,
+		Read:        resourceSonarqubeGroupRead,
+		Update:      resourceSonarqubeGroupUpdate,
+		Delete:      resourceSonarqubeGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeGroupImport,
 		},
@@ -46,12 +47,14 @@ func resourceSonarqubeGroup() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the Group to create. Changing this forces a new resource to be created.",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the Group.",
 			},
 		},
 	}

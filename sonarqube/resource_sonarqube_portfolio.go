@@ -46,10 +46,11 @@ const (
 // Returns the resource represented by this file.
 func resourceSonarqubePortfolio() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubePortfolioCreate,
-		Read:   resourceSonarqubePortfolioRead,
-		Update: resourceSonarqubePortfolioUpdate,
-		Delete: resourceSonarqubePortfolioDelete,
+		Description: "Provides a Sonarqube Portfolio resource. This can be used to create and manage Sonarqube Portfolio. Note that the SonarQube API for Portfolios is called ``views``",
+		Create:      resourceSonarqubePortfolioCreate,
+		Read:        resourceSonarqubePortfolioRead,
+		Update:      resourceSonarqubePortfolioUpdate,
+		Delete:      resourceSonarqubePortfolioDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubePortfolioImport,
 		},
@@ -63,19 +64,22 @@ func resourceSonarqubePortfolio() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The key of the Portfolio to create",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "The name of the Portfolio to create",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "A description of the Portfolio to create",
 			},
 			"qualifier": {
 				Type:     schema.TypeString,
@@ -87,6 +91,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Default:      "public",
 				ForceNew:     true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI
 				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
+				Description:  "Whether the created portfolio should be visible to everyone, or only specific user/groups. If no visibility is specified, the default portfolio visibility will be `public`.",
 			},
 			"selection_mode": {
 				Type:         schema.TypeString,
@@ -94,6 +99,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Default:      NONE,
 				ForceNew:     false,
 				ValidateFunc: validation.StringInSlice([]string{NONE, MANUAL, TAGS, REGEXP, REST}, false),
+				Description:  "How to populate the Portfolio to create. Possible values are `NONE`, `MANUAL`, `TAGS`, `REGEXP` or `REST`. [See docs](https://docs.sonarqube.org/9.8/project-administration/managing-portfolios/#populating-portfolios) for how Portfolio population works",
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:        schema.TypeString,
@@ -109,6 +115,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Description: "List of Project tags to populate the Portfolio from. Only active when `selection_mode` is `TAGS`",
 			},
 			"regexp": { // Only active for REGEXP
 				Type:          schema.TypeString,
@@ -116,6 +123,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				ForceNew:      false,
 				ConflictsWith: []string{"selected_projects", "tags"},
 				ValidateFunc:  validation.StringIsValidRegExp,
+				Description:   "A regular expression that is used to match Projects with a matching name OR key. If they match, they are added to the Portfolio",
 			},
 			"selected_projects": {
 				Type:          schema.TypeSet,
@@ -139,6 +147,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 							},
 						},
 					},
+					Description: "Block set of projects to add to the portfolio. Only active when `selection_mode` is `MANUAL`. See [below for nested schema](#selected_projects)",
 				},
 			},
 		},
@@ -190,7 +199,6 @@ func validatePortfolioResource(d *schema.ResourceDiff) error {
 	default:
 		return fmt.Errorf("resourceSonarqubePortfolioCreate: selection_mode needs to be set to one of NONE, MANUAL, TAGS, REGEXP, REST")
 	}
-
 }
 
 func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeURL url.URL) error {
@@ -423,7 +431,6 @@ func resourceSonarqubePortfolioImport(d *schema.ResourceData, m interface{}) ([]
 }
 
 func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfolioReadResponse *Portfolio) {
-
 	d.SetId(portfolioReadResponse.Key)
 	d.Set("key", portfolioReadResponse.Key)
 	d.Set("name", portfolioReadResponse.Name)
@@ -446,7 +453,6 @@ func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfol
 	if len(portfolioReadResponse.SelectedProjects) > 0 {
 		d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects))
 	}
-
 }
 
 func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, error) {

@@ -47,9 +47,10 @@ const (
 // Returns the resource represented by this file.
 func resourceSonarqubeUserToken() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeUserTokenCreate,
-		Read:   resourceSonarqubeUserTokenRead,
-		Delete: resourceSonarqubeUserTokenDelete,
+		Description: "Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.",
+		Create:      resourceSonarqubeUserTokenCreate,
+		Read:        resourceSonarqubeUserTokenRead,
+		Delete:      resourceSonarqubeUserTokenDelete,
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -58,22 +59,26 @@ func resourceSonarqubeUserToken() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 100)),
+				Description:      "The name of the Token to create. Changing this forces a new resource to be created.",
 			},
 			"login_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The login name of the User for which the token should be created. If not set, the token is created for the authenticated user. Changing this forces a new resource to be created.",
 			},
 			"expiration_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+				Description: "The expiration date of the token being generated, in ISO 8601 format (YYYY-MM-DD). If not set, default to no expiration.",
 			},
 			"token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "The token value.",
 			},
 			"type": {
 				Type:             schema.TypeString,
@@ -81,11 +86,13 @@ func resourceSonarqubeUserToken() *schema.Resource {
 				Default:          UserToken,
 				ForceNew:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{string(UserToken), string(GlobalAnalysisToken), string(ProjectAnalysisToken)}, false)),
+				Description:      "The kind of Token to create. Changing this forces a new resource to be created. Possible values are USER_TOKEN, GLOBAL_ANALYSIS_TOKEN, or PROJECT_ANALYSIS_TOKEN. Defaults to USER_TOKEN. If set to PROJECT_ANALYSIS_TOKEN, then the project_key must also be specified.",
 			},
 			"project_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The key of the only project that can be analyzed by the PROJECT_ANALYSIS TOKEN being created. Changing this forces a new resource to be created.",
 			},
 		},
 	}

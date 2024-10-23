@@ -29,10 +29,11 @@ type ListWebhooksResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeWebhookCreate,
-		Read:   resourceSonarqubeWebhookRead,
-		Update: resourceSonarqubeWebhookUpdate,
-		Delete: resourceSonarqubeWebhookDelete,
+		Description: "Provides a Sonarqube Webhook resource. This can be used to manage Sonarqube webhooks.",
+		Create:      resourceSonarqubeWebhookCreate,
+		Read:        resourceSonarqubeWebhookRead,
+		Update:      resourceSonarqubeWebhookUpdate,
+		Delete:      resourceSonarqubeWebhookDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeWebhookImport,
 		},
@@ -40,18 +41,21 @@ func resourceSonarqubeWebhook() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the webhook to create. This will be displayed in the Sonarqube administration console.",
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The URL to send event payloads to. This must begin with either `https://` or `http://`.",
 			},
 			"secret": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Optional:  true,
-				Computed:  true,
+				Type:        schema.TypeString,
+				Sensitive:   true,
+				Optional:    true,
+				Computed:    true,
+				Description: "The secret to send with the event payload.",
 			},
 			"project": {
 				Type:        schema.TypeString,
