@@ -1,0 +1,19 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+### Example: create a local user
+{{ tffile "examples/resources/sonarqube_user/local.tf" }}
+
+### Example: create a remote user
+{{ tffile "examples/resources/sonarqube_user/remote.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

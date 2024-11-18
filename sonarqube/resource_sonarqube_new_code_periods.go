@@ -35,10 +35,11 @@ const (
 // Returns the resource represented by this file.
 func resourceSonarqubeNewCodePeriodsBinding() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeNewCodePeriodsCreate,
-		Read:   resourceSonarqubeNewCodePeriodsRead,
-		Update: resourceSonarqubeNewCodePeriodsCreate,
-		Delete: resourceSonarqubeNewCodePeriodsDelete,
+		Description: "Provides a Sonarqube New Code Periods resource. This can be used to manage Sonarqube New Code Periods.",
+		Create:      resourceSonarqubeNewCodePeriodsCreate,
+		Read:        resourceSonarqubeNewCodePeriodsRead,
+		Update:      resourceSonarqubeNewCodePeriodsCreate,
+		Delete:      resourceSonarqubeNewCodePeriodsDelete,
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -47,20 +48,24 @@ func resourceSonarqubeNewCodePeriodsBinding() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				RequiredWith: []string{"project"},
+				Description:  "The name of a branch of a project for which the new code period will be configured. Changing this will force a new resource to be created. Setting this also requires setting the 'project' argument.",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The key of a project for which the new code period will be configured. Changing this will force a new resource to be created.",
 			},
 			"type": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{string(SpecificAnalysis), string(PreviousVersion), string(NumberOfDays), string(ReferenceBranch)}, false)),
+				Description:      "The kind of new code period to use. Supported values are SPECIFIC_ANALYSIS, PREVIOUS_VERSION, NUMBER_OF_DAYS, or REFERENCE_BRANCH.",
 			},
 			"value": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The desired value of the new code period. Varies based on the 'type'. For SPECIFIC_ANALYIS, the value must be the UUID of a previous analysis. For NUMBER_OF_DAYS it must be a numeric string. For REFERENCE_BRANCH it should be the name of branch on the project. For PREVIOUS_VERSION it must **not** be set.",
 			},
 		},
 	}

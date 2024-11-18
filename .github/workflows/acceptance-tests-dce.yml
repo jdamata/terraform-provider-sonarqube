@@ -13,27 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Add hosts to /etc/hosts
         run: |
             sudo echo "127.0.0.1 sonarqube.dev.local" | sudo tee -a /etc/hosts      
       - name: Start Sonarqube dce
         run: docker compose -f docker-compose-dce.yml --env-file ${{ matrix.env }} up -d 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.18
+          go-version: 1.22
       - name: build and vet the provider
         run: make
         env:
           GO111MODULE: on
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - name: run acceptance tests
         run: |
-          sleep 120 # Testing if sonarqube dce needs more time to start
+          while [[ "$(curl -s -o /dev/null -w "%{http_code}" admin:admin@sonarqube.dev.local/api/system/info)" != "200" ]]; do echo "waiting for SonarQube to start"; sleep 15; done
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           TF_ACC: 1

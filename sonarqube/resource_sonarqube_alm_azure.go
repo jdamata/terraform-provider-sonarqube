@@ -22,6 +22,8 @@ type GetAlmAzure struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeAlmAzure() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube Azure Devops Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
+Platform Integration for Azure Devops.`,
 		Create: resourceSonarqubeAlmAzureCreate,
 		Read:   resourceSonarqubeAlmAzureRead,
 		Update: resourceSonarqubeAlmAzureUpdate,
@@ -114,8 +116,8 @@ func resourceSonarqubeAlmAzureRead(d *schema.ResourceData, m interface{}) error 
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to find azure binding: %+v", d.Id())
-
 }
+
 func resourceSonarqubeAlmAzureUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/update_azure"

@@ -1,0 +1,22 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+### Example: create a user, user token and output the token value
+{{ tffile "examples/resources/sonarqube_user_token/user-token.tf" }}
+
+### Example: create an expiring global analysis token and output the token value
+{{ tffile "examples/resources/sonarqube_user_token/global-analysis-token.tf" }}
+
+### Example: create a project, project analysis token, and output the token value
+{{ tffile "examples/resources/sonarqube_user_token/project-analysis-token.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

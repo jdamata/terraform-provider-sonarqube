@@ -27,3 +27,6 @@ coverage.txt
 # dist directory for local testingg
 dist/
 .vscode/settings.json
+
+.DS_Store
+

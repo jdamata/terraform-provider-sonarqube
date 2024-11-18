@@ -1,0 +1,26 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+### Example: Set global admin permissions for a group called "my-admins"
+{{ tffile "examples/resources/sonarqube_permissions/global-admin.tf" }}
+
+### Example: Set project admin permissions for a group called "my-project-admins"
+{{ tffile "examples/resources/sonarqube_permissions/project-admin.tf" }}
+
+### Example: Set project admin permissions for a group called "my-project-admins on a permission template"
+{{ tffile "examples/resources/sonarqube_permissions/project-template.tf" }}
+
+### Example: Set codeviewer & user permissions on project level for a user called "johndoe"
+{{ tffile "examples/resources/sonarqube_permissions/project-user.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
