@@ -86,7 +86,7 @@ func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, name string, pr
 	  }
 
 	}
-	`, rnd, name, project, valuesKey, valuesData)
+	`, rnd, name, project, valuesKey, generateHCLList(valuesData))
 }
 
 func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string, values []string, fields map[string]string) string {
