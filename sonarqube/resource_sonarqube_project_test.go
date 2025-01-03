@@ -58,6 +58,30 @@ func testAccSonarqubeProjectSettingsConfig(rnd string, name string, project stri
 		`, rnd, name, project, visibility, value)
 }
 
+func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, ame string, project string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_project" "%[1]s" {
+		  name       = "%[2]s"
+		  project    = "%[3]s"
+		  visibility = "public"
+
+		  setting {
+			key   = "sonar.issue.ignore.multicriteria"
+			field_values = [
+                {
+                    "resourceKey" = "src/main/java/**/*"
+                    "ruleKey"     = "java:S1106"
+                },
+                {
+                    "resourceKey" = "src/main/java/**/*"
+                    "ruleKey"     = "java:S1120"
+                }
+            ]
+		  }
+		}
+		`, rnd, project)
+}
+
 func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string, values []string, fields map[string]string) string {
 	formattedValues := generateHCLList(values)
 	formattedFields := generateHCLMap(fields)
@@ -344,6 +368,29 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(name, "setting.1.values.*", ".tfvars"),
 					resource.TestCheckResourceAttr(name, "setting.2.key", "sonar.issue.ignore.multicriteria"),
 					resource.TestCheckTypeSetElemNestedAttrs(name, "setting.2.field_values.*", fieldValues),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(1)),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
 				),
 			},
 		},
