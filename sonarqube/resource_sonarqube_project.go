@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -237,16 +238,23 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		var settings []interface{}
-		for _, apiSetting := range projectSettings {
-			if !apiSetting.Inherited {
-				settings = append(settings, apiSetting.ToMap())
-			} else if len(componentSettings) > 0 {
-				// cases when defined setting has same value as default (is considered inherited)
-				for _, s := range componentSettings {
+		var settingsKey []string
+		if len(componentSettings) > 0 {
+			// looks for backend value for defined settings
+			for _, s := range componentSettings {
+				for _, apiSetting := range projectSettings {
 					if s.(map[string]interface{})["key"].(string) == apiSetting.Key {
 						settings = append(settings, apiSetting.ToMap())
+						settingsKey = append(settingsKey, apiSetting.Key)
 					}
 				}
+			}
+		}
+		// checks for any defined setting (not inherited)
+		for _, apiSetting := range projectSettings {
+			if !apiSetting.Inherited && !slices.Contains(settingsKey, apiSetting.Key) {
+				settings = append(settings, apiSetting.ToMap())
+				settingsKey = append(settingsKey, apiSetting.Key)
 			}
 		}
 		d.Set("setting", settings)
