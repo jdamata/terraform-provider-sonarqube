@@ -230,7 +230,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	// Get settings
 	var projectSettings []Setting
 	if _, ok := d.GetOk("setting"); ok {
-		//componentSettings := d.Get("setting").([]interface{})
+		componentSettings := d.Get("setting").([]interface{})
 		projectSettings, err = getComponentSettings(d.Id(), m)
 		if err != nil {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
@@ -240,24 +240,15 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		for _, apiSetting := range projectSettings {
 			if !apiSetting.Inherited {
 				settings = append(settings, apiSetting.ToMap())
+			} else if len(componentSettings) > 0 {
+				// cases when defined setting has same value as default (is considered inherited)
+				for _, s := range componentSettings {
+					if s.(map[string]interface{})["key"].(string) == apiSetting.Key {
+						settings = append(settings, apiSetting.ToMap())
+					}
+				}
 			}
 		}
-		// if len(componentSettings) > 0 {
-		// 	for i, s := range componentSettings {
-		// 		setting := s.(map[string]interface{})
-		// 		key := setting["key"].(string)
-		// 		found := false
-		// 		for _, apiSetting := range projectSettings {
-		// 			if key == apiSetting.Key {
-		// 				settings[i] = apiSetting.ToMap()
-		// 				found = true
-		// 			}
-		// 		}
-		// 		if !found {
-
-		// 		}
-		// 	}
-		// }
 		d.Set("setting", settings)
 	}
 
