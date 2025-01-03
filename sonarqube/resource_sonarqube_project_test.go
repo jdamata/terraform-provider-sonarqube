@@ -59,7 +59,7 @@ func testAccSonarqubeProjectSettingsConfig(rnd string, name string, project stri
 		`, rnd, name, project, visibility, value)
 }
 
-func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, name string, project string) string {
+func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, name string, project string, valuesKey string, valuesData []string) string {
 	return fmt.Sprintf(`
 	resource "sonarqube_project" "%[1]s" {
 	  name       = "%[2]s"
@@ -81,11 +81,12 @@ func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, name string, pr
 	  }
 
 	  setting {
-	    key    = "sonar.dbcleaner.branchesToKeepWhenInactive"
-	    values = ["master", "main", "release/*", "dev"]
+	  	key    = "%[4]s"
+		values = %[5]s
 	  }
+
 	}
-	`, rnd, name, project)
+	`, rnd, name, project, valuesKey, valuesData)
 }
 
 func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string, values []string, fields map[string]string) string {
@@ -384,48 +385,39 @@ func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
 
+	var settingValuesKey string
+	var settingValuesKeyData []string
 	// Some settings are not available in community edition
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) != "community" {
-		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-						resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(2)),
-						resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
-						resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.dbcleaner.branchesToKeepWhenInactive"),
-						resource.TestCheckResourceAttr(name, "setting.1.values.#", strconv.Itoa(4)),
-						resource.TestCheckResourceAttr(name, "setting.1.values.0", "master"),
-						resource.TestCheckResourceAttr(name, "setting.1.values.1", "main"),
-					),
-				},
-			},
-		})
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+		settingValuesKey = "sonar.terraform.file.suffixes"
+		settingValuesKeyData = []string{".tf", ".tfvars", ".hcl"}
 	} else {
-		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-						resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(1)),
-						resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
-						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
-					),
-				},
-			},
-		})
+		settingValuesKey = "sonar.dbcleaner.branchesToKeepWhenInactive"
+		settingValuesKeyData = []string{"master", "main", "release/*"}
 	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject", settingValuesKey, settingValuesKeyData),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(2)),
+					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
+					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
+					resource.TestCheckResourceAttr(name, "setting.1.key", settingValuesKey),
+					resource.TestCheckResourceAttr(name, "setting.1.values.#", strconv.Itoa(3)),
+					resource.TestCheckResourceAttr(name, "setting.1.values.0", settingValuesKeyData[0]),
+					resource.TestCheckResourceAttr(name, "setting.1.values.1", settingValuesKeyData[1]),
+					resource.TestCheckResourceAttr(name, "setting.1.values.2", settingValuesKeyData[2]),
+				),
+			},
+		},
+	})
+
 }
