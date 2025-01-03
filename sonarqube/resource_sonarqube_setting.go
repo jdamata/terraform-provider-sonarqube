@@ -313,25 +313,25 @@ func checkSettingDiff(a map[string]interface{}, b Setting) bool {
 		// array of objects of key/value pairs
 		fieldValues := a["field_values"].([]interface{})
 		if len(fieldValues) != len(b.FieldValues) {
-			return false
+			return true
 		}
 		for i := range fieldValues {
 			k1, _ := json.Marshal(fieldValues[i])
 			k2, _ := json.Marshal(b.FieldValues[i])
 			if string(k1) != string(k2) {
-				return false
+				return true
 			}
 		}
-		return true
+		return false
 	} else if a["values"] != nil && len(a["values"].([]string)) > 0 {
 		// array of strings
 		values := a["values"].([]string)
 		if len(values) != len(b.Values) {
-			return false
+			return true
 		}
 		for i := range values {
 			if string(values[i]) != string(b.Values[i]) {
-				return false
+				return true
 			}
 		}
 		return true
