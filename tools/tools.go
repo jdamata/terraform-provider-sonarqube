@@ -9,4 +9,4 @@ import (
 
 // * Run the docs generation tool
 //go:generate echo "Generate provider documentation..."
-//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-dir
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
