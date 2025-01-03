@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -382,27 +383,49 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
-	expectedConditions := 2
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
-					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
-					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
-					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
-					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
-					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
-					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.dbcleaner.branchesToKeepWhenInactive"),
-					resource.TestCheckResourceAttr(name, "setting.1.values.#", strconv.Itoa(4)),
-					resource.TestCheckResourceAttr(name, "setting.1.values.0", "master"),
-					resource.TestCheckResourceAttr(name, "setting.1.values.1", "main"),
-				),
+
+	// Some settings are not available in community edition
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) != "community" {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { testAccPreCheck(t) },
+			Providers: testAccProviders,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+						resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(2)),
+						resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
+						resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.dbcleaner.branchesToKeepWhenInactive"),
+						resource.TestCheckResourceAttr(name, "setting.1.values.#", strconv.Itoa(4)),
+						resource.TestCheckResourceAttr(name, "setting.1.values.0", "master"),
+						resource.TestCheckResourceAttr(name, "setting.1.values.1", "main"),
+					),
+				},
 			},
-		},
-	})
+		})
+	} else {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { testAccPreCheck(t) },
+			Providers: testAccProviders,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
+						resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(1)),
+						resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
+						resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
+					),
+				},
+			},
+		})
+	}
 }
