@@ -58,28 +58,33 @@ func testAccSonarqubeProjectSettingsConfig(rnd string, name string, project stri
 		`, rnd, name, project, visibility, value)
 }
 
-func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, ame string, project string) string {
+func testAccSonarqubeProjectSettingsFieldValuesArray(rnd string, name string, project string) string {
 	return fmt.Sprintf(`
-		resource "sonarqube_project" "%[1]s" {
-		  name       = "%[2]s"
-		  project    = "%[3]s"
-		  visibility = "public"
+	resource "sonarqube_project" "%[1]s" {
+	  name       = "%[2]s"
+	  project    = "%[3]s"
+	  visibility = "public"
 
-		  setting {
-			key   = "sonar.issue.ignore.multicriteria"
-			field_values = [
-                {
-                    "resourceKey" = "src/main/java/**/*"
-                    "ruleKey"     = "java:S1106"
-                },
-                {
-                    "resourceKey" = "src/main/java/**/*"
-                    "ruleKey"     = "java:S1120"
-                }
-            ]
-		  }
-		}
-		`, rnd, project)
+	  setting {
+	    key   		 = "sonar.issue.ignore.multicriteria"
+	    field_values = [
+	      {
+	        "resourceKey" = "src/main/java/**/*"
+	        "ruleKey"     = "java:S1106"
+	      },
+	      {
+	        "resourceKey" = "src/main/java/**/*"
+	        "ruleKey"     = "java:S1120"
+	      }
+	    ]
+	  }
+
+	  setting {
+	    key    = "sonar.dbcleaner.branchesToKeepWhenInactive"
+	    values = ["master", "main", "release/*", "dev"]
+	  }
+	}
+	`, rnd, name, project)
 }
 
 func testAccSonarqubeProjectSettingsMultiple(rnd string, key string, name string, values []string, fields map[string]string) string {
@@ -377,6 +382,7 @@ func TestAccSonarqubeProjectSettingsTypes(t *testing.T) {
 func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
+	expectedConditions := 2
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -385,12 +391,16 @@ func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
 				Config: testAccSonarqubeProjectSettingsFieldValuesArray(rnd, "testAccSonarqubeProject", "testAccSonarqubeProject"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProject"),
-					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(1)),
+					resource.TestCheckResourceAttr(name, "setting.#", strconv.Itoa(expectedConditions)),
 					resource.TestCheckResourceAttr(name, "setting.0.key", "sonar.issue.ignore.multicriteria"),
 					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.resourceKey", "src/main/java/**/*"),
 					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.resourceKey", "src/main/java/**/*"),
 					resource.TestCheckResourceAttr(name, "setting.0.field_values.0.ruleKey", "java:S1106"),
 					resource.TestCheckResourceAttr(name, "setting.0.field_values.1.ruleKey", "java:S1120"),
+					resource.TestCheckResourceAttr(name, "setting.1.key", "sonar.dbcleaner.branchesToKeepWhenInactive"),
+					resource.TestCheckResourceAttr(name, "setting.1.field_values.#", strconv.Itoa(4)),
+					resource.TestCheckResourceAttr(name, "setting.1.field_values.0", "master"),
+					resource.TestCheckResourceAttr(name, "setting.1.field_values.1", "main"),
 				),
 			},
 		},
