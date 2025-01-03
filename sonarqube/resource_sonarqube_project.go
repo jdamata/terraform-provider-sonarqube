@@ -236,7 +236,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
 		}
 
-		var settings []interface{}
+		var settings []Setting
 		for _, apiSetting := range projectSettings {
 			if !apiSetting.Inherited {
 				settings = append(settings, apiSetting)

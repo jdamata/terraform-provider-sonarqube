@@ -357,8 +357,7 @@ func getComponentSettingUrlEncode(setting map[string]interface{}) url.Values {
 		fieldValues := setting["field_values"].([]interface{})
 		for _, value := range fieldValues {
 			b, _ := json.Marshal(value)
-			fv := string(b)
-			raw.Add("fieldValues", fv)
+			raw.Add("fieldValues", string(b))
 			addedSetting = true
 		}
 	}
