@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -135,11 +136,12 @@ func resourceSonarqubeAlmGithubRead(d *schema.ResourceData, m interface{}) error
 	// Loop over all GitHub instances to see if the Alm instance exists.
 	for _, value := range AlmGithubReadResponse.Github {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("url", value.URL)
-			d.Set("app_id", value.AppID)
-			d.Set("client_id", value.ClientID)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("key", value.Key))
+			errs = append(errs, d.Set("url", value.URL))
+			errs = append(errs, d.Set("app_id", value.AppID))
+			errs = append(errs, d.Set("client_id", value.ClientID))
+			return errors.Join(errs...)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())

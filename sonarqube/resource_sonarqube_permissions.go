@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -214,9 +215,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		loginName := d.Get("login_name").(string)
 		for _, value := range users.Users {
 			if strings.EqualFold(value.Login, loginName) {
-				d.Set("login_name", value.Login)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
-				return nil
+				errName := d.Set("login_name", value.Login)
+				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
+				return errors.Join(errName, errPerms)
 			}
 		}
 
@@ -258,9 +259,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		groupName := d.Get("group_name").(string)
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
-				d.Set("group_name", value.Name)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
-				return nil
+				errGroup := d.Set("group_name", value.Name)
+				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
+				return errors.Join(errGroup, errPerms)
 			}
 		}
 	}

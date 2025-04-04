@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -133,12 +134,13 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 
 	for _, value := range settingReadResponse.Setting {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("value", value.Value)
-			d.Set("values", value.Values)
-			d.Set("field_values", value.FieldValues)
+			errs := []error{}
+			errs = append(errs, d.Set("key", value.Key))
+			errs = append(errs, d.Set("value", value.Value))
+			errs = append(errs, d.Set("values", value.Values))
+			errs = append(errs, d.Set("field_values", value.FieldValues))
 			d.SetId(value.Key)
-			return nil
+			return errors.Join(errs...)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeSettingsRead: Failed to find setting: %+v", d.Id())
@@ -167,7 +169,9 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	d.Set("key", d.Id())
+	if err := d.Set("key", d.Id()); err != nil {
+		return nil, err
+	}
 	if err := resourceSonarqubeSettingsRead(d, m); err != nil {
 		return nil, err
 	}
@@ -302,10 +306,10 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	}
 
 	if changed {
-		d.Set("setting", componentSettings)
+		err = d.Set("setting", componentSettings)
 	}
 
-	return changed, nil
+	return changed, err
 }
 
 func checkSettingDiff(a map[string]interface{}, b Setting) bool {

@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -149,10 +150,10 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 			log.Printf("[DEBUG][resourceSonarqubePermissionTemplateRead] Found PermissionTemplate with ID '%s'", value.ID)
 			// If it does, set the values of that template
 			d.SetId(value.ID)
-			d.Set("name", value.Name)
-			d.Set("description", value.Description)
-			d.Set("project_key_pattern", value.ProjectKeyPattern)
-			return nil
+			errName := d.Set("name", value.Name)
+			errDesc := d.Set("description", value.Description)
+			errProj := d.Set("project_key_pattern", value.ProjectKeyPattern)
+			return errors.Join(errName, errDesc, errProj)
 		}
 	}
 

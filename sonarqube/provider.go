@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/tidwall/gjson"
 )
@@ -137,7 +139,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		transport.Proxy = http.ProxyURL(proxyUrl)
 	}
 	transport.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool),
+		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool), // #nosec G402
 	}
 
 	client := retryablehttp.NewClient()
@@ -214,7 +216,11 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 	if err != nil {
 		return "", "", fmt.Errorf("cannot get sonarqube version/edition. Please configure installed_version and installed_edition: %+v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			tflog.Error(context.TODO(), fmt.Sprintf("error while closing system info: %s", err))
+		}
+	}()
 
 	// Read in the response
 	responseData, err := ioutil.ReadAll(resp.Body)

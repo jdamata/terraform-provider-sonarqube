@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -77,10 +78,11 @@ func resourceSonarqubeUserExternalIdentityCreate(d *schema.ResourceData, m inter
 	}
 
 	d.SetId(d.Get("login_name").(string))
-	d.Set("external_identity", d.Get("external_identity").(string))
-	d.Set("external_provider", d.Get("external_provider").(string))
+	errs := []error{}
+	errs = append(errs, d.Set("external_identity", d.Get("external_identity").(string)))
+	errs = append(errs, d.Set("external_provider", d.Get("external_provider").(string)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func resourceSonarqubeUserExternalIdentityRead(d *schema.ResourceData, m interface{}) error {
