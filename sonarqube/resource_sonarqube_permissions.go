@@ -539,7 +539,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 
 func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	permissions := expandPermissions(d)
+	permissions := expandPermissions(d.Get("permissions"))
 
 	// build the base query
 	RawQuery := url.Values{}
