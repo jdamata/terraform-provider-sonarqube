@@ -169,7 +169,7 @@ func resourceSonarqubePermissionsImport(d *schema.ResourceData, m interface{}) (
 
 func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	permissions := expandPermissions(d)
+	permissions := expandPermissions(d.Get("permissions"))
 
 	var principalName, scopeValue string
 
@@ -377,8 +377,9 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeBasePath := sonarQubeURL.Path
 
-	targetPermissions := expandPermissions(d)
-	var currentPermissions []string
+	currentFlatPermissions, targetFlatPermissions := d.GetChange("permissions")
+	currentPermissions := expandPermissions(currentFlatPermissions)
+	targetPermissions := expandPermissions(targetFlatPermissions)
 
 	RawQuery := url.Values{
 		"ps": []string{"100"},
@@ -389,42 +390,6 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 	}
 
 	if loginName, ok := d.GetOk("login_name"); ok {
-		if templateID, ok := d.GetOk("template_id"); ok {
-			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeBasePath, "/") + "/api/permissions/template_users"
-			RawQuery.Add("templateId", templateID.(string))
-		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeBasePath, "/") + "/api/permissions/template_users"
-			RawQuery.Add("templateName", templateName.(string))
-		} else {
-			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeBasePath, "/") + "/api/permissions/users"
-			RawQuery.Add("q", loginName.(string))
-		}
-		sonarQubeURL.RawQuery = RawQuery.Encode()
-
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"GET",
-			sonarQubeURL.String(),
-			http.StatusOK,
-			"resourceSonarqubePermissionsUpdate",
-		)
-		if err != nil {
-			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
-		}
-		defer resp.Body.Close()
-
-		users := GetUser{}
-		err = json.NewDecoder(resp.Body).Decode(&users)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
-		}
-
-		for _, value := range users.Users {
-			if strings.EqualFold(value.Login, loginName.(string)) {
-				currentPermissions = value.Permissions
-				break
-			}
-		}
 
 		toAddPermissions, toRemovePermissions := calculatePermissionChanges(currentPermissions, targetPermissions)
 
@@ -449,7 +414,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 			RawQuery.Set("permission", perm)
 			sonarQubeURL.RawQuery = RawQuery.Encode()
 
-			resp, err = httpRequestHelper(
+			resp, err := httpRequestHelper(
 				m.(*ProviderConfiguration).httpClient,
 				"POST",
 				sonarQubeURL.String(),
@@ -483,7 +448,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 			RawQuery.Add("permission", perm)
 			sonarQubeURL.RawQuery = RawQuery.Encode()
 
-			resp, err = httpRequestHelper(
+			resp, err := httpRequestHelper(
 				m.(*ProviderConfiguration).httpClient,
 				"POST",
 				sonarQubeURL.String(),
@@ -496,43 +461,6 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 			defer resp.Body.Close()
 		}
 	} else if groupName, ok := d.GetOk("group_name"); ok {
-		if templateID, ok := d.GetOk("template_id"); ok {
-			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeBasePath, "/") + "/api/permissions/template_groups"
-			RawQuery.Add("templateId", templateID.(string))
-		} else if templateName, ok := d.GetOk("template_name"); ok {
-			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeBasePath, "/") + "/api/permissions/template_groups"
-			RawQuery.Add("templateName", templateName.(string))
-		} else {
-			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeBasePath, "/") + "/api/permissions/groups"
-			RawQuery.Add("q", groupName.(string))
-		}
-		sonarQubeURL.RawQuery = RawQuery.Encode()
-
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"GET",
-			sonarQubeURL.String(),
-			http.StatusOK,
-			"resourceSonarqubePermissionsUpdate",
-		)
-		if err != nil {
-			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
-		}
-		defer resp.Body.Close()
-
-		groups := GetGroupPermissions{}
-		err = json.NewDecoder(resp.Body).Decode(&groups)
-		if err != nil {
-			return fmt.Errorf("resourceSonarqubePermissionsUpdate: Failed to decode json into struct: %+v", err)
-		}
-
-		for _, value := range groups.Groups {
-			if strings.EqualFold(value.Name, groupName.(string)) {
-				currentPermissions = value.Permissions
-				break
-			}
-		}
-
 		toAddPermissions, toRemovePermissions := calculatePermissionChanges(currentPermissions, targetPermissions)
 
 		RawQuery = url.Values{}
@@ -556,7 +484,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 			RawQuery.Set("permission", perm)
 			sonarQubeURL.RawQuery = RawQuery.Encode()
 
-			resp, err = httpRequestHelper(
+			resp, err := httpRequestHelper(
 				m.(*ProviderConfiguration).httpClient,
 				"POST",
 				sonarQubeURL.String(),
@@ -590,7 +518,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 			RawQuery.Add("permission", perm)
 			sonarQubeURL.RawQuery = RawQuery.Encode()
 
-			resp, err = httpRequestHelper(
+			resp, err := httpRequestHelper(
 				m.(*ProviderConfiguration).httpClient,
 				"POST",
 				sonarQubeURL.String(),
@@ -680,10 +608,9 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func expandPermissions(d *schema.ResourceData) []string {
+func expandPermissions(flatPermissions interface{}) []string {
 	expandedPermissions := make([]string, 0)
-	flatPermissions := d.Get("permissions").([]interface{})
-	for _, permission := range flatPermissions {
+	for _, permission := range flatPermissions.([]interface{}) {
 		expandedPermissions = append(expandedPermissions, permission.(string))
 	}
 
