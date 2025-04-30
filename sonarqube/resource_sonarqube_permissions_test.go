@@ -133,3 +133,71 @@ func TestAccSonarqubePermissionLoginNameTemplateName(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSonarqubePermissionUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	resourceName := "sonarqube_permissions." + rnd
+	username := "update-test-user"
+	initialPermissions := []string{"admin", "scan"}
+	updatedPermissions := []string{"admin", "codeviewer", "issueadmin"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePermissionLoginNameConfig(rnd, username, initialPermissions),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "login_name", username),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(initialPermissions))),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", initialPermissions[0]),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", initialPermissions[1]),
+				),
+			},
+			{
+				Config: testAccSonarqubePermissionLoginNameConfig(rnd, username, updatedPermissions),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "login_name", username),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(updatedPermissions))),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", updatedPermissions[0]),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", updatedPermissions[1]),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", updatedPermissions[2]),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubePermissionGroupUpdate(t *testing.T) {
+	rnd := generateRandomResourceName()
+	resourceName := "sonarqube_permissions." + rnd
+	groupName := "update-test-group"
+	initialPermissions := []string{"profileadmin", "gateadmin"}
+	updatedPermissions := []string{"profileadmin"}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			// Create with initial permissions
+			{
+				Config: testAccSonarqubePermissionGroupNameConfig(rnd, groupName, initialPermissions),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(initialPermissions))),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", initialPermissions[0]),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", initialPermissions[1]),
+				),
+			},
+			// Update by removing a permission
+			{
+				Config: testAccSonarqubePermissionGroupNameConfig(rnd, groupName, updatedPermissions),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "group_name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(updatedPermissions))),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", updatedPermissions[0]),
+				),
+			},
+		},
+	})
+}
