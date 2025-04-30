@@ -51,7 +51,7 @@ resource "sonarqube_permissions" "john_project_read" {
 
 ### Required
 
-- `permissions` (List of String) A list of permissions that should be applied. Possible values are: `admin`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `scan`, `user`.
+- `permissions` (List of String) A list of permissions that should be applied. Changing this forces a new resource to be created. Possible values are: `admin`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `scan`, `user`.
 
 ### Optional
 
