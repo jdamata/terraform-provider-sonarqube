@@ -150,8 +150,8 @@ func TestAccSonarqubePermissionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "login_name", username),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(initialPermissions))),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", initialPermissions[0]),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", initialPermissions[1]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", initialPermissions[0]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", initialPermissions[1]),
 				),
 			},
 			{
@@ -159,9 +159,9 @@ func TestAccSonarqubePermissionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "login_name", username),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(updatedPermissions))),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", updatedPermissions[0]),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", updatedPermissions[1]),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", updatedPermissions[2]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", updatedPermissions[0]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", updatedPermissions[1]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", updatedPermissions[2]),
 				),
 			},
 		},
@@ -185,8 +185,8 @@ func TestAccSonarqubePermissionGroupUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "group_name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(initialPermissions))),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", initialPermissions[0]),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", initialPermissions[1]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", initialPermissions[0]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", initialPermissions[1]),
 				),
 			},
 			// Update by removing a permission
@@ -195,7 +195,7 @@ func TestAccSonarqubePermissionGroupUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "group_name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", fmt.Sprintf("%d", len(updatedPermissions))),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", updatedPermissions[0]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", updatedPermissions[0]),
 				),
 			},
 		},

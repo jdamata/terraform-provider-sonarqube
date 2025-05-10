@@ -74,7 +74,7 @@ func resourceSonarqubePermissions() *schema.Resource {
 				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_id`",
 			},
 			"permissions": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -445,7 +445,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 		}
 
 		for _, perm := range toAddPermissions {
-			RawQuery.Add("permission", perm)
+			RawQuery.Set("permission", perm)
 			sonarQubeURL.RawQuery = RawQuery.Encode()
 
 			resp, err := httpRequestHelper(
@@ -515,7 +515,7 @@ func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) e
 		}
 
 		for _, perm := range toAddPermissions {
-			RawQuery.Add("permission", perm)
+			RawQuery.Set("permission", perm)
 			sonarQubeURL.RawQuery = RawQuery.Encode()
 
 			resp, err := httpRequestHelper(
@@ -609,22 +609,32 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 }
 
 func expandPermissions(flatPermissions interface{}) []string {
-	expandedPermissions := make([]string, 0)
-	for _, permission := range flatPermissions.([]interface{}) {
-		expandedPermissions = append(expandedPermissions, permission.(string))
+	switch v := flatPermissions.(type) {
+	case *schema.Set:
+		expandedPermissions := make([]string, 0)
+		for _, permission := range v.List() {
+			expandedPermissions = append(expandedPermissions, permission.(string))
+		}
+		return expandedPermissions
+	case []interface{}:
+		expandedPermissions := make([]string, 0)
+		for _, permission := range v {
+			expandedPermissions = append(expandedPermissions, permission.(string))
+		}
+		return expandedPermissions
+	default:
+		return []string{}
 	}
-
-	return expandedPermissions
 }
 
-func flattenPermissions(input *[]string) []interface{} {
-	flatPermissions := make([]interface{}, 0)
+func flattenPermissions(input *[]string) *schema.Set {
+	flatPermissions := schema.NewSet(schema.HashString, []interface{}{})
 	if input == nil {
 		return flatPermissions
 	}
 
 	for _, permission := range *input {
-		flatPermissions = append(flatPermissions, permission)
+		flatPermissions.Add(permission)
 	}
 
 	return flatPermissions
