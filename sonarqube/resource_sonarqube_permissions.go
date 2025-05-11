@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -88,7 +89,7 @@ func resourceSonarqubePermissions() *schema.Resource {
 func resourceSonarqubePermissionsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) > 2 {
-		return nil, fmt.Errorf("invalid import format, expected 'principal(:scope)' where principal is login_name or group_name and scope is project_key, template_id or template_name with optional prefix")
+		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: invalid import format, expected 'principal(:scope)'")
 	}
 
 	principal := parts[0]
@@ -115,38 +116,48 @@ func resourceSonarqubePermissionsImport(d *schema.ResourceData, m interface{}) (
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("error searching for user during import: %+v", err)
+		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: error searching for user during import: %+v", err)
 	}
 	defer resp.Body.Close()
 
 	users := GetUser{}
 	err = json.NewDecoder(resp.Body).Decode(&users)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode user response: %+v", err)
+		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: failed to decode user response: %+v", err)
 	}
 
 	isUser := false
 	for _, user := range users.Users {
 		if strings.EqualFold(user.Login, principal) {
 			isUser = true
-			d.Set("login_name", user.Login)
+			errLoginName := d.Set("login_name", user.Login)
+			if errLoginName != nil {
+				return nil, errLoginName
+			}
 			break
 		}
 	}
 
 	if !isUser {
 		// Assume it's a group
-		d.Set("group_name", principal)
+		errGroupName := d.Set("group_name", principal)
+		if errGroupName != nil {
+			return nil, fmt.Errorf("resourceSonarqubePermissionsImport: failed to set group_name: %+v", errGroupName)
+		}
 	}
 
 	if scope != "" {
 		// Determine the scope type (project_key, template_id, template_name)
+		var setError error
 		if strings.HasPrefix(scope, "p_") {
-			d.Set("project_key", scope[2:])
+			setError = d.Set("project_key", scope[2:])
 		} else if strings.HasPrefix(scope, "t_") {
-			d.Set("template_id", scope[2:])
+			setError = d.Set("template_id", scope[2:])
 		} else if strings.HasPrefix(scope, "tn_") {
-			d.Set("template_name", scope[3:])
+			setError = d.Set("template_name", scope[3:])
+		}
+		if setError != nil {
+			return nil, fmt.Errorf("resourceSonarqubePermissionsImport: failed to set permissions: %+v", setError)
 		}
 	} else {
 		scope = "global"
@@ -317,9 +328,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		// Loop over all groups to see if the group we need exists.
 		for _, value := range users.Users {
 			if strings.EqualFold(value.Login, loginName.(string)) {
-				d.Set("login_name", value.Login)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
-				return nil
+				errName := d.Set("login_name", value.Login)
+				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
+				return errors.Join(errName, errPerms)
 			}
 		}
 
@@ -349,7 +360,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			"resourceSonarqubePermissionsRead",
 		)
 		if err != nil {
-			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
+			return fmt.Errorf("resourceSonarqubePermissionsRead: error reading Sonarqube permissions: %+v", err)
 		}
 		defer resp.Body.Close()
 
@@ -363,9 +374,9 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		// Loop over all groups to see if the group we need exists.
 		for _, value := range groups.Groups {
 			if strings.EqualFold(value.Name, groupName) {
-				d.Set("group_name", value.Name)
-				d.Set("permissions", flattenPermissions(&value.Permissions))
-				return nil
+				errGroup := d.Set("group_name", value.Name)
+				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
+				return errors.Join(errGroup, errPerms)
 			}
 		}
 	}
@@ -600,7 +611,7 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 			"resourceSonarqubePermissionsDelete",
 		)
 		if err != nil {
-			return fmt.Errorf("error creating Sonarqube permission: %+v", err)
+			return fmt.Errorf("resourceSonarqubePermissionsDelete: error creating Sonarqube permission: %+v", err)
 		}
 		defer resp.Body.Close()
 	}
