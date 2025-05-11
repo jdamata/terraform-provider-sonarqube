@@ -233,7 +233,7 @@ func resourceSonarqubeUserDelete(d *schema.ResourceData, m interface{}) error {
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
-		"DELETE",
+		"POST",
 		sonarQubeURL.String(),
 		http.StatusOK,
 		"resourceSonarqubeUserDelete",
