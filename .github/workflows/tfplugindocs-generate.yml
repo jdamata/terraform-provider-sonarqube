@@ -15,33 +15,44 @@ jobs:
     name: tfplugindocs generate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository code
+        uses: actions/checkout@v4
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
-      - uses: actions/setup-go@v5
+
+      - name: Setup Go with version from tools/go.mod
+        uses: actions/setup-go@v5
         with:
           go-version-file: tools/go.mod
-      - name: GOCACHE
+
+      - name: Set GOCACHE environment variable
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@v4
+
+      - name: Cache Go build cache
+        uses: actions/cache@v4
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@v4
+
+      - name: Cache Go module dependencies
+        uses: actions/cache@v4
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: |
+
+      - name: Install tools and generate documentation
+        run: |
           make tools
           make docs
-      - uses: actions-js/push@v1.5
-        name: Github commit and push
+
+      - name: Commit and push generated documentation
+        uses: actions-js/push@v1.5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
