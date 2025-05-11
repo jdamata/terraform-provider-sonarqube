@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -166,10 +167,11 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	for _, value := range getQualityProfileProjectResponse.Results {
 		if idSlice[1] == value.Key {
 			d.SetId(d.Id())
-			d.Set("project", value.Key)
-			d.Set("quality_profile", qualityProfile)
-			d.Set("language", language)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("project", value.Key))
+			errs = append(errs, d.Set("quality_profile", qualityProfile))
+			errs = append(errs, d.Set("language", language))
+			return errors.Join(errs...)
 		}
 	}
 

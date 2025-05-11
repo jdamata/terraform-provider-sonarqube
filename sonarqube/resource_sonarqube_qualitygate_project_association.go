@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -108,9 +109,9 @@ func resourceSonarqubeQualityGateProjectAssociationRead(d *schema.ResourceData, 
 		return fmt.Errorf("resourceSonarqubeQualityGateProjectAssociationRead: Failed to decode json into struct: %+v", err)
 	}
 
-	d.Set("projectkey", idSlice[1])
-	d.Set("gatename", qualityGateAssociationReadResponse.QualityGate.Name)
-	return nil
+	errKey := d.Set("projectkey", idSlice[1])
+	errName := d.Set("gatename", qualityGateAssociationReadResponse.QualityGate.Name)
+	return errors.Join(errKey, errName)
 }
 
 func resourceSonarqubeQualityGateProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {

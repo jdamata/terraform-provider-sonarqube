@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -150,13 +151,14 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 	if idSlice[1] == BindingReadResponse.Slug &&
 		idSlice[2] == BindingReadResponse.Repository &&
 		BindingReadResponse.Alm == "azure" {
-		d.Set("project", idSlice[0])
-		d.Set("project_name", idSlice[1])
-		d.Set("repository_name", idSlice[2])
-		d.Set("alm_setting", BindingReadResponse.Key)
-		d.Set("monorepo", BindingReadResponse.Monorepo)
+		errs := []error{}
+		errs = append(errs, d.Set("project", idSlice[0]))
+		errs = append(errs, d.Set("project_name", idSlice[1]))
+		errs = append(errs, d.Set("repository_name", idSlice[2]))
+		errs = append(errs, d.Set("alm_setting", BindingReadResponse.Key))
+		errs = append(errs, d.Set("monorepo", BindingReadResponse.Monorepo))
 
-		return nil
+		return errors.Join(errs...)
 	}
 	return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to find azure binding: %+v", d.Id())
 }

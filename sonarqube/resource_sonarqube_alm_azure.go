@@ -1,12 +1,15 @@
 package sonarqube
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -78,7 +81,11 @@ func resourceSonarqubeAlmAzureCreate(d *schema.ResourceData, m interface{}) erro
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			tflog.Error(context.TODO(), fmt.Sprintf("error while AlmAzure created: %s", err))
+		}
+	}()
 
 	d.SetId(d.Get("key").(string))
 
@@ -99,7 +106,11 @@ func resourceSonarqubeAlmAzureRead(d *schema.ResourceData, m interface{}) error 
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			tflog.Error(context.TODO(), fmt.Sprintf("error while AlmAzure read: %s", err))
+		}
+	}()
 
 	// Decode response into struct
 	AlmAzureReadResponse := GetAlmAzure{}
@@ -110,9 +121,9 @@ func resourceSonarqubeAlmAzureRead(d *schema.ResourceData, m interface{}) error 
 	// Loop over all Azure instances to see if the Alm instance exists.
 	for _, value := range AlmAzureReadResponse.Azure {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("url", value.URL)
-			return nil
+			errKey := d.Set("key", value.Key)
+			errURL := d.Set("url", value.URL)
+			return errors.Join(errKey, errURL)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to find azure binding: %+v", d.Id())
@@ -138,7 +149,11 @@ func resourceSonarqubeAlmAzureUpdate(d *schema.ResourceData, m interface{}) erro
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			tflog.Error(context.TODO(), fmt.Sprintf("error while AlmAzure updated: %s", err))
+		}
+	}()
 
 	return resourceSonarqubeAlmAzureRead(d, m)
 }
@@ -180,7 +195,7 @@ func resourceSonarqubeAlmAzureImport(d *schema.ResourceData, m interface{}) ([]*
 	}
 
 	// Add personal_access_token from import id
-	d.Set("personal_access_token", importIdComponents[1])
+	err := d.Set("personal_access_token", importIdComponents[1])
 
-	return []*schema.ResourceData{d}, nil
+	return []*schema.ResourceData{d}, err
 }

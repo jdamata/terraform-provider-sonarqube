@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -356,8 +357,7 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	updateResourceDataFromPortfolioReadResponse(d, portfolioReadResponse)
-	return nil
+	return updateResourceDataFromPortfolioReadResponse(d, portfolioReadResponse)
 }
 
 func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) error {
@@ -430,29 +430,31 @@ func resourceSonarqubePortfolioImport(d *schema.ResourceData, m interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfolioReadResponse *Portfolio) {
+func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfolioReadResponse *Portfolio) error {
 	d.SetId(portfolioReadResponse.Key)
-	d.Set("key", portfolioReadResponse.Key)
-	d.Set("name", portfolioReadResponse.Name)
-	d.Set("description", portfolioReadResponse.Desc)
-	d.Set("qualifier", portfolioReadResponse.Qualifier)
-	d.Set("visibility", portfolioReadResponse.Visibility)
-	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
+	errs := []error{}
+	errs = append(errs, d.Set("key", portfolioReadResponse.Key))
+	errs = append(errs, d.Set("name", portfolioReadResponse.Name))
+	errs = append(errs, d.Set("description", portfolioReadResponse.Desc))
+	errs = append(errs, d.Set("qualifier", portfolioReadResponse.Qualifier))
+	errs = append(errs, d.Set("visibility", portfolioReadResponse.Visibility))
+	errs = append(errs, d.Set("selection_mode", portfolioReadResponse.SelectionMode))
 
 	// These fields may or may not be set in the reposnse from SonarQube
 	if len(portfolioReadResponse.Tags) > 0 {
-		d.Set("tags", portfolioReadResponse.Tags)
+		errs = append(errs, d.Set("tags", portfolioReadResponse.Tags))
 	}
 	if len(portfolioReadResponse.Branch) > 0 {
-		d.Set("branch", portfolioReadResponse.Branch)
+		errs = append(errs, d.Set("branch", portfolioReadResponse.Branch))
 	}
 	if len(portfolioReadResponse.Regexp) > 0 {
-		d.Set("regexp", portfolioReadResponse.Regexp)
+		errs = append(errs, d.Set("regexp", portfolioReadResponse.Regexp))
 	}
 
 	if len(portfolioReadResponse.SelectedProjects) > 0 {
-		d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects))
+		errs = append(errs, d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects)))
 	}
+	return errors.Join(errs...)
 }
 
 func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, error) {
@@ -570,29 +572,31 @@ func addSelectedProject(portfolioKey, projectKey string, selectedBranches []stri
 	}
 	defer resp.Body.Close()
 
+	errs := []error{}
 	for _, branch := range selectedBranches {
-		addSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+		errs = append(errs, addSelectedProjectBranch(portfolioKey, projectKey, branch, m))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func updateSelectedProject(portfolioKey, projectKey string, selectedBranches, apiSelectedBranches []string, m interface{}) error {
 	// For each branch in the terraform schema, make sure they are also in SonarQube
+	errs := []error{}
 	for _, branch := range selectedBranches {
 		if !slices.Contains(apiSelectedBranches, branch) {
-			addSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+			errs = append(errs, addSelectedProjectBranch(portfolioKey, projectKey, branch, m))
 		}
 	}
 
 	// For each branch in SonarQube, ensure it exists in the terraform schema, otherwise remove it
 	for _, branch := range apiSelectedBranches {
 		if !slices.Contains(selectedBranches, branch) {
-			deleteSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+			errs = append(errs, deleteSelectedProjectBranch(portfolioKey, projectKey, branch, m))
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func addSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) error {
