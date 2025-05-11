@@ -38,4 +38,4 @@ testacc-no-docker-windows:
 	&& set SONAR_HOST=http://localhost:9001\
 	&& set SONAR_USER=admin\
 	&& set SONAR_PASS=admin\
-	&& go test -race -coverprofile=coverage.txt -covermode=atomic ./... -run TestAccSonarqubeUserLocal
+	&& go test -race -coverprofile=coverage.txt -covermode=atomic ./...
