@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -190,14 +191,12 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	if d.Get("is_default").(bool) {
-		err := setDefaultQualityGate(d, m, true)
-		if err != nil {
+		if err := setDefaultQualityGate(d, m, true); err != nil {
 			return fmt.Errorf("resourceSonarqubeQualityGateCreate: Failed to set this quality gate as default: %+v", err)
 		}
 	}
 
-	updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
-	return nil
+	return updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
 }
 
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
@@ -205,10 +204,11 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return err
 	}
-	updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
+	if err := updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse); err != nil {
+		return err
+	}
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=true
-	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
-	return nil
+	return d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
 }
 
 var lock_update_default sync.Mutex
@@ -264,15 +264,13 @@ func resourceSonarqubeQualityGateUpdate(d *schema.ResourceData, m interface{}) e
 		// explicitly set as default) then we don't need to do anything (and accidentally set Sonar way as default!)
 		// In all other cases where the default has changed, we do need to update it.
 		if newDefault != !qualityGateReadResponse.Actions.SetAsDefault {
-			err := setDefaultQualityGate(d, m, newDefault)
-			if err != nil {
+			if err := setDefaultQualityGate(d, m, newDefault); err != nil {
 				return fmt.Errorf("resourceSonarqubeQualityGateUpdate: Failed to set this quality gate as default: %+v", err)
 			}
 		}
 	}
 
-	updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
-	return nil
+	return updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
 }
 
 func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
@@ -403,10 +401,10 @@ func synchronizeConditions(d *schema.ResourceData, m interface{}, apiQualityGate
 	}
 
 	if changed {
-		d.Set("condition", qualityGateConditions)
+		err = d.Set("condition", qualityGateConditions)
 	}
 
-	return changed, nil
+	return changed, err
 }
 
 func addOrUpdateCondition(d *schema.ResourceData, m interface{}, apiQualityGateConditions *[]ReadQualityGateConditionsResponse, condition interface{}, changed *bool) (string, error) {
@@ -459,13 +457,15 @@ func removeDeletedConditions(apiQualityGateConditions *[]ReadQualityGateConditio
 	return nil
 }
 
-func updateResourceDataFromQualityGateReadResponse(d *schema.ResourceData, qualityGateReadResponse *GetQualityGate) {
+func updateResourceDataFromQualityGateReadResponse(d *schema.ResourceData, qualityGateReadResponse *GetQualityGate) error {
 	d.SetId(qualityGateReadResponse.Name)
-	d.Set("name", qualityGateReadResponse.Name)
+	errs := []error{}
+	errs = append(errs, d.Set("name", qualityGateReadResponse.Name))
 	// Copied gates do not have condition blocks so we don't want to populate from the API.
 	if _, copiedGate := d.GetOk("copy_from"); !copiedGate {
-		d.Set("condition", flattenReadQualityGateConditionsResponse(&qualityGateReadResponse.Conditions))
+		errs = append(errs, d.Set("condition", flattenReadQualityGateConditionsResponse(&qualityGateReadResponse.Conditions)))
 	}
+	return errors.Join(errs...)
 }
 
 func createCondition(qualityGateName string, metric string, op string, threshold string, m interface{}) (string, error) {

@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -117,8 +118,11 @@ func resourceSonarqubeGroupMemberRead(d *schema.ResourceData, m interface{}) err
 		if d.Get("login_name").(string) == value.LoginName {
 			// If it does, set the values of that group membership
 			d.SetId(createGroupMembershipId(d.Get("name").(string), d.Get("login_name").(string)))
-			d.Set("name", d.Get("name").(string))
-			d.Set("login_name", value.LoginName)
+			errName := d.Set("name", d.Get("name").(string))
+			errLogin := d.Set("login_name", value.LoginName)
+			if err := errors.Join(errName, errLogin); err != nil {
+				return nil
+			}
 			readSuccess = true
 			break
 		}
@@ -164,10 +168,10 @@ func resourceSonarqubeGroupMemberImport(d *schema.ResourceData, m interface{}) (
 
 	exists, _ := checkGroupMemberExists(groupName, loginName, m)
 	if exists {
-		d.Set("name", groupName)
-		d.Set("login_name", loginName)
+		errName := d.Set("name", groupName)
+		errLogin := d.Set("login_name", loginName)
 
-		return []*schema.ResourceData{d}, nil
+		return []*schema.ResourceData{d}, errors.Join(errName, errLogin)
 	} else {
 		return nil, fmt.Errorf("User '%s' not a member of group '%s'", loginName, groupName)
 	}

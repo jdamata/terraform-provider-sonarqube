@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -130,8 +131,11 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId(value.ID)
 			}
 			// If it does, set the values of that group
-			d.Set("name", value.Name)
-			d.Set("description", value.Description)
+			errName := d.Set("name", value.Name)
+			errDesc := d.Set("description", value.Description)
+			if err := errors.Join(errName, errDesc); err != nil {
+				return err
+			}
 			readSuccess = true
 			break
 		}

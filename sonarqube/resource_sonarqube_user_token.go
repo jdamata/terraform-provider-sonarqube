@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -151,7 +152,9 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 		d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
 		// we set the token value here as the API wont return it later
 		if tokenResponse.Token != "" {
-			d.Set("token", tokenResponse.Token)
+			if err := d.Set("token", tokenResponse.Token); err != nil {
+				return err
+			}
 		} else {
 			return fmt.Errorf("resourceSonarqubeUserTokenCreate: Create response didn't contain the token")
 		}
@@ -198,16 +201,19 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 		for _, value := range getTokensResponse.Tokens {
 			if d.Get("name").(string) == value.Name {
 				d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
-				d.Set("login_name", getTokensResponse.Login)
-				d.Set("name", value.Name)
+        errs := []error{}
+				if d.Get("login_name").(string) != "" {
+          errs = append(errs, d.Set("login_name", getTokensResponse.Login))
+				}
+        errs = append(errs, d.Set("name", value.Name))
 				if value.ExpirationDate != "" {
 					dateReceived, errTimeParse := time.Parse("2006-01-02T15:04:05-0700", value.ExpirationDate)
 					if errTimeParse != nil {
 						return fmt.Errorf("resourceSonarqubeUserTokenCreate: Failed to parse ExpirationDate: %+v", err)
 					}
-					d.Set("expiration_date", dateReceived.Format("2006-01-02"))
+					errs = append(errs, d.Set("expiration_date", dateReceived.Format("2006-01-02")))
 				}
-				return nil
+				return errors.Join(errs...)
 			}
 		}
 	}

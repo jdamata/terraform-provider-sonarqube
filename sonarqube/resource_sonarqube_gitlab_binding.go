@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -124,12 +125,13 @@ func resourceSonarqubeGitlabBindingRead(d *schema.ResourceData, m interface{}) e
 	}
 	// Loop over all branches to see if the main branch we need exists.
 	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "gitlab" {
-		d.Set("project", idSlice[0])
-		d.Set("repository", idSlice[1])
-		d.Set("alm_setting", BindingReadResponse.Key)
-		d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo))
+		errs := []error{}
+		errs = append(errs, d.Set("project", idSlice[0]))
+		errs = append(errs, d.Set("repository", idSlice[1]))
+		errs = append(errs, d.Set("alm_setting", BindingReadResponse.Key))
+		errs = append(errs, d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo)))
 
-		return nil
+		return errors.Join(errs...)
 	}
 	return fmt.Errorf("resourceSonarqubeGitlabBindingRead: Failed to find gitlab binding: %+v", d.Id())
 }
