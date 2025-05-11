@@ -46,3 +46,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
           message: "[bot] docs: tfplugindocs generate"
+          repository: ${{ github.pull_request.head.repo.full_name }}
