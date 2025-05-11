@@ -20,6 +20,8 @@ jobs:
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+          ref: '${{ github.head_ref }}'
+          repository: '${{ pull_request.head.repo.full_name }}'
 
       - name: Setup Go with version from tools/go.mod
         uses: actions/setup-go@v5
