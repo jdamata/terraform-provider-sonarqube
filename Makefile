@@ -33,7 +33,7 @@ testacc:
 	docker rm sonarqube1
 
 testacc-no-docker-windows:
-#	docker run --name sonarqube1 -d -p 9001:9000 sonarqube:latest
+	# docker run --name sonarqube1 -d -p 9001:9000 sonarqube:latest
 	set TF_ACC=1\
 	&& set SONAR_HOST=http://localhost:9001\
 	&& set SONAR_USER=admin\
