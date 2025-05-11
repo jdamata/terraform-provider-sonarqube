@@ -13,6 +13,7 @@ import (
 
 // User struct
 type User struct {
+	ID          string   `json:"id,omitempty"`
 	Login       string   `json:"login,omitempty"`
 	Name        string   `json:"name,omitempty"`
 	Email       string   `json:"email,omitempty"`
@@ -82,30 +83,35 @@ func resourceSonarqubeUser() *schema.Resource {
 
 func resourceSonarqubeUserCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/create"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/v2/users-management/users"
 
 	isLocal := d.Get("is_local").(bool)
 
-	rawQuery := url.Values{
-		"login": []string{d.Get("login_name").(string)},
-		"name":  []string{d.Get("name").(string)},
-		"local": []string{strconv.FormatBool(isLocal)},
+	data := map[string]string{
+		"login": d.Get("login_name").(string),
+		"name":  d.Get("name").(string),
+		"local": strconv.FormatBool(isLocal),
 	}
 
 	if password, ok := d.GetOk("password"); ok {
-		rawQuery.Add("password", password.(string))
+		data["password"] = password.(string)
 	}
 
 	if email, ok := d.GetOk("email"); ok {
-		rawQuery.Add("email", email.(string))
+		data["email"] = email.(string)
 	}
 
-	sonarQubeURL.RawQuery = rawQuery.Encode()
+	// Encode the data map as JSON
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("error encoding data to JSON: %+v", err)
+	}
 
-	resp, err := httpRequestHelper(
+	resp, err := apiV2Request(
 		m.(*ProviderConfiguration).httpClient,
 		"POST",
 		sonarQubeURL.String(),
+		jsonData,
 		http.StatusOK,
 		"resourceSonarqubeUserCreate",
 	)
@@ -115,14 +121,14 @@ func resourceSonarqubeUserCreate(d *schema.ResourceData, m interface{}) error {
 	defer resp.Body.Close()
 
 	// Decode response into struct
-	userResponse := CreateUserResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&userResponse)
+	response := User{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeUserCreate: Failed to decode json into struct: %+v", err)
 	}
 
-	if userResponse.User.Login != "" {
-		d.SetId(userResponse.User.Login)
+	if response.ID != "" {
+		d.SetId(response.ID)
 	} else {
 		return fmt.Errorf("resourceSonarqubeUserCreate: Create response didn't contain the user login")
 	}
@@ -132,12 +138,7 @@ func resourceSonarqubeUserCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/users/search"
-
-	sonarQubeURL.RawQuery = url.Values{
-		"ps": []string{"500"},
-		"q":  []string{d.Id()},
-	}.Encode()
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + fmt.Sprintf("/api/v2/users-management/users/{%v}", d.Id())
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -152,23 +153,21 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	defer resp.Body.Close()
 
 	// Decode response into struct
-	userResponse := GetUser{}
-	err = json.NewDecoder(resp.Body).Decode(&userResponse)
+	response := User{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeUserCreate: Failed to decode json into struct: %+v", err)
 	}
 
-	// Loop over all users to see if the current user exists.
-	for _, value := range userResponse.Users {
-		if d.Id() == value.Login {
-			d.SetId(value.Login)
-			d.Set("login_name", value.Login)
-			d.Set("name", value.Name)
-			d.Set("email", value.Email)
-			d.Set("is_local", value.IsLocal)
-			return nil
-		}
+	if response.ID == "" {
+		return fmt.Errorf("resourceSonarqubeUserRead: Failed to find user: %+v", d.Id())
 	}
+
+	d.SetId(response.ID)
+	d.Set("login_name", response.Login)
+	d.Set("name", response.Name)
+	d.Set("email", response.Email)
+	d.Set("is_local", response.IsLocal)
 
 	return fmt.Errorf("resourceSonarqubeUserRead: Failed to find user: %+v", d.Id())
 }
@@ -225,9 +224,8 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceSonarqubeUserDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/v2/users-management/users/" + d.Id()
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + fmt.Sprintf("/api/v2/users-management/users/{%v}", d.Id())
 	sonarQubeURL.RawQuery = url.Values{
-		"id":        []string{d.Id()},
 		"anonymize": []string{strconv.FormatBool(m.(*ProviderConfiguration).sonarQubeAnonymizeUsers)},
 	}.Encode()
 
