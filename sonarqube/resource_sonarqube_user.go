@@ -202,9 +202,11 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 	// handle password updates (api/users/change_password)
 	if d.HasChange("password") {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/users/change_password"
+		oldPassword, newPassword := d.GetChange("password")
 		sonarQubeURL.RawQuery = url.Values{
-			"login":    []string{d.Id()},
-			"password": []string{d.Get("password").(string)},
+			"login":            []string{d.Id()},
+			"password":         []string{newPassword.(string)},
+			"previousPassword": []string{oldPassword.(string)},
 		}.Encode()
 
 		resp, err := httpRequestHelper(
