@@ -21,7 +21,7 @@ jobs:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
           ref: '${{ github.head_ref }}'
-          repository: '${{ github.pull_request.head.repo.full_name }}'
+          repository: '${{ github.event.pull_request.head.repo.full_name }}'
 
       - name: Setup Go with version from tools/go.mod
         uses: actions/setup-go@v5
@@ -59,4 +59,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
           message: "[bot] docs: tfplugindocs generate"
-          repository: ${{ github.pull_request.head.repo.full_name }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
