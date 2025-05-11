@@ -28,7 +28,7 @@ type GroupPermission struct {
 // Returns the resource represented by this file.
 func resourceSonarqubePermissions() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides a Sonarqube Permissions resource. This can be used to manage global and project permissions.",
+		Description: "Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name",
 		Create:      resourceSonarqubePermissionsCreate,
 		Read:        resourceSonarqubePermissionsRead,
 		Update:      resourceSonarqubePermissionsUpdate,
@@ -89,7 +89,7 @@ func resourceSonarqubePermissions() *schema.Resource {
 func resourceSonarqubePermissionsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) > 2 {
-		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: invalid import format, expected 'principal(:scope)'")
+		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: invalid import format, expected 'principal(:scope)' where principal is login_name or group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with with prefixes. Example: group1:tn_test_template_name")
 	}
 
 	principal := parts[0]
