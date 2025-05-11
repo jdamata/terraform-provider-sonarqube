@@ -52,6 +52,9 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 		if err != nil {
 			return *resp, fmt.Errorf("failed to decode error response json into struct: %+v", err)
 		}
+		if len(errorResponse.Errors) == 0 {
+			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode: %v. No error message found in the response body", resp.StatusCode, expectedResponseCode)
+		}
 		return *resp, fmt.Errorf("API returned an error: %+v", errorResponse.Errors[0].Message)
 	}
 
