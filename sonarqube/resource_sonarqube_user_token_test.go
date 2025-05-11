@@ -96,7 +96,7 @@ func testAccSonarqubeUserTokenNoLoginConfig(rnd string, name string) string {
         }`, rnd, name)
 }
 
-func testAccSonarqubeUserTokenNoLogin(t *testing.T) {
+func TestAccSonarqubeUserTokenNoLogin(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_user_token." + rnd
 
@@ -108,7 +108,6 @@ func testAccSonarqubeUserTokenNoLogin(t *testing.T) {
 				Config: testAccSonarqubeUserTokenNoLoginConfig(rnd, "testAccSonarqubeUserTokenNoLogin"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenNoLogin"),
-					resource.TestCheckResourceAttr(name, "login", name),
 				),
 			},
 		},
@@ -128,7 +127,7 @@ func testAccSonarqubeUserTokenGlobalAnalysisTokenConfig(rnd string, name string)
         }`, rnd, name)
 }
 
-func testAccSonarqubeUserTokenGlobalAnalysisToken(t *testing.T) {
+func TestAccSonarqubeUserTokenGlobalAnalysisToken(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_user_token." + rnd
 
@@ -154,14 +153,19 @@ func testAccSonarqubeUserTokenProjectAnalysisTokenConfig(rnd string, name string
             name       = "%[2]s"
             password   = "secret-sauce37!"
         }
+		resource "sonarqube_project" "%[1]s" {
+			name = "my-project"
+			project = "my-project"
+			visibility = "public"
+		}
         resource "sonarqube_user_token" "%[1]s" {
             name        = "%[2]s"
             type        = "PROJECT_ANALYSIS_TOKEN"
-            project_key = "my-project"
+            project_key = sonarqube_project.%[1]s.project
         }`, rnd, name)
 }
 
-func testAccSonarqubeUserTokenProjectAnalysisToken(t *testing.T) {
+func TestAccSonarqubeUserTokenProjectAnalysisToken(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_user_token." + rnd
 

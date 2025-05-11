@@ -26,17 +26,17 @@ type Paging struct {
 }
 
 // helper function to make api request to sonarqube
-func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) (http.Response, error) {
+func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, resource string) (http.Response, error) {
 	// Prepare request
 	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to prepare http request: %v. Request: %v", err, req)
+		return http.Response{}, fmt.Errorf("failed to prepare http request: %v. Request: %v. Resource: %v", err, req, resource)
 	}
 
 	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v", err, req)
+		return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v. Resource: %v", err, req, resource)
 	}
 
 	// Check response code
@@ -51,6 +51,9 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 		err = json.NewDecoder(resp.Body).Decode(&errorResponse)
 		if err != nil {
 			return *resp, fmt.Errorf("failed to decode error response json into struct: %+v", err)
+		}
+		if len(errorResponse.Errors) == 0 {
+			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode: %v. No error message found in the response body", resp.StatusCode, expectedResponseCode)
 		}
 		return *resp, fmt.Errorf("API returned an error: %+v", errorResponse.Errors[0].Message)
 	}
