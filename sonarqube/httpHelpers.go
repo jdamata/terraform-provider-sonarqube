@@ -26,17 +26,17 @@ type Paging struct {
 }
 
 // helper function to make api request to sonarqube
-func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, errormsg string) (http.Response, error) {
+func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL string, expectedResponseCode int, resource string) (http.Response, error) {
 	// Prepare request
 	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to prepare http request: %v. Request: %v", err, req)
+		return http.Response{}, fmt.Errorf("failed to prepare http request: %v. Request: %v. Resource: %v", err, req, resource)
 	}
 
 	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v", err, req)
+		return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v. Resource: %v", err, req, resource)
 	}
 
 	// Check response code
