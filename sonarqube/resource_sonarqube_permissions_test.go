@@ -139,7 +139,7 @@ func TestAccSonarqubePermissionUpdate(t *testing.T) {
 	resourceName := "sonarqube_permissions." + rnd
 	username := "update-test-user"
 	initialPermissions := []string{"admin", "scan"}
-	updatedPermissions := []string{"admin", "provisioning", "applicationcreator"}
+	updatedPermissions := []string{"admin", "provisioning", "scan"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
