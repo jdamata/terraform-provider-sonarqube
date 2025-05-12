@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -61,9 +62,10 @@ func dataSourceSonarqubePermissionTemplatesRead(d *schema.ResourceData, m interf
 		return err
 	}
 
-	d.Set("permission_templates", flattenReadPermissionTemplatesResponse(permissionTemplatesReadResponse.PermissionTemplates))
+	errs := []error{}
+	errs = append(errs, d.Set("permission_templates", flattenReadPermissionTemplatesResponse(permissionTemplatesReadResponse.PermissionTemplates)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readPermissionTemplatesFromApi(d *schema.ResourceData, m interface{}) (*GetPermissionTemplates, error) {
@@ -85,7 +87,7 @@ func readPermissionTemplatesFromApi(d *schema.ResourceData, m interface{}) (*Get
 		"readPermissionTemplatesFromApi",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error reading Sonarqube permission templates: %+v", err)
+		return nil, fmt.Errorf("readPermissionTemplatesFromApi: Failed to read Sonarqube permission templates: %+v", err)
 	}
 	defer resp.Body.Close()
 
