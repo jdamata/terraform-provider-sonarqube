@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -93,13 +94,14 @@ func dataSourceSonarqubeQualityGatesRead(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 
+	errs := []error{}
 	if qualityGateReadResponse != nil {
-		d.Set("quality_gates", flattenReadQualityGateResponse(*qualityGateReadResponse))
+		errs = append(errs, d.Set("quality_gates", flattenReadQualityGateResponse(*qualityGateReadResponse)))
 	} else {
-		d.Set("quality_gates", []interface{}{})
+		errs = append(errs, d.Set("quality_gates", []interface{}{}))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readQualityGatesFromApi(d *schema.ResourceData, m interface{}) (*GetQualityGate, error) {
@@ -126,7 +128,7 @@ func readQualityGatesFromApi(d *schema.ResourceData, m interface{}) (*GetQuality
 			// If the quality gate does not exist, we don't want to fail the data source
 			return nil, nil
 		}
-		return nil, fmt.Errorf("error reading Sonarqube quality gates: %+v", err)
+		return nil, fmt.Errorf("readQualityGatesFromApi: Failed to read Sonarqube quality gates: %+v", err)
 	}
 	defer resp.Body.Close()
 
