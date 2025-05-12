@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -64,9 +65,10 @@ func dataSourceSonarqubeLanguagesRead(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	d.Set("languages", flattenReadLanguagesResponse(languagesReadResponse.Languages))
+	errs := []error{}
+	errs = append(errs, d.Set("languages", flattenReadLanguagesResponse(languagesReadResponse.Languages)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readLanguagesFromApi(d *schema.ResourceData, m interface{}) (*GetLanguages, error) {
