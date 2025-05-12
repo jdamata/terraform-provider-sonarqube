@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -80,18 +81,19 @@ func dataSourceSonarqubeUserTokensRead(d *schema.ResourceData, m interface{}) er
 		return err
 	}
 
+	errs := []error{}
 	if userTokensReadResponse != nil {
 		userTokens, err := flattenReadUserTokensResponse(userTokensReadResponse.Login, userTokensReadResponse.Tokens)
 		if err != nil {
 			return err
 		}
 
-		d.Set("user_tokens", userTokens)
+		errs = append(errs, d.Set("user_tokens", userTokens))
 	} else {
-		d.Set("user_tokens", []interface{}{})
+		errs = append(errs, d.Set("user_tokens", []interface{}{}))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readUserTokensFromApi(d *schema.ResourceData, m interface{}) (*GetTokens, error) {
@@ -118,7 +120,7 @@ func readUserTokensFromApi(d *schema.ResourceData, m interface{}) (*GetTokens, e
 			// If the user does not exist, we don't want to fail the data source
 			return nil, nil
 		}
-		return nil, fmt.Errorf("error reading Sonarqube user tokens: %+v", err)
+		return nil, fmt.Errorf("readUserTokensFromApi: Failed to read Sonarqube user tokens: %+v", err)
 	}
 	defer resp.Body.Close()
 
