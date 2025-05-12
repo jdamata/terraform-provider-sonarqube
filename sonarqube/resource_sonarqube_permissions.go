@@ -322,9 +322,10 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 		templateName := d.Get("template_name").(string)
 		for _, value := range permissionTemplates.PermissionTemplates {
 			if strings.EqualFold(value.ID, templateId) || strings.EqualFold(value.Name, templateName) {
-				d.Set("special_group_name", "project_creator")
-				d.Set("permissions", flattenProjectCreatorPermissions(&value.Permissions))
-				return nil
+				errs := []error{}
+				errs = append(errs, d.Set("special_group_name", "project_creator"))
+				errs = append(errs, d.Set("permissions", flattenProjectCreatorPermissions(&value.Permissions)))
+				return errors.Join(errs...)
 			}
 		}
 	}
