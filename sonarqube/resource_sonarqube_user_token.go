@@ -170,10 +170,10 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_tokens/search"
 
 	// split d.Id into login_name and the token name (foo/bar)
-	login := strings.Split(d.Id(), "/")
-	if login[0] != "" {
+	login_name := strings.Split(d.Id(), "/")
+	if login_name[0] != "" {
 		sonarQubeURL.RawQuery = url.Values{
-			"login": []string{login[0]},
+			"login": []string{login_name[0]},
 		}.Encode()
 	}
 
@@ -193,23 +193,23 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 	getTokensResponse := GetTokens{}
 	err = json.NewDecoder(resp.Body).Decode(&getTokensResponse)
 	if err != nil {
-		return fmt.Errorf("resourceSonarqubeUserTokenCreate: Failed to decode json into struct: %+v", err)
+		return fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to decode json into struct: %+v", err)
 	}
 
 	// Loop over all user token to see if the current token exists.
 	if getTokensResponse.Tokens != nil {
 		for _, value := range getTokensResponse.Tokens {
-			if d.Get("name").(string) == value.Name {
-				d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
-        errs := []error{}
+			if login_name[1] == value.Name {
+				d.SetId(fmt.Sprintf("%s/%s", getTokensResponse.Login, value.Name))
+				errs := []error{}
 				if d.Get("login_name").(string) != "" {
-          errs = append(errs, d.Set("login_name", getTokensResponse.Login))
+					errs = append(errs, d.Set("login_name", getTokensResponse.Login))
 				}
-        errs = append(errs, d.Set("name", value.Name))
+				errs = append(errs, d.Set("name", value.Name))
 				if value.ExpirationDate != "" {
 					dateReceived, errTimeParse := time.Parse("2006-01-02T15:04:05-0700", value.ExpirationDate)
 					if errTimeParse != nil {
-						return fmt.Errorf("resourceSonarqubeUserTokenCreate: Failed to parse ExpirationDate: %+v", err)
+						return fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to parse ExpirationDate: %+v", errTimeParse)
 					}
 					errs = append(errs, d.Set("expiration_date", dateReceived.Format("2006-01-02")))
 				}
@@ -218,7 +218,7 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubeUserTokenCreate: Failed to find user token: %+v", d.Id())
+	return fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to find user token: %+v", d.Id())
 }
 
 func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) error {
