@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -51,9 +52,10 @@ func dataSourceSonarqubeGroupsRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	d.Set("groups", flattenReadGroupsResponse(groupsReadResponse.Groups))
+	errs := []error{}
+	errs = append(errs, d.Set("groups", flattenReadGroupsResponse(groupsReadResponse.Groups)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readGroupsFromApi(d *schema.ResourceData, m interface{}) (*GetGroup, error) {
@@ -78,7 +80,7 @@ func readGroupsFromApi(d *schema.ResourceData, m interface{}) (*GetGroup, error)
 		"readGroupsFromApi",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error reading Sonarqube groups: %+v", err)
+		return nil, fmt.Errorf("readGroupsFromApi: Failed to read Sonarqube groups: %+v", err)
 	}
 	defer resp.Body.Close()
 
