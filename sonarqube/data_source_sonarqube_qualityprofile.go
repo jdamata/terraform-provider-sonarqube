@@ -68,6 +68,7 @@ func dataSourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}
 
 	RawQuery := url.Values{}
 	if !hasKey {
+		RawQuery.Set("qualityProfile", name.(string))
 		RawQuery.Set("language", language.(string))
 	}
 	sonarQubeURL.RawQuery = RawQuery.Encode()
@@ -110,12 +111,10 @@ func dataSourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}
 			}
 		}
 	} else {
-		for _, qualityProfile := range getQualityProfileResponse.Profiles {
-			if qualityProfile.Name == name.(string) {
-				foundQualityProfile = qualityProfile
-				break
-			}
+		if len(getQualityProfileResponse.Profiles) > 1 {
+			return fmt.Errorf("dataSourceSonarqubeQualityProfileRead: found more than one quality profile with %s", qualityProfileIdent)
 		}
+		foundQualityProfile = getQualityProfileResponse.Profiles[0]
 	}
 
 	if foundQualityProfile.Key != "" {
