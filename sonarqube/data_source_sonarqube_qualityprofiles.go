@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -67,9 +68,10 @@ func dataSourceSonarqubeQualityProfilesRead(d *schema.ResourceData, m interface{
 		return err
 	}
 
-	d.Set("quality_profiles", flattenReadQualityProfilesResponse(qualityProfilesReadResponse.Profiles))
+	errs := []error{}
+	errs = append(errs, d.Set("quality_profiles", flattenReadQualityProfilesResponse(qualityProfilesReadResponse.Profiles)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readQualityProfilesFromApi(d *schema.ResourceData, m interface{}) (*GetQualityProfileList, error) {
@@ -94,7 +96,7 @@ func readQualityProfilesFromApi(d *schema.ResourceData, m interface{}) (*GetQual
 		"readQualityProfilesFromApi",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error reading Sonarqube quality profiles: %+v", err)
+		return nil, fmt.Errorf("readQualityProfilesFromApi: Failed to read Sonarqube quality profiles: %+v", err)
 	}
 	defer resp.Body.Close()
 
