@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -61,9 +62,10 @@ func dataSourceSonarqubeUsersRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.Set("users", flattenReadUsersResponse(usersReadResponse.Users))
+	errs := []error{}
+	errs = append(errs, d.Set("users", flattenReadUsersResponse(usersReadResponse.Users)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func readUsersFromApi(d *schema.ResourceData, m interface{}) (*GetUser, error) {
@@ -88,7 +90,7 @@ func readUsersFromApi(d *schema.ResourceData, m interface{}) (*GetUser, error) {
 		"readUsersFromApi",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error reading Sonarqube users: %+v", err)
+		return nil, fmt.Errorf("readUsersFromApi: Failed to read Sonarqube users: %+v", err)
 	}
 	defer resp.Body.Close()
 
