@@ -52,6 +52,9 @@ func resourceSonarqubeUserToken() *schema.Resource {
 		Create:      resourceSonarqubeUserTokenCreate,
 		Read:        resourceSonarqubeUserTokenRead,
 		Delete:      resourceSonarqubeUserTokenDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeUserTokenImport,
+		},
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -247,4 +250,11 @@ func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) err
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func resourceSonarqubeUserTokenImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	if err := resourceSonarqubeUserTokenRead(d, m); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
