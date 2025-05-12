@@ -151,8 +151,7 @@ func resourceSonarqubeQualityProfileUsergroupAssociationRead(d *schema.ResourceD
 		login := d.Get("login_name").(string)
 		for _, value := range QualityProfileUsergroupAssociationReadResponse.Users {
 			if strings.EqualFold(value.Login, login) {
-				d.Set("login_name", value.Login)
-				return nil
+				return d.Set("login_name", value.Login)
 			}
 		}
 	} else {
