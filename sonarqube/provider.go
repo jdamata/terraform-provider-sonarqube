@@ -117,6 +117,7 @@ func Provider() *schema.Provider {
 			"sonarqube_qualityprofile":  dataSourceSonarqubeQualityProfile(),
 			"sonarqube_qualityprofiles": dataSourceSonarqubeQualityProfiles(),
 			"sonarqube_qualitygate":     dataSourceSonarqubeQualityGate(),
+			"sonarqube_qualitygates":   dataSourceSonarqubeQualityGates(),
 			"sonarqube_rule":            dataSourceSonarqubeRule(),
 			"sonarqube_languages":       dataSourceSonarqubeLanguages(),
 		},
