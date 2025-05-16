@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/tidwall/gjson"
 )
@@ -76,42 +78,49 @@ func Provider() *schema.Provider {
 		},
 		// Add the resources supported by this provider to this map.
 		ResourcesMap: map[string]*schema.Resource{
-			"sonarqube_alm_azure":                          resourceSonarqubeAlmAzure(),
-			"sonarqube_azure_binding":                      resourceSonarqubeAzureBinding(),
-			"sonarqube_group":                              resourceSonarqubeGroup(),
-			"sonarqube_group_member":                       resourceSonarqubeGroupMember(),
-			"sonarqube_permission_template":                resourceSonarqubePermissionTemplate(),
-			"sonarqube_permissions":                        resourceSonarqubePermissions(),
-			"sonarqube_plugin":                             resourceSonarqubePlugin(),
-			"sonarqube_project":                            resourceSonarqubeProject(),
-			"sonarqube_project_main_branch":                resourceSonarqubeProjectMainBranch(),
-			"sonarqube_portfolio":                          resourceSonarqubePortfolio(),
-			"sonarqube_qualityprofile":                     resourceSonarqubeQualityProfile(),
-			"sonarqube_qualityprofile_project_association": resourceSonarqubeQualityProfileProjectAssociation(),
-			"sonarqube_qualitygate":                        resourceSonarqubeQualityGate(),
-			"sonarqube_qualitygate_project_association":    resourceSonarqubeQualityGateProjectAssociation(),
-			"sonarqube_qualitygate_usergroup_association":  resourceSonarqubeQualityGateUsergroupAssociation(),
-			"sonarqube_user":                               resourceSonarqubeUser(),
-			"sonarqube_user_external_identity":             resourceSonarqubeUserExternalIdentity(),
-			"sonarqube_user_token":                         resourceSonarqubeUserToken(),
-			"sonarqube_webhook":                            resourceSonarqubeWebhook(),
-			"sonarqube_rule":                               resourceSonarqubeRule(),
-			"sonarqube_setting":                            resourceSonarqubeSettings(),
-			"sonarqube_qualityprofile_activate_rule":       resourceSonarqubeQualityProfileRule(),
-			"sonarqube_alm_github":                         resourceSonarqubeAlmGithub(),
-			"sonarqube_github_binding":                     resourceSonarqubeGithubBinding(),
-			"sonarqube_alm_gitlab":                         resourceSonarqubeAlmGitlab(),
-			"sonarqube_gitlab_binding":                     resourceSonarqubeGitlabBinding(),
-			"sonarqube_new_code_periods":                   resourceSonarqubeNewCodePeriodsBinding(),
+			"sonarqube_alm_azure":                            resourceSonarqubeAlmAzure(),
+			"sonarqube_azure_binding":                        resourceSonarqubeAzureBinding(),
+			"sonarqube_group":                                resourceSonarqubeGroup(),
+			"sonarqube_group_member":                         resourceSonarqubeGroupMember(),
+			"sonarqube_permission_template":                  resourceSonarqubePermissionTemplate(),
+			"sonarqube_permissions":                          resourceSonarqubePermissions(),
+			"sonarqube_plugin":                               resourceSonarqubePlugin(),
+			"sonarqube_project":                              resourceSonarqubeProject(),
+			"sonarqube_project_main_branch":                  resourceSonarqubeProjectMainBranch(),
+			"sonarqube_portfolio":                            resourceSonarqubePortfolio(),
+			"sonarqube_qualityprofile":                       resourceSonarqubeQualityProfile(),
+			"sonarqube_qualityprofile_project_association":   resourceSonarqubeQualityProfileProjectAssociation(),
+			"sonarqube_qualityprofile_usergroup_association": resourceSonarqubeQualityProfileUsergroupAssociation(),
+			"sonarqube_qualitygate":                          resourceSonarqubeQualityGate(),
+			"sonarqube_qualitygate_project_association":      resourceSonarqubeQualityGateProjectAssociation(),
+			"sonarqube_qualitygate_usergroup_association":    resourceSonarqubeQualityGateUsergroupAssociation(),
+			"sonarqube_user":                                 resourceSonarqubeUser(),
+			"sonarqube_user_external_identity":               resourceSonarqubeUserExternalIdentity(),
+			"sonarqube_user_token":                           resourceSonarqubeUserToken(),
+			"sonarqube_webhook":                              resourceSonarqubeWebhook(),
+			"sonarqube_rule":                                 resourceSonarqubeRule(),
+			"sonarqube_setting":                              resourceSonarqubeSettings(),
+			"sonarqube_qualityprofile_activate_rule":         resourceSonarqubeQualityProfileRule(),
+			"sonarqube_alm_github":                           resourceSonarqubeAlmGithub(),
+			"sonarqube_github_binding":                       resourceSonarqubeGithubBinding(),
+			"sonarqube_alm_gitlab":                           resourceSonarqubeAlmGitlab(),
+			"sonarqube_gitlab_binding":                       resourceSonarqubeGitlabBinding(),
+			"sonarqube_new_code_periods":                     resourceSonarqubeNewCodePeriodsBinding(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"sonarqube_user":           dataSourceSonarqubeUser(),
-			"sonarqube_group":          dataSourceSonarqubeGroup(),
-			"sonarqube_project":        dataSourceSonarqubeProject(),
-			"sonarqube_portfolio":      dataSourceSonarqubePortfolio(),
-			"sonarqube_qualityprofile": dataSourceSonarqubeQualityProfile(),
-			"sonarqube_qualitygate":    dataSourceSonarqubeQualityGate(),
-			"sonarqube_rule":           dataSourceSonarqubeRule(),
+			"sonarqube_user":            dataSourceSonarqubeUser(),
+			"sonarqube_users":          dataSourceSonarqubeUsers(),
+			"sonarqube_group":           dataSourceSonarqubeGroup(),
+			"sonarqube_groups":          dataSourceSonarqubeGroups(),
+			"sonarqube_group_members":  dataSourceSonarqubeGroupMembers(),
+			"sonarqube_project":         dataSourceSonarqubeProject(),
+			"sonarqube_portfolio":       dataSourceSonarqubePortfolio(),
+			"sonarqube_qualityprofile":  dataSourceSonarqubeQualityProfile(),
+			"sonarqube_qualityprofiles": dataSourceSonarqubeQualityProfiles(),
+			"sonarqube_qualitygate":     dataSourceSonarqubeQualityGate(),
+			"sonarqube_qualitygates":   dataSourceSonarqubeQualityGates(),
+			"sonarqube_rule":            dataSourceSonarqubeRule(),
+			"sonarqube_languages":       dataSourceSonarqubeLanguages(),
 		},
 		ConfigureFunc: configureProvider,
 	}
@@ -137,7 +146,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		transport.Proxy = http.ProxyURL(proxyUrl)
 	}
 	transport.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool),
+		InsecureSkipVerify: d.Get("tls_insecure_skip_verify").(bool), // #nosec G402
 	}
 
 	client := retryablehttp.NewClient()
@@ -214,7 +223,11 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 	if err != nil {
 		return "", "", fmt.Errorf("cannot get sonarqube version/edition. Please configure installed_version and installed_edition: %+v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			tflog.Error(context.TODO(), fmt.Sprintf("error while closing system info: %s", err))
+		}
+	}()
 
 	// Read in the response
 	responseData, err := ioutil.ReadAll(resp.Body)

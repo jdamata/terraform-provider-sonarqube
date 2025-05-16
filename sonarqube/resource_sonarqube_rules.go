@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -222,13 +223,14 @@ func resourceSonarqubeRuleRead(d *schema.ResourceData, m interface{}) error {
 	for _, value := range ruleReadResponse.Rule {
 		if d.Id() == value.RuleKey {
 			d.SetId(value.RuleKey)
-			d.Set("markdown_description", value.MdDesc)
-			d.Set("name", value.Name)
-			d.Set("severity", value.Severity)
-			d.Set("template_key", value.TemplateKey)
-			d.Set("status", value.Status)
-			d.Set("type", value.Type)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("markdown_description", value.MdDesc))
+			errs = append(errs, d.Set("name", value.Name))
+			errs = append(errs, d.Set("severity", value.Severity))
+			errs = append(errs, d.Set("template_key", value.TemplateKey))
+			errs = append(errs, d.Set("status", value.Status))
+			errs = append(errs, d.Set("type", value.Type))
+			return errors.Join(errs...)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeRuleRead: Failed to find project: %+v", d.Id())

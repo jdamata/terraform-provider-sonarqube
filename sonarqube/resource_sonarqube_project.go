@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -224,9 +225,12 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(projectReadResponse.Component.Key)
-	d.Set("name", projectReadResponse.Component.Name)
-	d.Set("project", projectReadResponse.Component.Key)
-	d.Set("visibility", projectReadResponse.Component.Visibility)
+	errName := d.Set("name", projectReadResponse.Component.Name)
+	errProject := d.Set("project", projectReadResponse.Component.Key)
+	errVisibility := d.Set("visibility", projectReadResponse.Component.Visibility)
+	if err := errors.Join(errName, errProject, errVisibility); err != nil {
+		return err
+	}
 
 	// Get settings
 	var projectSettings []Setting
@@ -258,13 +262,16 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		d.Set("setting", settings)
+		if err := d.Set("setting", settings); err != nil {
+			return err
+		}
 	}
 
 	if len(projectReadResponse.Component.Tags) > 0 {
-		d.Set("tags", projectReadResponse.Component.Tags)
+		err = d.Set("tags", projectReadResponse.Component.Tags)
 	}
 
-	return nil
+	return err
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
@@ -358,6 +365,6 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	// As per the docs, use the id to make the read work as intended (https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/import)
-	d.Set("project", d.Id())
-	return []*schema.ResourceData{d}, nil
+	err := d.Set("project", d.Id())
+	return []*schema.ResourceData{d}, err
 }

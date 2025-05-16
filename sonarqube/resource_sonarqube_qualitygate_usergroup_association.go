@@ -143,8 +143,7 @@ func resourceSonarqubeQualityGateUsergroupAssociationRead(d *schema.ResourceData
 		login := d.Get("login_name").(string)
 		for _, value := range qualityGateUsergroupAssociationReadResponse.Users {
 			if strings.EqualFold(value.Login, login) {
-				d.Set("login_name", value.Login)
-				return nil
+				return d.Set("login_name", value.Login)
 			}
 		}
 	} else {

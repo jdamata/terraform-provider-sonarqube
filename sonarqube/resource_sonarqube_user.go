@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -162,11 +163,12 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	for _, value := range userResponse.Users {
 		if d.Id() == value.Login {
 			d.SetId(value.Login)
-			d.Set("login_name", value.Login)
-			d.Set("name", value.Name)
-			d.Set("email", value.Email)
-			d.Set("is_local", value.IsLocal)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("login_name", value.Login))
+			errs = append(errs, d.Set("name", value.Name))
+			errs = append(errs, d.Set("email", value.Email))
+			errs = append(errs, d.Set("is_local", value.IsLocal))
+			return errors.Join(errs...)
 		}
 	}
 
@@ -201,9 +203,11 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange("password") {
 		password_old, _ := d.GetChange("password")
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/users/change_password"
+		oldPassword, newPassword := d.GetChange("password")
 		sonarQubeURL.RawQuery = url.Values{
 			"login":            []string{d.Id()},
-			"password":         []string{d.Get("password").(string)},
+			"password":         []string{newPassword.(string)},
+			"previousPassword": []string{oldPassword.(string)},
 			"previousPassword": []string{password_old.(string)},
 		}.Encode()
 

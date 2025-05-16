@@ -1,4 +1,5 @@
 export GO111MODULE=on
+export CGO_ENABLED=1
 export TF_LOG=DEBUG
 SRC=$(shell find . -name '*.go')
 SONARQUBE_IMAGE?=sonarqube:latest
@@ -30,3 +31,11 @@ testacc:
 	-TF_ACC=1 SONAR_HOST=http://localhost:9001 SONAR_USER=admin SONAR_PASS=admin go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 	docker stop sonarqube1
 	docker rm sonarqube1
+
+testacc-no-docker-windows:
+	# docker run --name sonarqube1 -d -p 9001:9000 sonarqube:latest
+	set TF_ACC=1\
+	&& set SONAR_HOST=http://localhost:9001\
+	&& set SONAR_USER=admin\
+	&& set SONAR_PASS=admin\
+	&& go test -race -coverprofile=coverage.txt -covermode=atomic ./...

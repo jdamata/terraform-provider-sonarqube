@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -110,9 +111,9 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 	// Loop over all branches to see if the main branch we need exists.
 	for _, value := range branchReadResponse.Branches {
 		if idSlice[1] == value.Name && value.IsMain {
-			d.Set("project", idSlice[0])
-			d.Set("name", value.Name)
-			return nil
+			errProject := d.Set("project", idSlice[0])
+			errName := d.Set("name", value.Name)
+			return errors.Join(errProject, errName)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to find project main branch: %+v", d.Id())

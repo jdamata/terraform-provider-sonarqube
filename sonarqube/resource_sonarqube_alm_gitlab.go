@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -108,11 +109,11 @@ func resourceSonarqubeAlmGitlabRead(d *schema.ResourceData, m interface{}) error
 	// Loop over all GitHub instances to see if the Alm instance exists.
 	for _, value := range AlmGitlabReadResponse.Gitlab {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("url", value.URL)
+			errKey := d.Set("key", value.Key)
+			errUrl := d.Set("url", value.URL)
 			// The personal_access_token is a secured property that is not returned
 			// d.Set("personal_access_token", value.PersonalAccessToken)
-			return nil
+			return errors.Join(errKey, errUrl)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeGitlabBindingRead: Failed to find gitlab binding: %+v", d.Id())
