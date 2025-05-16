@@ -30,32 +30,33 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 	// Prepare request
 	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to prepare http request: %v. Request: %v. Resource: %v", err, req, resource)
+		return http.Response{}, fmt.Errorf("failed to create request for resource %s: %w", resource, err)
 	}
 
 	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v. Resource: %v", err, req, resource)
+		return http.Response{}, fmt.Errorf("failed to send request for resource %s: %w", resource, err)
+		// return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v. Resource: %v", err, req, resource)
 	}
 
 	// Check response code
 	if resp.StatusCode != expectedResponseCode {
 		if resp.Body == http.NoBody {
 			// No error message in the body
-			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode: %v", resp.StatusCode, expectedResponseCode)
+			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode: %v for resource %s", resp.StatusCode, expectedResponseCode, resource)
 		}
 
 		// The response body has content, try to decode the error message
 		errorResponse := ErrorResponse{}
 		err = json.NewDecoder(resp.Body).Decode(&errorResponse)
 		if err != nil {
-			return *resp, fmt.Errorf("failed to decode error response json into struct: %+v", err)
+			return *resp, fmt.Errorf("failed to decode error response json into struct for resource %s: %+v", err, resource)
 		}
 		if len(errorResponse.Errors) == 0 {
-			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode: %v. No error message found in the response body", resp.StatusCode, expectedResponseCode)
+			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode for resource %s: %v. No error message found in the response body", resp.StatusCode, resource, expectedResponseCode)
 		}
-		return *resp, fmt.Errorf("API returned an error: %+v", errorResponse.Errors[0].Message)
+		return *resp, fmt.Errorf("API returned an error for resource %s: %+v", errorResponse.Errors[0].Message, resource)
 	}
 
 	return *resp, nil
