@@ -201,11 +201,11 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 		for _, value := range getTokensResponse.Tokens {
 			if d.Get("name").(string) == value.Name {
 				d.SetId(fmt.Sprintf("%s/%s", d.Get("login_name").(string), d.Get("name").(string)))
-        errs := []error{}
+				errs := []error{}
 				if d.Get("login_name").(string) != "" {
-          errs = append(errs, d.Set("login_name", getTokensResponse.Login))
+					errs = append(errs, d.Set("login_name", getTokensResponse.Login))
 				}
-        errs = append(errs, d.Set("name", value.Name))
+				errs = append(errs, d.Set("name", value.Name))
 				if value.ExpirationDate != "" {
 					dateReceived, errTimeParse := time.Parse("2006-01-02T15:04:05-0700", value.ExpirationDate)
 					if errTimeParse != nil {
