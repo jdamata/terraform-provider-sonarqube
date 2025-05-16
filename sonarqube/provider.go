@@ -112,6 +112,7 @@ func Provider() *schema.Provider {
 			"sonarqube_users":          dataSourceSonarqubeUsers(),
 			"sonarqube_group":           dataSourceSonarqubeGroup(),
 			"sonarqube_groups":          dataSourceSonarqubeGroups(),
+			"sonarqube_group_members":  dataSourceSonarqubeGroupMembers(),
 			"sonarqube_project":         dataSourceSonarqubeProject(),
 			"sonarqube_portfolio":       dataSourceSonarqubePortfolio(),
 			"sonarqube_qualityprofile":  dataSourceSonarqubeQualityProfile(),
