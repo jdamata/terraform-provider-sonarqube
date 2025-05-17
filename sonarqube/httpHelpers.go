@@ -67,14 +67,15 @@ func censorHttpError(error error) error {
 	return errors.New(sanitizedError)
 }
 
+var (
+	regexBasicAuth = regexp.MustCompile(`(https?://)([^:]+:)([^@]+)`)
+	regexToken     = regexp.MustCompile(`([&?]token=)([^&"' ]*)`)
+	regexPassword  = regexp.MustCompile(`([&?]password=)([^&"' ]*)`)
+	regexSecret    = regexp.MustCompile(`([&?]secret=)([^&"' ]*)`)
+)
+
 func sanitizeSensitiveURLs(input string) string {
-	regexBasicAuth := regexp.MustCompile(`(https?://)([^:]+:)([^@]+)(@)`)
-
-	regexToken := regexp.MustCompile(`([&?]token=)([^&"' ]*)`)
-	regexPassword := regexp.MustCompile(`([&?]password=)([^&"' ]*)`)
-	regexSecret := regexp.MustCompile(`([&?]secret=)([^&"' ]*)`)
-
-	outputString := regexBasicAuth.ReplaceAllString(input, "${1}***:***@")
+	outputString := regexBasicAuth.ReplaceAllString(input, "${1}***:***")
 
 	outputString = regexToken.ReplaceAllString(outputString, "${1}***")
 	outputString = regexPassword.ReplaceAllString(outputString, "${1}***")
