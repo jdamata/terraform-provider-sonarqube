@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -108,20 +108,20 @@ func Provider() *schema.Provider {
 			"sonarqube_new_code_periods":                     resourceSonarqubeNewCodePeriodsBinding(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"sonarqube_user":            dataSourceSonarqubeUser(),
-			"sonarqube_users":           dataSourceSonarqubeUsers(),
-			"sonarqube_user_tokens":     dataSourceSonarqubeUserTokens(),
-			"sonarqube_group":           dataSourceSonarqubeGroup(),
-			"sonarqube_groups":          dataSourceSonarqubeGroups(),
-			"sonarqube_group_members":   dataSourceSonarqubeGroupMembers(),
-			"sonarqube_project":         dataSourceSonarqubeProject(),
-			"sonarqube_portfolio":       dataSourceSonarqubePortfolio(),
-			"sonarqube_qualityprofile":  dataSourceSonarqubeQualityProfile(),
-			"sonarqube_qualityprofiles": dataSourceSonarqubeQualityProfiles(),
-			"sonarqube_qualitygate":     dataSourceSonarqubeQualityGate(),
-			"sonarqube_qualitygates":    dataSourceSonarqubeQualityGates(),
-			"sonarqube_rule":            dataSourceSonarqubeRule(),
-			"sonarqube_languages":       dataSourceSonarqubeLanguages(),
+			"sonarqube_user":                 dataSourceSonarqubeUser(),
+			"sonarqube_users":                dataSourceSonarqubeUsers(),
+			"sonarqube_user_tokens":          dataSourceSonarqubeUserTokens(),
+			"sonarqube_group":                dataSourceSonarqubeGroup(),
+			"sonarqube_groups":               dataSourceSonarqubeGroups(),
+			"sonarqube_group_members":        dataSourceSonarqubeGroupMembers(),
+			"sonarqube_project":              dataSourceSonarqubeProject(),
+			"sonarqube_portfolio":            dataSourceSonarqubePortfolio(),
+			"sonarqube_qualityprofile":       dataSourceSonarqubeQualityProfile(),
+			"sonarqube_qualityprofiles":      dataSourceSonarqubeQualityProfiles(),
+			"sonarqube_qualitygate":          dataSourceSonarqubeQualityGate(),
+			"sonarqube_qualitygates":         dataSourceSonarqubeQualityGates(),
+			"sonarqube_rule":                 dataSourceSonarqubeRule(),
+			"sonarqube_languages":            dataSourceSonarqubeLanguages(),
 			"sonarqube_permission_templates": dataSourceSonarqubePermissionTemplates(),
 		},
 		ConfigureFunc: configureProvider,
@@ -232,7 +232,7 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 	}()
 
 	// Read in the response
-	responseData, err := ioutil.ReadAll(resp.Body)
+	responseData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to parse response body on GET sonarqube system/info api: %+v", err)
 	}

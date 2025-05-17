@@ -72,7 +72,7 @@ Azure Devops repository and a SonarQube project`,
 
 func checkAzureBindingSupport(conf *ProviderConfiguration) error {
 	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		return fmt.Errorf("Azure Devops Bindings are not supported in the Community edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+		return fmt.Errorf("azure devops bindings are not supported in the Community edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
 	}
 	return nil
 }
