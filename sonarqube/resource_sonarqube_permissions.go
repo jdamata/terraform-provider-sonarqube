@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // GetGroupPermissions struct
@@ -28,7 +29,7 @@ type GroupPermission struct {
 // Returns the resource represented by this file.
 func resourceSonarqubePermissions() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name",
+		Description: "Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name or special_group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name",
 		Create:      resourceSonarqubePermissionsCreate,
 		Read:        resourceSonarqubePermissionsRead,
 		Update:      resourceSonarqubePermissionsUpdate,
@@ -43,36 +44,49 @@ func resourceSonarqubePermissions() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"login_name", "group_name"},
-				Description:  "The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name`.",
+				ExactlyOneOf: []string{"login_name", "group_name", "special_group_name"},
+				Description:  "The name of the user that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `group_name` and `special_group_name`.",
 			},
 			"group_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"login_name", "group_name"},
-				Description:  "The name of the Group that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `login_name`",
+				ExactlyOneOf: []string{"login_name", "group_name", "special_group_name"},
+				Description:  "The name of the Group that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `login_name` and `special_group_name`.",
+			},
+			"special_group_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"login_name", "group_name", "special_group_name"},
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringInSlice(
+						[]string{"project_creator"},
+						false,
+					),
+				),
+				Description: "The name of the Special Group that should get the specified permissions. Changing this forces a new resource to be created. Cannot be used with `login_name` and `group_name`.",
 			},
 			"project_key": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"template_id", "template_name"},
-				Description:   "Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `template_id & template_name`",
+				ConflictsWith: []string{"special_group_name", "template_id", "template_name"},
+				Description:   "Specify if you want to apply project level permissions. Changing this forces a new resource to be created. Cannot be used with `special_group_name`, `template_id` and `template_name`.",
 			},
 			"template_id": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				ConflictsWith: []string{"project_key", "template_name"},
-				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_name`",
+				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key` and `template_name`.",
 			},
 			"template_name": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				ConflictsWith: []string{"project_key", "template_id"},
-				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key & template_id`",
+				Description:   "Specify if you want to apply the permissions to a permission template. Changing this forces a new resource to be created. Cannot be used with `project_key` and `template_id`.",
 			},
 			"permissions": {
 				Type:     schema.TypeSet,
@@ -89,13 +103,47 @@ func resourceSonarqubePermissions() *schema.Resource {
 func resourceSonarqubePermissionsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) > 2 {
-		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: invalid import format, expected 'principal(:scope)' where principal is login_name or group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with with prefixes. Example: group1:tn_test_template_name")
+		return nil, fmt.Errorf("resourceSonarqubePermissionsImport: invalid import format, expected 'principal(:scope)' where principal is login_name or group_name or special_group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with with prefixes. Example: group1:tn_test_template_name")
 	}
 
 	principal := parts[0]
 	scope := ""
 	if len(parts) == 2 {
 		scope = parts[1]
+	}
+
+	if scope != "" {
+		// Determine the scope type (project_key, template_id, template_name)
+		var setError error
+		if strings.HasPrefix(scope, "p_") {
+			setError = d.Set("project_key", scope[2:])
+		} else if strings.HasPrefix(scope, "t_") {
+			setError = d.Set("template_id", scope[2:])
+		} else if strings.HasPrefix(scope, "tn_") {
+			setError = d.Set("template_name", scope[3:])
+		}
+		if setError != nil {
+			return nil, fmt.Errorf("resourceSonarqubePermissionsImport: failed to set permissions: %+v", setError)
+		}
+	} else {
+		scope = "global"
+	}
+
+	// Check if the principal is a special group
+	if strings.EqualFold(principal, "project_creator") {
+		if err := d.Set("special_group_name", principal); err != nil {
+			return nil, fmt.Errorf("resourceSonarqubePermissionsImport: failed to set special_group_name: %+v", err)
+		}
+
+		// Generate a deterministic ID
+		d.SetId(fmt.Sprintf("project-creator-%s-permissions", scope))
+
+		// Read the current state
+		if err := resourceSonarqubePermissionsRead(d, m); err != nil {
+			return nil, err
+		}
+
+		return []*schema.ResourceData{d}, nil
 	}
 
 	// Determine if principal is a user or group by checking if it exists as a user
@@ -146,23 +194,6 @@ func resourceSonarqubePermissionsImport(d *schema.ResourceData, m interface{}) (
 		}
 	}
 
-	if scope != "" {
-		// Determine the scope type (project_key, template_id, template_name)
-		var setError error
-		if strings.HasPrefix(scope, "p_") {
-			setError = d.Set("project_key", scope[2:])
-		} else if strings.HasPrefix(scope, "t_") {
-			setError = d.Set("template_id", scope[2:])
-		} else if strings.HasPrefix(scope, "tn_") {
-			setError = d.Set("template_name", scope[3:])
-		}
-		if setError != nil {
-			return nil, fmt.Errorf("resourceSonarqubePermissionsImport: failed to set permissions: %+v", setError)
-		}
-	} else {
-		scope = "global"
-	}
-
 	// Generate a deterministic ID
 	if isUser {
 		d.SetId(fmt.Sprintf("user-%s-%s-permissions", principal, scope))
@@ -210,8 +241,8 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	// we use different API endpoints and request params
-	// based on the target principal type (group or user)
-	// and if its a direct or template permission
+	// based on the target principal type (group or user or
+	// special group) and if its a direct or template permission
 	if _, ok := d.GetOk("login_name"); ok {
 		// user permission
 		RawQuery.Add("login", d.Get("login_name").(string))
@@ -229,7 +260,7 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 		}
 
 		d.SetId(fmt.Sprintf("user-%s-%s-permissions", principalName, scopeValue))
-	} else {
+	} else if _, ok := d.GetOk("group_name"); ok {
 		// group permission
 		RawQuery.Add("groupName", d.Get("group_name").(string))
 		if templateID, ok := d.GetOk("template_id"); ok {
@@ -246,6 +277,20 @@ func resourceSonarqubePermissionsCreate(d *schema.ResourceData, m interface{}) e
 		}
 
 		d.SetId(fmt.Sprintf("group-%s-%s-permissions", principalName, scopeValue))
+	} else {
+		// special group permission set to project creator
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/add_project_creator_to_template"
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template project creator permission
+			RawQuery.Add("templateId", templateID.(string))
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			// name provide instead of id
+			RawQuery.Add("templateName", templateName.(string))
+		} else {
+			return fmt.Errorf("resourceSonarqubePermissionsCreate: 'templateId' or 'templateName' must be set when 'special_group_name' is set to 'project_creator'")
+		}
+
+		d.SetId(fmt.Sprintf("project-creator-%s-permissions", scopeValue))
 	}
 
 	// loop through all permissions that should be applied
@@ -287,8 +332,8 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 	}
 
 	// we use different API endpoints and request params
-	// based on the target principal type (group or user)
-	// and if its a direct or template permission
+	// based on the target principal type (group or user or
+	// special group) and if its a direct or template permission
 	if loginName, ok := d.GetOk("login_name"); ok {
 		// permission target is USER
 		if templateID, ok := d.GetOk("template_id"); ok {
@@ -334,7 +379,7 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			}
 		}
 
-	} else {
+	} else if _, ok := d.GetOk("group_name"); ok {
 		// permission target is GROUP
 		groupName := d.Get("group_name").(string)
 
@@ -377,6 +422,44 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 				errGroup := d.Set("group_name", value.Name)
 				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
 				return errors.Join(errGroup, errPerms)
+			}
+		}
+	} else {
+		// permission target is PROJECT CREATOR set to project creator
+		if templateName, ok := d.GetOk("template_name"); ok {
+			RawQuery.Add("templateName", templateName.(string))
+		}
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/search_templates"
+		sonarQubeURL.RawQuery = RawQuery.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"GET",
+			sonarQubeURL.String(),
+			http.StatusOK,
+			"resourceSonarqubePermissionsRead",
+		)
+		if err != nil {
+			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
+		}
+		defer resp.Body.Close()
+
+		// Decode response into struct
+		permissionTemplates := GetPermissionTemplates{}
+		err = json.NewDecoder(resp.Body).Decode(&permissionTemplates)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+		}
+
+		// Loop over all permission templates
+		templateId := d.Get("template_id").(string)
+		templateName := d.Get("template_name").(string)
+		for _, value := range permissionTemplates.PermissionTemplates {
+			if strings.EqualFold(value.ID, templateId) || strings.EqualFold(value.Name, templateName) {
+				errs := []error{}
+				errs = append(errs, d.Set("special_group_name", "project_creator"))
+				errs = append(errs, d.Set("permissions", flattenProjectCreatorPermissions(&value.Permissions)))
+				return errors.Join(errs...)
 			}
 		}
 	}
@@ -562,7 +645,8 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 	}
 
 	// we use different API endpoints and request params
-	// based on the target principal type (group or user)
+	// based on the target principal type (group or user
+	// or special group)
 	if _, ok := d.GetOk("login_name"); ok {
 		// permission target is USER
 		if templateID, ok := d.GetOk("template_id"); ok {
@@ -579,7 +663,7 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 		RawQuery.Add("login", d.Get("login_name").(string))
 		sonarQubeURL.RawQuery = RawQuery.Encode()
 
-	} else {
+	} else if _, ok := d.GetOk("group_name"); ok {
 		// permission target is GROUP
 		if templateID, ok := d.GetOk("template_id"); ok {
 			// template group permission
@@ -594,6 +678,18 @@ func resourceSonarqubePermissionsDelete(d *schema.ResourceData, m interface{}) e
 		}
 		RawQuery.Add("groupName", d.Get("group_name").(string))
 		sonarQubeURL.RawQuery = RawQuery.Encode()
+	} else {
+		// permission target is SPECIAL GROUP set to project creator
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/remove_project_creator_from_template"
+		if templateID, ok := d.GetOk("template_id"); ok {
+			// template project creator permission
+			RawQuery.Add("templateId", templateID.(string))
+		} else if templateName, ok := d.GetOk("template_name"); ok {
+			// name provide instead of id
+			RawQuery.Add("templateName", templateName.(string))
+		} else {
+			return fmt.Errorf("resourceSonarqubePermissionsDelete: 'templateId' or 'templateName' must be set when 'special_group_name' is set to 'project_creator'")
+		}
 	}
 
 	// loop through all permissions that should be applied
@@ -675,4 +771,19 @@ func calculatePermissionChanges(current, target []string) (toAdd, toRemove []str
 	}
 
 	return toAdd, toRemove
+}
+
+func flattenProjectCreatorPermissions(input *[]PermissionTemplatePermission) []interface{} {
+	flatPermissions := make([]interface{}, 0)
+	if input == nil {
+		return flatPermissions
+	}
+
+	for _, permission := range *input {
+		if permission.WithProjectCreator {
+			flatPermissions = append(flatPermissions, permission.Key)
+		}
+	}
+
+	return flatPermissions
 }
