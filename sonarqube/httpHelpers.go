@@ -2,10 +2,11 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"net/http"
-
 	"github.com/hashicorp/go-retryablehttp"
+	"net/http"
+	"regexp"
 )
 
 // ErrorResponse struct
@@ -30,14 +31,13 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 	// Prepare request
 	req, err := retryablehttp.NewRequest(method, sonarqubeURL, http.NoBody)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to create request for resource %s: %w", resource, err)
+		return http.Response{}, fmt.Errorf("failed to create request for resource %s: %w", resource, censorHttpError(err))
 	}
 
 	// Execute request
 	resp, err := client.Do(req)
 	if err != nil {
-		return http.Response{}, fmt.Errorf("failed to send request for resource %s: %w", resource, err)
-		// return http.Response{}, fmt.Errorf("failed to execute http request: %v. Request: %v. Resource: %v", err, req, resource)
+		return http.Response{}, fmt.Errorf("failed to send request for resource %s: %w", resource, censorHttpError(err))
 	}
 
 	// Check response code
@@ -51,13 +51,34 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 		errorResponse := ErrorResponse{}
 		err = json.NewDecoder(resp.Body).Decode(&errorResponse)
 		if err != nil {
-			return *resp, fmt.Errorf("failed to decode error response json into struct for resource %s: %+v", err, resource)
+			return *resp, fmt.Errorf("failed to decode error response json into struct for resource %s: %+v", resource, err)
 		}
 		if len(errorResponse.Errors) == 0 {
 			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode for resource %s: %v. No error message found in the response body", resp.StatusCode, resource, expectedResponseCode)
 		}
-		return *resp, fmt.Errorf("API returned an error for resource %s: %+v", errorResponse.Errors[0].Message, resource)
+		return *resp, fmt.Errorf("API returned an error for resource %s: %+v", resource, errorResponse.Errors[0].Message)
 	}
 
 	return *resp, nil
+}
+
+func censorHttpError(error error) error {
+	sanitizedError := sanitizeSensitiveURLs(error.Error())
+	return errors.New(sanitizedError)
+}
+
+func sanitizeSensitiveURLs(input string) string {
+	regexBasicAuth := regexp.MustCompile(`(https?://)([^:]+:)([^@]+)(@)`)
+
+	regexToken := regexp.MustCompile(`([&?]token=)([^&"']*)`)
+	regexPassword := regexp.MustCompile(`([&?]password=)([^&"']*)`)
+	regexSecret := regexp.MustCompile(`([&?]secret=)([^&"']*)`)
+
+	outputString := regexBasicAuth.ReplaceAllString(input, "${1}***:***@")
+
+	outputString = regexToken.ReplaceAllString(outputString, "${1}***")
+	outputString = regexPassword.ReplaceAllString(outputString, "${1}***")
+	outputString = regexSecret.ReplaceAllString(outputString, "${1}***")
+
+	return outputString
 }
