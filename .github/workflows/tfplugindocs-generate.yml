@@ -1,9 +1,9 @@
 name: tfplugindocs generate
 
 on:
-  pull_request:
+  pull_request_target:
     paths:
-      - .github/workflows/tfplugindocs-check.yml
+      - .github/workflows/tfplugindocs-generate.yml
       - Makefile
       - docs/**
       - examples/**
@@ -18,8 +18,8 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
-          fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+          persist-credentials: false # don't write token to git config
+          fetch-depth: 0
           ref: '${{ github.head_ref }}'
           repository: '${{ github.event.pull_request.head.repo.full_name }}'
 
@@ -27,26 +27,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: tools/go.mod
-
-      - name: Set GOCACHE environment variable
-        run: |
-          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-
-      - name: Cache Go build cache
-        uses: actions/cache@v4
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-
-      - name: Cache Go module dependencies
-        uses: actions/cache@v4
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+          cache-dependency-path: tools/go.sum
 
       - name: Install tools and generate documentation
         run: |
@@ -58,5 +39,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
-          message: "[bot] docs: tfplugindocs generate"
+          message: "[skip ci] chore(docs): tfplugindocs generate"
           repository: ${{ github.event.pull_request.head.repo.full_name }}
