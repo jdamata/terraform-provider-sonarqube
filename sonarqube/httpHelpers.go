@@ -70,9 +70,9 @@ func censorHttpError(error error) error {
 func sanitizeSensitiveURLs(input string) string {
 	regexBasicAuth := regexp.MustCompile(`(https?://)([^:]+:)([^@]+)(@)`)
 
-	regexToken := regexp.MustCompile(`([&?]token=)([^&"']*)`)
-	regexPassword := regexp.MustCompile(`([&?]password=)([^&"']*)`)
-	regexSecret := regexp.MustCompile(`([&?]secret=)([^&"']*)`)
+	regexToken := regexp.MustCompile(`([&?]token=)([^&"' ]*)`)
+	regexPassword := regexp.MustCompile(`([&?]password=)([^&"' ]*)`)
+	regexSecret := regexp.MustCompile(`([&?]secret=)([^&"' ]*)`)
 
 	outputString := regexBasicAuth.ReplaceAllString(input, "${1}***:***@")
 
