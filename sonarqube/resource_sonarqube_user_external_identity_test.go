@@ -81,7 +81,7 @@ func TestAccSonarqubeUserExternalLocalUserIdentity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSonarqubeUserExternalIdentityLocalUserConfig(rnd, "testAccSonarqubeUser", "terraform-test@sonarqube.com", "sonarqube"), // Provider "sonarbube" is deprecated in 9.8. "LDAP" works in 9.8 but not in current LTS.
-				ExpectError: regexp.MustCompile("Error setting external identity: Sonarqube user 'testAccSonarqubeUser' is not 'external'"),
+				ExpectError: regexp.MustCompile("error setting external identity: Sonarqube user 'testAccSonarqubeUser' is not 'external'"),
 			},
 		},
 	})
