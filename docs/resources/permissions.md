@@ -2,12 +2,12 @@
 page_title: "sonarqube_permissions Resource - terraform-provider-sonarqube"
 subcategory: ""
 description: |-
-  Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name
+  Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name or special_group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name
 ---
 
 # sonarqube_permissions (Resource)
 
-Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name
+Provides a Sonarqube Permissions resource. This resource can be used to manage global and project permissions. It supports importing using the format 'principal(:scope)' where principal is login_name or group_name or special_group_name and the optional scope is project_key (p_), template_id (t_) or template_name (tn_) with prefixes. Example: group1:tn_test_template_name
 
 ## Example Usage
 
