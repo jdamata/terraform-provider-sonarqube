@@ -88,11 +88,10 @@ func resourceSonarqubeQualityGateUsergroupAssociationCreate(d *schema.ResourceDa
 		http.StatusNoContent,
 		"resourceSonarqubeQualityGateUsergroupAssociationCreate",
 	)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeQualityGateUsergroupAssociationCreate: Failed creating Sonarqube quality gate usergroup association for quality gate '%s': %+v", d.Get("gatename").(string), err)
 	}
+	defer resp.Body.Close()
 
 	if _, ok := d.GetOk("login_name"); ok {
 		d.SetId(createGatePermissionId(d.Get("gatename").(string), "user", d.Get("login_name").(string)))
@@ -200,7 +199,7 @@ func createGatePermissionId(gateName string, targetType string, target string) s
 func checkGatePermissionFeatureSupport(conf *ProviderConfiguration) error {
 	minimumVersion, _ := version.NewVersion("9.2")
 	if conf.sonarQubeVersion.LessThan(minimumVersion) {
-		return fmt.Errorf("Minimum required SonarQube version for quality gate permissions is %s", minimumVersion)
+		return fmt.Errorf("minimum required SonarQube version for quality gate permissions is %s", minimumVersion)
 	}
 	return nil
 }

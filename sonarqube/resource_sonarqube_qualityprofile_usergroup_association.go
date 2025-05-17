@@ -95,11 +95,10 @@ func resourceSonarqubeQualityProfileUsergroupAssociationCreate(d *schema.Resourc
 		http.StatusNoContent,
 		"resourceSonarqubeQualityProfileUsergroupAssociationCreate",
 	)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return fmt.Errorf("resourceSonarqubeQualityProfileUsergroupAssociationCreate: Failed creating Sonarqube quality profile usergroup association for quality profile '%s': %+v", d.Get("profile_name").(string), err)
 	}
+	defer resp.Body.Close()
 
 	if _, ok := d.GetOk("login_name"); ok {
 		d.SetId(createProfilePermissionId(d.Get("profile_name").(string), "user", d.Get("login_name").(string)))
@@ -209,7 +208,7 @@ func createProfilePermissionId(profileName string, targetType string, target str
 func checkProfilePermissionFeatureSupport(conf *ProviderConfiguration) error {
 	minimumVersion, _ := version.NewVersion("6.6")
 	if conf.sonarQubeVersion.LessThan(minimumVersion) {
-		return fmt.Errorf("Minimum required SonarQube version for quality profile permissions is %s", minimumVersion)
+		return fmt.Errorf("minimum required SonarQube version for quality profile permissions is %s", minimumVersion)
 	}
 	return nil
 }
