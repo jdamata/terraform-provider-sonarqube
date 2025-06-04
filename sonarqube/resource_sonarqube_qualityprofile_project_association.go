@@ -144,6 +144,7 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/qualityprofiles/projects"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{qualityProfileID},
+		"q":   []string{idSlice[1]}, // Filter by project name
 	}.Encode()
 
 	resp, err = httpRequestHelper(
