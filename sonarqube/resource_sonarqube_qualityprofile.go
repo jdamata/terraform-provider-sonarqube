@@ -198,9 +198,11 @@ func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}
 		"language":       []string{d.Get("language").(string)},
 	}.Encode()
 
-	err := setDefaultQualityProfile(d, m, false)
-	if err != nil {
-		return err
+	if d.Get("is_default").(bool) {
+		err := setDefaultQualityProfile(d, m, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	resp, err := httpRequestHelper(
