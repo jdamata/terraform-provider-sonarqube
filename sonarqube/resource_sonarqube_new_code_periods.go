@@ -179,6 +179,11 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 	}
 	// Check that the project and branch match
 	if branch == NewCodePeriodsReadResponse.Branch && project == NewCodePeriodsReadResponse.Project {
+		// Check if the retrieved type is supported in the current edition
+		if err := checkNewCodePeriodsAdvancedSupport(NewCodePeriodsReadResponse.Type, m.(*ProviderConfiguration)); err != nil {
+			return err
+		}
+		
 		id := "newCodePeriod"
 		if NewCodePeriodsReadResponse.Branch != "" {
 			id += "/" + NewCodePeriodsReadResponse.Branch

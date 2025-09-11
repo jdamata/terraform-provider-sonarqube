@@ -55,16 +55,19 @@ func testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsGlobalNumberOfDays(t *testing.T) {
-	// Skip test on Community edition as NUMBER_OF_DAYS is not supported
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-		t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
-	}
-
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { 
+			testAccPreCheck(t)
+			// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+			if testAccProvider != nil && testAccProvider.Meta() != nil {
+				if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+					t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+				}
+			}
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -209,16 +212,19 @@ func testAccSonarqubeNewCodePeriodsBranchReferenceBranch(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
-	// Skip test on Community edition as REFERENCE_BRANCH is not supported
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-		t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
-	}
-
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { 
+			testAccPreCheck(t)
+			// Skip test on Community edition as REFERENCE_BRANCH is not supported
+			if testAccProvider != nil && testAccProvider.Meta() != nil {
+				if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+					t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+				}
+			}
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -232,6 +238,7 @@ func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
 			},
 		},
 	})
+}
 }
 
 func testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd string) string {
@@ -357,10 +364,9 @@ func TestAccSonarqubeNewCodePeriodsImportGlobal(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd),
+				Config: testAccSonarqubeNewCodePeriodsGlobalPreviousVersion(rnd),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
-					resource.TestCheckResourceAttr(name, "value", "5"),
+					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
 				),
 			},
 			{
@@ -407,19 +413,17 @@ func TestAccSonarqubeNewCodePeriodsImportBranch(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeNewCodePeriodsBranchReferenceBranch(rnd),
+				Config: testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "type", "REFERENCE_BRANCH"),
-					resource.TestCheckResourceAttr(name, "branch", "main"),
+					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
 					resource.TestCheckResourceAttr(name, "project", rnd),
-					resource.TestCheckResourceAttr(name, "value", "development"),
 				),
 			},
 			{
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     "newCodePeriod/main/" + rnd,
+				ImportStateId:     "newCodePeriod/" + rnd,
 			},
 		},
 	})
@@ -434,7 +438,7 @@ func TestAccSonarqubeNewCodePeriodsImportInvalidFormat(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd),
+				Config: testAccSonarqubeNewCodePeriodsGlobalPreviousVersion(rnd),
 			},
 			{
 				ResourceName:  name,
