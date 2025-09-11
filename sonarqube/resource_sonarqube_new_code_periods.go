@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -40,6 +41,9 @@ func resourceSonarqubeNewCodePeriodsBinding() *schema.Resource {
 		Read:        resourceSonarqubeNewCodePeriodsRead,
 		Update:      resourceSonarqubeNewCodePeriodsCreate,
 		Delete:      resourceSonarqubeNewCodePeriodsDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceSonarqubeNewCodePeriodsImport,
+		},
 
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
@@ -178,7 +182,15 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 			id += "/" + NewCodePeriodsReadResponse.Project
 		}
 		d.SetId(id)
-		return nil
+		
+		// Set the type and value from the API response
+		errs := []error{}
+		errs = append(errs, d.Set("type", NewCodePeriodsReadResponse.Type))
+		if NewCodePeriodsReadResponse.Value != "" {
+			errs = append(errs, d.Set("value", NewCodePeriodsReadResponse.Value))
+		}
+		
+		return errors.Join(errs...)
 	}
 
 	return fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to find new code period: %+v", d.Id())
@@ -212,4 +224,35 @@ func resourceSonarqubeNewCodePeriodsDelete(d *schema.ResourceData, m interface{}
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func resourceSonarqubeNewCodePeriodsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	// Parse ID: newCodePeriod[/branch[/project]]
+	parts := strings.Split(d.Id(), "/")
+	
+	if len(parts) < 1 || parts[0] != "newCodePeriod" {
+		return nil, fmt.Errorf("resourceSonarqubeNewCodePeriodsImport: invalid import ID format: %s", d.Id())
+	}
+	
+	switch len(parts) {
+	case 2:
+		// newCodePeriod/projectKey
+		if err := d.Set("project", parts[1]); err != nil {
+			return nil, err
+		}
+	case 3:
+		// newCodePeriod/branchName/projectKey
+		if err := d.Set("branch", parts[1]); err != nil {
+			return nil, err
+		}
+		if err := d.Set("project", parts[2]); err != nil {
+			return nil, err
+		}
+	}
+	
+	if err := resourceSonarqubeNewCodePeriodsRead(d, m); err != nil {
+		return nil, err
+	}
+	
+	return []*schema.ResourceData{d}, nil
 }

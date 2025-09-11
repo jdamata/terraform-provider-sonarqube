@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -315,6 +316,105 @@ func TestAccSonarqubeNewCodePeriodsProjectReferenceProject(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "project", rnd),
 					resource.TestCheckResourceAttr(name, "value", "development"),
 				),
+			},
+		},
+	})
+}
+
+// Import tests
+func TestAccSonarqubeNewCodePeriodsImportGlobal(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
+					resource.TestCheckResourceAttr(name, "value", "5"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "newCodePeriod",
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeNewCodePeriodsImportProject(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
+					resource.TestCheckResourceAttr(name, "project", rnd),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "newCodePeriod/" + rnd,
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeNewCodePeriodsImportBranch(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsBranchReferenceBranch(rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "type", "REFERENCE_BRANCH"),
+					resource.TestCheckResourceAttr(name, "branch", "main"),
+					resource.TestCheckResourceAttr(name, "project", rnd),
+					resource.TestCheckResourceAttr(name, "value", "development"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "newCodePeriod/main/" + rnd,
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeNewCodePeriodsImportInvalidFormat(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd),
+			},
+			{
+				ResourceName:  name,
+				ImportState:   true,
+				ImportStateId: "invalidFormat",
+				ExpectError:   regexp.MustCompile("invalid import ID format"),
 			},
 		},
 	})
