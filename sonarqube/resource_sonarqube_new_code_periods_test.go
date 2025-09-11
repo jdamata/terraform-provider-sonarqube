@@ -61,16 +61,18 @@ func TestAccSonarqubeNewCodePeriodsGlobalNumberOfDays(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { 
 			testAccPreCheck(t)
-			// Skip test on Community edition as NUMBER_OF_DAYS is not supported
-			if testAccProvider != nil && testAccProvider.Meta() != nil {
-				if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-					t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
-				}
-			}
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
@@ -133,11 +135,6 @@ func testAccSonarqubeNewCodePeriodsBranchNumberOfDays(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsBranchNumberOfDays(t *testing.T) {
-	// Skip test on Community edition as NUMBER_OF_DAYS is not supported
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-		t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
-	}
-
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -146,6 +143,14 @@ func TestAccSonarqubeNewCodePeriodsBranchNumberOfDays(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsBranchNumberOfDays(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
@@ -218,16 +223,18 @@ func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { 
 			testAccPreCheck(t)
-			// Skip test on Community edition as REFERENCE_BRANCH is not supported
-			if testAccProvider != nil && testAccProvider.Meta() != nil {
-				if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-					t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
-				}
-			}
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as REFERENCE_BRANCH is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsBranchReferenceBranch(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "REFERENCE_BRANCH"),
@@ -238,7 +245,6 @@ func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
 			},
 		},
 	})
-}
 }
 
 func testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd string) string {
@@ -290,11 +296,6 @@ func testAccSonarqubeNewCodePeriodsProjectNumberOfDays(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsProjectNumberOfDays(t *testing.T) {
-	// Skip test on Community edition as NUMBER_OF_DAYS is not supported
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-		t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
-	}
-
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -303,6 +304,14 @@ func TestAccSonarqubeNewCodePeriodsProjectNumberOfDays(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsProjectNumberOfDays(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
@@ -323,6 +332,7 @@ func testAccSonarqubeNewCodePeriodsProjectReferenceProject(rnd string) string {
 		}
 
         resource "sonarqube_new_code_periods" "%[1]s" {
+			branch = "main"
 			project = sonarqube_project.%[1]s.project
 			type = "REFERENCE_BRANCH"
 			value = "development"
@@ -330,11 +340,6 @@ func testAccSonarqubeNewCodePeriodsProjectReferenceProject(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsProjectReferenceProject(t *testing.T) {
-	// Skip test on Community edition as REFERENCE_BRANCH is not supported
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
-		t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
-	}
-
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -343,9 +348,18 @@ func TestAccSonarqubeNewCodePeriodsProjectReferenceProject(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as REFERENCE_BRANCH is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsProjectReferenceProject(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "REFERENCE_BRANCH"),
+					resource.TestCheckResourceAttr(name, "branch", "main"),
 					resource.TestCheckResourceAttr(name, "project", rnd),
 					resource.TestCheckResourceAttr(name, "value", "development"),
 				),

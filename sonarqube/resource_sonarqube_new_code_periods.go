@@ -104,11 +104,6 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 		rawQuery.Add("value", value)
 	}
 
-	// Check if advanced new code period types are supported in this SonarQube edition
-	if err := checkNewCodePeriodsAdvancedSupport(m.(*ProviderConfiguration), string(periodType)); err != nil {
-		return err
-	}
-
 	if periodType == PreviousVersion {
 		if value != "" {
 			return fmt.Errorf("resourceSonarqubeNewCodePeriodsCreate: 'value' must be unset when the 'type' is %s", periodType)
@@ -179,11 +174,7 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 	}
 	// Check that the project and branch match
 	if branch == NewCodePeriodsReadResponse.Branch && project == NewCodePeriodsReadResponse.Project {
-		// Check if the retrieved type is supported in the current edition
-		if err := checkNewCodePeriodsAdvancedSupport(NewCodePeriodsReadResponse.Type, m.(*ProviderConfiguration)); err != nil {
-			return err
-		}
-		
+
 		id := "newCodePeriod"
 		if NewCodePeriodsReadResponse.Branch != "" {
 			id += "/" + NewCodePeriodsReadResponse.Branch
@@ -265,13 +256,4 @@ func resourceSonarqubeNewCodePeriodsImport(d *schema.ResourceData, m interface{}
 	}
 	
 	return []*schema.ResourceData{d}, nil
-}
-
-func checkNewCodePeriodsAdvancedSupport(conf *ProviderConfiguration, periodType string) error {
-	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		if periodType == string(NumberOfDays) || periodType == string(ReferenceBranch) {
-			return fmt.Errorf("new code period type '%s' is not supported in SonarQube Community edition. Supported types are 'PREVIOUS_VERSION' and 'SPECIFIC_ANALYSIS'. You are using SonarQube %s version %s", periodType, conf.sonarQubeEdition, conf.sonarQubeVersion)
-		}
-	}
-	return nil
 }
