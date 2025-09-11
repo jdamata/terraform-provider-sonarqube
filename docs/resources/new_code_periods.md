@@ -47,3 +47,18 @@ resource "sonarqube_new_code_periods" "reference" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+## Import
+
+Import is supported using the following syntax:
+
+```terraform
+# Import global new code period
+terraform import sonarqube_new_code_periods.example newCodePeriod
+
+# Import project-specific new code period
+terraform import sonarqube_new_code_periods.example newCodePeriod/my-project-key
+
+# Import branch-specific new code period
+terraform import sonarqube_new_code_periods.example newCodePeriod/my-branch-name/my-project-key
+```
