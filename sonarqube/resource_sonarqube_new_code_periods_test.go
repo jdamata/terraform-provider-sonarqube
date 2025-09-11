@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -54,6 +55,11 @@ func testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsGlobalNumberOfDays(t *testing.T) {
+	// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+		t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+	}
+
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -124,6 +130,11 @@ func testAccSonarqubeNewCodePeriodsBranchNumberOfDays(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsBranchNumberOfDays(t *testing.T) {
+	// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+		t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+	}
+
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -198,6 +209,11 @@ func testAccSonarqubeNewCodePeriodsBranchReferenceBranch(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
+	// Skip test on Community edition as REFERENCE_BRANCH is not supported
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+		t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+	}
+
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -267,6 +283,11 @@ func testAccSonarqubeNewCodePeriodsProjectNumberOfDays(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsProjectNumberOfDays(t *testing.T) {
+	// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+		t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+	}
+
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
@@ -302,6 +323,11 @@ func testAccSonarqubeNewCodePeriodsProjectReferenceProject(rnd string) string {
 }
 
 func TestAccSonarqubeNewCodePeriodsProjectReferenceProject(t *testing.T) {
+	// Skip test on Community edition as REFERENCE_BRANCH is not supported
+	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+		t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+	}
+
 	rnd := generateRandomResourceName()
 	name := "sonarqube_new_code_periods." + rnd
 
