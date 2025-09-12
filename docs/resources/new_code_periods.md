@@ -75,5 +75,5 @@ terraform import sonarqube_new_code_periods.example newCodePeriod
 terraform import sonarqube_new_code_periods.example newCodePeriod/my-project-key
 
 # Import branch-specific new code period
-terraform import sonarqube_new_code_periods.example newCodePeriod/my-branch-name/my-project-key
+terraform import sonarqube_new_code_periods.example newCodePeriod/my-project-key/my-branch-name
 ```
