@@ -427,9 +427,10 @@ func TestAccSonarqubeNewCodePeriodsImportBranch(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd),
+				Config: testAccSonarqubeNewCodePeriodsBranchPreviousVersion(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
+					resource.TestCheckResourceAttr(name, "branch", "main"),
 					resource.TestCheckResourceAttr(name, "project", rnd),
 				),
 			},
@@ -437,7 +438,7 @@ func TestAccSonarqubeNewCodePeriodsImportBranch(t *testing.T) {
 				ResourceName:      name,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     "newCodePeriod/" + rnd,
+				ImportStateId:     "newCodePeriod/" + rnd + "/main",
 			},
 		},
 	})

@@ -92,10 +92,8 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 
 	if branch != "" {
 		rawQuery.Add("branch", branch)
-		id += "/" + branch
-
 		rawQuery.Add("project", project)
-		id += "/" + project
+		id += "/" + project + "/" + branch
 	} else if project != "" {
 		rawQuery.Add("project", project)
 		id += "/" + project
@@ -228,7 +226,7 @@ func resourceSonarqubeNewCodePeriodsDelete(d *schema.ResourceData, m interface{}
 }
 
 func resourceSonarqubeNewCodePeriodsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	// Parse ID: newCodePeriod[/branch[/project]]
+	// Parse ID: newCodePeriod[/project[/branch]]
 	parts := strings.Split(d.Id(), "/")
 	
 	if len(parts) < 1 || parts[0] != "newCodePeriod" {
@@ -242,11 +240,11 @@ func resourceSonarqubeNewCodePeriodsImport(d *schema.ResourceData, m interface{}
 			return nil, err
 		}
 	case 3:
-		// newCodePeriod/branchName/projectKey
-		if err := d.Set("branch", parts[1]); err != nil {
+		// newCodePeriod/projectKey/branchName
+		if err := d.Set("project", parts[1]); err != nil {
 			return nil, err
 		}
-		if err := d.Set("project", parts[2]); err != nil {
+		if err := d.Set("branch", parts[2]); err != nil {
 			return nil, err
 		}
 	}
