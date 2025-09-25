@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,10 +30,11 @@ type ListWebhooksResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeWebhookCreate,
-		Read:   resourceSonarqubeWebhookRead,
-		Update: resourceSonarqubeWebhookUpdate,
-		Delete: resourceSonarqubeWebhookDelete,
+		Description: "Provides a Sonarqube Webhook resource. This can be used to manage Sonarqube webhooks.",
+		Create:      resourceSonarqubeWebhookCreate,
+		Read:        resourceSonarqubeWebhookRead,
+		Update:      resourceSonarqubeWebhookUpdate,
+		Delete:      resourceSonarqubeWebhookDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeWebhookImport,
 		},
@@ -40,18 +42,21 @@ func resourceSonarqubeWebhook() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the webhook to create. This will be displayed in the Sonarqube administration console.",
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The URL to send event payloads to. This must begin with either `https://` or `http://`.",
 			},
 			"secret": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Optional:  true,
-				Computed:  true,
+				Type:        schema.TypeString,
+				Sensitive:   true,
+				Optional:    true,
+				Computed:    true,
+				Description: "The secret to send with the event payload.",
 			},
 			"project": {
 				Type:        schema.TypeString,
@@ -137,18 +142,19 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 	for _, webhook := range webhookResponse.Webhooks {
 		log.Printf("[DEBUG][resourceSonarqubeWebhookRead] webhook.Key: '%s' vs %s ", webhook.Key, d.Id())
 		if webhook.Key == d.Id() {
-			d.Set("name", webhook.Name)
-			d.Set("url", webhook.Url)
+			errs := []error{}
+			errs = append(errs, d.Set("name", webhook.Name))
+			errs = append(errs, d.Set("url", webhook.Url))
 			// Field 'project' is not included in the webhook response object, so it is imported from the parameter.
 			if project, ok := d.GetOk("project"); ok {
-				d.Set("project", project.(string))
+				errs = append(errs, d.Set("project", project.(string)))
 			}
 			// Version 10.1 of sonarqube does not return the secret in the api response anymore. Field 'secret' replaced by flag 'hasSecret' in response
 			// Instead we just set the secret in state to the value being passed in to avoid constant drifts
 			if secret, ok := d.GetOk("secret"); ok {
-				d.Set("secret", secret.(string))
+				errs = append(errs, d.Set("secret", secret.(string)))
 			}
-			return nil
+			return errors.Join(errs...)
 		}
 	}
 
@@ -217,7 +223,9 @@ func resourceSonarqubeWebhookImport(d *schema.ResourceData, m interface{}) ([]*s
 
 	if len(importIdComponents) == 2 {
 		log.Printf("[DEBUG][resourceSonarqubeWebhookImport] Import id: '%+v' is in format {key/project:%s/%s}", d.Id(), importIdComponents[0], importIdComponents[1])
-		d.Set("project", importIdComponents[1])
+		if err := d.Set("project", importIdComponents[1]); err != nil {
+			return nil, err
+		}
 	} else if len(importIdComponents) == 1 {
 		log.Printf("[DEBUG][resourceSonarqubeWebhookImport] Import id: '%+v' is in format {key:%s}", d.Id(), importIdComponents[0])
 	} else {

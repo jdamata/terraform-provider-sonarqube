@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -35,10 +36,11 @@ type Group struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeGroupCreate,
-		Read:   resourceSonarqubeGroupRead,
-		Update: resourceSonarqubeGroupUpdate,
-		Delete: resourceSonarqubeGroupDelete,
+		Description: "Provides a Sonarqube Group resource. This can be used to create and manage Sonarqube Groups.",
+		Create:      resourceSonarqubeGroupCreate,
+		Read:        resourceSonarqubeGroupRead,
+		Update:      resourceSonarqubeGroupUpdate,
+		Delete:      resourceSonarqubeGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeGroupImport,
 		},
@@ -46,12 +48,14 @@ func resourceSonarqubeGroup() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the Group to create. Changing this forces a new resource to be created.",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the Group.",
 			},
 		},
 	}
@@ -127,8 +131,11 @@ func resourceSonarqubeGroupRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId(value.ID)
 			}
 			// If it does, set the values of that group
-			d.Set("name", value.Name)
-			d.Set("description", value.Description)
+			errName := d.Set("name", value.Name)
+			errDesc := d.Set("description", value.Description)
+			if err := errors.Join(errName, errDesc); err != nil {
+				return err
+			}
 			readSuccess = true
 			break
 		}
@@ -204,6 +211,12 @@ func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSonarqubeGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	// no ID in the group search response from sonarqube 10.0+,
+	// so we have to recopy the given ID to the name for the import
+	if err := d.Set("name", d.Id()); err != nil {
+		return nil, err
+	}
+
 	if err := resourceSonarqubeGroupRead(d, m); err != nil {
 		return nil, err
 	}

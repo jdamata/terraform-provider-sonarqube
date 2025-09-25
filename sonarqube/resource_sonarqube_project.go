@@ -2,9 +2,11 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,10 +44,11 @@ type CreateProjectResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeProjectCreate,
-		Read:   resourceSonarqubeProjectRead,
-		Update: resourceSonarqubeProjectUpdate,
-		Delete: resourceSonarqubeProjectDelete,
+		Description: "Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.",
+		Create:      resourceSonarqubeProjectCreate,
+		Read:        resourceSonarqubeProjectRead,
+		Update:      resourceSonarqubeProjectUpdate,
+		Delete:      resourceSonarqubeProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectImport,
 		},
@@ -53,18 +56,21 @@ func resourceSonarqubeProject() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the Project to create",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
 			},
 			"visibility": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "public",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "public",
+				Description: "Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used. Valid values are `public` and `private`.",
 			},
 			"tags": {
 				Type:     schema.TypeList,
@@ -73,6 +79,7 @@ func resourceSonarqubeProject() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Description: "A list of tags to put on the project.",
 			},
 			"setting": {
 				Type:        schema.TypeList,
@@ -109,6 +116,7 @@ func resourceSonarqubeProject() *schema.Resource {
 							},
 						},
 					},
+					Description: "The definition of a Setting to be used by this Portfolio as documented in the `setting` block below.",
 				},
 			},
 		},
@@ -217,9 +225,12 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(projectReadResponse.Component.Key)
-	d.Set("name", projectReadResponse.Component.Name)
-	d.Set("project", projectReadResponse.Component.Key)
-	d.Set("visibility", projectReadResponse.Component.Visibility)
+	errName := d.Set("name", projectReadResponse.Component.Name)
+	errProject := d.Set("project", projectReadResponse.Component.Key)
+	errVisibility := d.Set("visibility", projectReadResponse.Component.Visibility)
+	if err := errors.Join(errName, errProject, errVisibility); err != nil {
+		return err
+	}
 
 	// Get settings
 	var projectSettings []Setting
@@ -230,27 +241,40 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
 		}
 
-		settings := make([]interface{}, len(componentSettings))
-		for i, s := range componentSettings {
-			key := s.(map[string]interface{})["key"].(string)
-			for _, apiSetting := range projectSettings {
-				if key == apiSetting.Key {
-					settings[i] = apiSetting.ToMap()
+		var settings []interface{}
+		var settingsKey []string
+		if len(componentSettings) > 0 {
+			// looks for backend value for defined settings
+			for _, s := range componentSettings {
+				for _, apiSetting := range projectSettings {
+					if s.(map[string]interface{})["key"].(string) == apiSetting.Key {
+						settings = append(settings, apiSetting.ToMap())
+						settingsKey = append(settingsKey, apiSetting.Key)
+					}
 				}
 			}
 		}
+		// checks for any defined setting (not inherited)
+		for _, apiSetting := range projectSettings {
+			if !apiSetting.Inherited && !slices.Contains(settingsKey, apiSetting.Key) {
+				settings = append(settings, apiSetting.ToMap())
+				settingsKey = append(settingsKey, apiSetting.Key)
+			}
+		}
 		d.Set("setting", settings)
+		if err := d.Set("setting", settings); err != nil {
+			return err
+		}
 	}
 
 	if len(projectReadResponse.Component.Tags) > 0 {
-		d.Set("tags", projectReadResponse.Component.Tags)
+		err = d.Set("tags", projectReadResponse.Component.Tags)
 	}
 
-	return nil
+	return err
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
-
 	// handle default updates (api/users/update)
 	if d.HasChange("visibility") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
@@ -341,6 +365,6 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 
 func resourceSonarqubeProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	// As per the docs, use the id to make the read work as intended (https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/import)
-	d.Set("project", d.Id())
-	return []*schema.ResourceData{d}, nil
+	err := d.Set("project", d.Id())
+	return []*schema.ResourceData{d}, err
 }

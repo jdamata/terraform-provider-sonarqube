@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,10 +42,11 @@ func (a Setting) ToMap() map[string]interface{} {
 
 func resourceSonarqubeSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeSettingsCreate,
-		Read:   resourceSonarqubeSettingsRead,
-		Update: resourceSonarqubeSettingsUpdate,
-		Delete: resourceSonarqubeSettingsDelete,
+		Description: "Provides a Sonarqube Settings resource. This can be used to manage Sonarqube settings.",
+		Create:      resourceSonarqubeSettingsCreate,
+		Read:        resourceSonarqubeSettingsRead,
+		Update:      resourceSonarqubeSettingsUpdate,
+		Delete:      resourceSonarqubeSettingsDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeSettingsImporter,
 		},
@@ -132,12 +134,13 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 
 	for _, value := range settingReadResponse.Setting {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("value", value.Value)
-			d.Set("values", value.Values)
-			d.Set("field_values", value.FieldValues)
+			errs := []error{}
+			errs = append(errs, d.Set("key", value.Key))
+			errs = append(errs, d.Set("value", value.Value))
+			errs = append(errs, d.Set("values", value.Values))
+			errs = append(errs, d.Set("field_values", value.FieldValues))
 			d.SetId(value.Key)
-			return nil
+			return errors.Join(errs...)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeSettingsRead: Failed to find setting: %+v", d.Id())
@@ -166,7 +169,9 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceSonarqubeSettingsImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	d.Set("key", d.Id())
+	if err := d.Set("key", d.Id()); err != nil {
+		return nil, err
+	}
 	if err := resourceSonarqubeSettingsRead(d, m); err != nil {
 		return nil, err
 	}
@@ -193,6 +198,7 @@ func resourceSonarqubeSettingsUpdate(d *schema.ResourceData, m interface{}) erro
 
 	return resourceSonarqubeSettingsRead(d, m)
 }
+
 func getCreateOrUpdateQueryRawQuery(key []string, d *schema.ResourceData) string {
 	// build the base query
 	RawQuery := url.Values{
@@ -300,39 +306,29 @@ func synchronizeSettings(d *schema.ResourceData, m interface{}) (bool, error) {
 	}
 
 	if changed {
-		d.Set("setting", componentSettings)
+		err = d.Set("setting", componentSettings)
 	}
 
-	return changed, nil
+	return changed, err
 }
 
 func checkSettingDiff(a map[string]interface{}, b Setting) bool {
-	if a["field_values"] != nil {
+	if a["field_values"] != nil && len(a["field_values"].([]interface{})) > 0 {
 		// array of objects of key/value pairs
 		fieldValues := a["field_values"].([]interface{})
-		if len(fieldValues) != len(b.FieldValues) {
-			return false
+		k1, _ := json.Marshal(fieldValues)
+		k2, _ := json.Marshal(b.FieldValues)
+		if len(fieldValues) != len(b.FieldValues) || string(k1) != string(k2) {
+			return true
 		}
-		for i := range fieldValues {
-			k1, _ := json.Marshal(fieldValues[i])
-			k2, _ := json.Marshal(b.FieldValues[i])
-			if string(k1) != string(k2) {
-				return false
-			}
-		}
-		return true
-	} else if a["values"] != nil && len(a["values"].([]string)) > 0 {
+	} else if a["values"] != nil && len(a["values"].([]interface{})) > 0 {
 		// array of strings
-		values := a["values"].([]string)
-		if len(values) != len(b.Values) {
-			return false
+		values := a["values"].([]interface{})
+		k1, _ := json.Marshal(values)
+		k2, _ := json.Marshal(b.Values)
+		if len(values) != len(b.Values) || string(k1) != string(k2) {
+			return true
 		}
-		for i := range values {
-			if string(values[i]) != string(b.Values[i]) {
-				return false
-			}
-		}
-		return true
 	} else if a["value"] != nil && a["value"] != "" {
 		return a["value"].(string) != b.Value
 	}
@@ -365,8 +361,7 @@ func getComponentSettingUrlEncode(setting map[string]interface{}) url.Values {
 		fieldValues := setting["field_values"].([]interface{})
 		for _, value := range fieldValues {
 			b, _ := json.Marshal(value)
-			fv := string(b)
-			raw.Add("fieldValues", fv)
+			raw.Add("fieldValues", string(b))
 			addedSetting = true
 		}
 	}
@@ -430,7 +425,6 @@ func removeComponentSettings(component string, newSettings []interface{}, apiPro
 			http.StatusNoContent,
 			"deleteSetting",
 		)
-
 		if err != nil {
 			return fmt.Errorf("removeComponentSettings: Failed to delete setting %s: %+v", component, err)
 		}

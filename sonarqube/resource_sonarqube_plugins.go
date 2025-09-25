@@ -38,9 +38,10 @@ type Plugin struct {
 // Returns the resource represented by this file.
 func resourceSonarqubePlugin() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubePluginCreate,
-		Read:   resourceSonarqubePluginRead,
-		Delete: resourceSonarqubePluginDelete,
+		Description: "Provides a Sonarqube Plugin resource. This can be used to create and manage Sonarqube Plugins.",
+		Create:      resourceSonarqubePluginCreate,
+		Read:        resourceSonarqubePluginRead,
+		Delete:      resourceSonarqubePluginDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubePluginImport,
 		},
@@ -48,9 +49,10 @@ func resourceSonarqubePlugin() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The key identifying the plugin to uninstall.",
 			},
 		},
 	}
@@ -107,8 +109,7 @@ func resourceSonarqubePluginRead(d *schema.ResourceData, m interface{}) error {
 		if d.Id() == value.Key {
 			// If it does, set the values of that project
 			d.SetId(value.Key)
-			d.Set("key", value.Key)
-			return nil
+			return d.Set("key", value.Key)
 		}
 	}
 

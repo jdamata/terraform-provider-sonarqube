@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -24,6 +25,8 @@ type GetBinding struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeGithubBinding() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube GitHub binding resource. This can be used to create and manage the binding between a
+GitHub repository and a SonarQube project`,
 		Create: resourceSonarqubeGithubBindingCreate,
 		Read:   resourceSonarqubeGithubBindingRead,
 		Delete: resourceSonarqubeGithubBindingDelete,
@@ -33,31 +36,36 @@ func resourceSonarqubeGithubBinding() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"alm_setting": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "GitHub ALM setting key",
 			},
 			"monorepo": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "false",
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "false",
+				ForceNew:    true,
+				Description: "Is this project part of a monorepo. Default value: false",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Project key",
 			},
 			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The full name of your GitHub repository, including the organization, case-sensitive. Maximum length: 256",
 			},
 			"summary_comment_enabled": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "true",
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "true",
+				ForceNew:    true,
+				Description: "Enable/disable summary in PR discussion tab. Default value: true",
 			},
 		},
 	}
@@ -136,13 +144,14 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 	}
 	// Loop over all branches to see if the main branch we need exists.
 	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "github" {
-		d.Set("project", idSlice[0])
-		d.Set("repository", idSlice[1])
-		d.Set("alm_setting", BindingReadResponse.Key)
-		d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo))
-		d.Set("summary_comment_enabled", strconv.FormatBool(BindingReadResponse.SummaryCommentEnabled))
+		errs := []error{}
+		errs = append(errs, d.Set("project", idSlice[0]))
+		errs = append(errs, d.Set("repository", idSlice[1]))
+		errs = append(errs, d.Set("alm_setting", BindingReadResponse.Key))
+		errs = append(errs, d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo)))
+		errs = append(errs, d.Set("summary_comment_enabled", strconv.FormatBool(BindingReadResponse.SummaryCommentEnabled)))
 
-		return nil
+		return errors.Join(errs...)
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())
 }

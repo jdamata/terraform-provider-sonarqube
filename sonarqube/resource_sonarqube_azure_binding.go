@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -24,6 +25,8 @@ type GetAzureBinding struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeAzureBinding() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube Azure Devops binding resource. This can be used to create and manage the binding between an
+Azure Devops repository and a SonarQube project`,
 		Create: resourceSonarqubeAzureBindingCreate,
 		Read:   resourceSonarqubeAzureBindingRead,
 		Delete: resourceSonarqubeAzureBindingDelete,
@@ -69,7 +72,7 @@ func resourceSonarqubeAzureBinding() *schema.Resource {
 
 func checkAzureBindingSupport(conf *ProviderConfiguration) error {
 	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		return fmt.Errorf("Azure Devops Bindings are not supported in the Community edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
+		return fmt.Errorf("azure devops bindings are not supported in the Community edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
 	}
 	return nil
 }
@@ -148,13 +151,14 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 	if idSlice[1] == BindingReadResponse.Slug &&
 		idSlice[2] == BindingReadResponse.Repository &&
 		BindingReadResponse.Alm == "azure" {
-		d.Set("project", idSlice[0])
-		d.Set("project_name", idSlice[1])
-		d.Set("repository_name", idSlice[2])
-		d.Set("alm_setting", BindingReadResponse.Key)
-		d.Set("monorepo", BindingReadResponse.Monorepo)
+		errs := []error{}
+		errs = append(errs, d.Set("project", idSlice[0]))
+		errs = append(errs, d.Set("project_name", idSlice[1]))
+		errs = append(errs, d.Set("repository_name", idSlice[2]))
+		errs = append(errs, d.Set("alm_setting", BindingReadResponse.Key))
+		errs = append(errs, d.Set("monorepo", BindingReadResponse.Monorepo))
 
-		return nil
+		return errors.Join(errs...)
 	}
 	return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to find azure binding: %+v", d.Id())
 }

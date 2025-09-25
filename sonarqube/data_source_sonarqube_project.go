@@ -6,19 +6,23 @@ import (
 
 func dataSourceSonarqubeProject() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSonarqubeProjectRead,
+		Description: "Use this data source to get a Sonarqube project resource",
+		Read:        dataSourceSonarqubeProjectRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the project",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The project key of the project",
 			},
 			"visibility": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Project visibility",
 			},
 		},
 	}

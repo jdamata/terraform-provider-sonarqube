@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -35,10 +36,11 @@ type CreateUserResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeUserCreate,
-		Read:   resourceSonarqubeUserRead,
-		Update: resourceSonarqubeUserUpdate,
-		Delete: resourceSonarqubeUserDelete,
+		Description: "Provides a Sonarqube User resource. This can be used to manage Sonarqube Users.",
+		Create:      resourceSonarqubeUserCreate,
+		Read:        resourceSonarqubeUserRead,
+		Update:      resourceSonarqubeUserUpdate,
+		Delete:      resourceSonarqubeUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeUserImport,
 		},
@@ -46,29 +48,34 @@ func resourceSonarqubeUser() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"login_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The login name of the User to create. Changing this forces a new resource to be created.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the User to create. Changing this forces a new resource to be created.",
 			},
 			"email": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The email of the User to create.",
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "The password of User to create. This is only used if the user is of type `local`.",
 			},
 			"is_local": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				ForceNew:    true,
+				Description: "`True` if the User should be of type `local`. Defaults to `true`.",
 			},
 		},
 	}
@@ -156,11 +163,12 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 	for _, value := range userResponse.Users {
 		if d.Id() == value.Login {
 			d.SetId(value.Login)
-			d.Set("login_name", value.Login)
-			d.Set("name", value.Name)
-			d.Set("email", value.Email)
-			d.Set("is_local", value.IsLocal)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("login_name", value.Login))
+			errs = append(errs, d.Set("name", value.Name))
+			errs = append(errs, d.Set("email", value.Email))
+			errs = append(errs, d.Set("is_local", value.IsLocal))
+			return errors.Join(errs...)
 		}
 	}
 
@@ -194,9 +202,11 @@ func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
 	// handle password updates (api/users/change_password)
 	if d.HasChange("password") {
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/users/change_password"
+		oldPassword, newPassword := d.GetChange("password")
 		sonarQubeURL.RawQuery = url.Values{
-			"login":    []string{d.Id()},
-			"password": []string{d.Get("password").(string)},
+			"login":            []string{d.Id()},
+			"password":         []string{newPassword.(string)},
+			"previousPassword": []string{oldPassword.(string)},
 		}.Encode()
 
 		resp, err := httpRequestHelper(

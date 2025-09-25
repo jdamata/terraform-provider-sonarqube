@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -28,9 +29,10 @@ type GetQualityProfileProjectAssociationResults struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeQualityProfileProjectAssociationCreate,
-		Read:   resourceSonarqubeQualityProfileProjectAssociationRead,
-		Delete: resourceSonarqubeQualityProfileProjectAssociationDelete,
+		Description: "Provides a Sonarqube Quality Profile Project association resource. This can be used to associate a Quality Profile to a Project",
+		Create:      resourceSonarqubeQualityProfileProjectAssociationCreate,
+		Read:        resourceSonarqubeQualityProfileProjectAssociationRead,
+		Delete:      resourceSonarqubeQualityProfileProjectAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeQualityProfileProjectAssociationImport,
 		},
@@ -41,7 +43,7 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Quality profile name",
+				Description: "Name of the Quality Profile",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringLenBetween(0, 100),
 				),
@@ -50,7 +52,7 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Project key",
+				Description: "Name of the project",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringLenBetween(0, 100),
 				),
@@ -59,7 +61,7 @@ func resourceSonarqubeQualityProfileProjectAssociation() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Quality profile language",
+				Description: "Quality profile language. Must be a langauge in this list https://next.sonarqube.com/sonarqube/web_api/api/languages/list",
 			},
 		},
 	}
@@ -142,6 +144,8 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/qualityprofiles/projects"
 	sonarQubeURL.RawQuery = url.Values{
 		"key": []string{qualityProfileID},
+		"q":   []string{idSlice[1]}, // Filter by project name
+		"ps":  []string{"500"},	  // Increase page size to the maximun value
 	}.Encode()
 
 	resp, err = httpRequestHelper(
@@ -165,15 +169,15 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 	for _, value := range getQualityProfileProjectResponse.Results {
 		if idSlice[1] == value.Key {
 			d.SetId(d.Id())
-			d.Set("project", value.Key)
-			d.Set("quality_profile", qualityProfile)
-			d.Set("language", language)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("project", value.Key))
+			errs = append(errs, d.Set("quality_profile", qualityProfile))
+			errs = append(errs, d.Set("language", language))
+			return errors.Join(errs...)
 		}
 	}
 
 	return fmt.Errorf("resourceSonarqubeQualityProfileProjectAssociationRead: Failed to find project association: %+v", d.Id())
-
 }
 
 func resourceSonarqubeQualityProfileProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
@@ -198,7 +202,6 @@ func resourceSonarqubeQualityProfileProjectAssociationDelete(d *schema.ResourceD
 	defer resp.Body.Close()
 
 	return nil
-
 }
 
 func resourceSonarqubeQualityProfileProjectAssociationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,6 +24,8 @@ type GetAlmGitlab struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeAlmGitlab() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube GitLab Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
+Platform Integration for GitLab.`,
 		Create: resourceSonarqubeAlmGitlabCreate,
 		Read:   resourceSonarqubeAlmGitlabRead,
 		Update: resourceSonarqubeAlmGitlabUpdate,
@@ -35,17 +38,20 @@ func resourceSonarqubeAlmGitlab() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 200)),
+				Description:      "Unique key of the GitLab instance setting. Maximum length: 200",
 			},
 			"personal_access_token": {
 				Type:             schema.TypeString,
 				Required:         true,
 				Sensitive:        true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
+				Description:      "GitLab App personal access token with the `read_api` scope. See [this doc](https://docs.sonarqube.org/latest/devops-platform-integration/gitlab-integration/#importing-your-gitlab-projects-into-sonarqube) for more information. Maximum length: 2000",
 			},
 			"url": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
+				Description:      "GitLab API URL. Maximum length: 2000",
 			},
 		},
 	}
@@ -103,16 +109,16 @@ func resourceSonarqubeAlmGitlabRead(d *schema.ResourceData, m interface{}) error
 	// Loop over all GitHub instances to see if the Alm instance exists.
 	for _, value := range AlmGitlabReadResponse.Gitlab {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("url", value.URL)
+			errKey := d.Set("key", value.Key)
+			errUrl := d.Set("url", value.URL)
 			// The personal_access_token is a secured property that is not returned
 			// d.Set("personal_access_token", value.PersonalAccessToken)
-			return nil
+			return errors.Join(errKey, errUrl)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeGitlabBindingRead: Failed to find gitlab binding: %+v", d.Id())
-
 }
+
 func resourceSonarqubeAlmGitlabUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/update_gitlab"

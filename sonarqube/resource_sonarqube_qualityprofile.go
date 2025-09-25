@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -60,9 +61,10 @@ type GetQualityProfileActions struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeQualityProfileCreate,
-		Read:   resourceSonarqubeQualityProfileRead,
-		Delete: resourceSonarqubeQualityProfileDelete,
+		Description: "Provides a Sonarqube Quality Profile resource. This can be used to create and manage Sonarqube Quality Profiles.",
+		Create:      resourceSonarqubeQualityProfileCreate,
+		Read:        resourceSonarqubeQualityProfileRead,
+		Delete:      resourceSonarqubeQualityProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeQualityProfileImport,
 		},
@@ -73,33 +75,34 @@ func resourceSonarqubeQualityProfile() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Quality profile name",
+				Description: "The name of the Quality Profile to create. Maximum length 100",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringLenBetween(0, 100),
 				),
 			},
 			"key": {
 				Type:        schema.TypeString,
-				Description: "Quality profile key",
+				Description: "ID of the Sonarqube Quality Profile",
 				Computed:    true,
 			},
 			"language": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Quality profile language",
+				Description: "Quality profile language. Must be one of \"cs\", \"css\", \"flex\", \"go\", \"java\", \"js\", \"jsp\", \"kotlin\", \"php\", \"py\", \"ruby\", \"scala\", \"ts\", \"vbnet\", \"web\", \"xml\"",
 			},
 			"is_default": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Is the default profile",
+				Description: "When set to true this will make the added Quality Profile default",
 				Default:     false,
 				ForceNew:    true,
 			},
 			"parent": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "When a parent is provided the quality profile will inherit it's rules",
 			},
 		},
 	}
@@ -174,11 +177,12 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 	for _, value := range getQualityProfileResponse.Profiles {
 		if d.Id() == value.Key {
 			d.SetId(value.Key)
-			d.Set("name", value.Name)
-			d.Set("language", value.Language)
-			d.Set("key", value.Key)
-			d.Set("is_default", value.IsDefault)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("name", value.Name))
+			errs = append(errs, d.Set("language", value.Language))
+			errs = append(errs, d.Set("key", value.Key))
+			errs = append(errs, d.Set("is_default", value.IsDefault))
+			return errors.Join(errs...)
 		}
 	}
 
@@ -194,10 +198,11 @@ func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}
 		"language":       []string{d.Get("language").(string)},
 	}.Encode()
 
-	err := setDefaultQualityProfile(d, m, false)
-
-	if err != nil {
-		return err
+	if d.Get("is_default").(bool) {
+		err := setDefaultQualityProfile(d, m, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	resp, err := httpRequestHelper(
@@ -213,7 +218,6 @@ func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}
 	defer resp.Body.Close()
 
 	return nil
-
 }
 
 func resourceSonarqubeQualityProfileImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

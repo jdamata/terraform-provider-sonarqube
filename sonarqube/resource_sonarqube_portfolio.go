@@ -3,6 +3,7 @@ package sonarqube
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -46,10 +47,11 @@ const (
 // Returns the resource represented by this file.
 func resourceSonarqubePortfolio() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubePortfolioCreate,
-		Read:   resourceSonarqubePortfolioRead,
-		Update: resourceSonarqubePortfolioUpdate,
-		Delete: resourceSonarqubePortfolioDelete,
+		Description: "Provides a Sonarqube Portfolio resource. This can be used to create and manage Sonarqube Portfolio. Note that the SonarQube API for Portfolios is called ``views``",
+		Create:      resourceSonarqubePortfolioCreate,
+		Read:        resourceSonarqubePortfolioRead,
+		Update:      resourceSonarqubePortfolioUpdate,
+		Delete:      resourceSonarqubePortfolioDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubePortfolioImport,
 		},
@@ -63,19 +65,22 @@ func resourceSonarqubePortfolio() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The key of the Portfolio to create",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "The name of the Portfolio to create",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "A description of the Portfolio to create",
 			},
 			"qualifier": {
 				Type:     schema.TypeString,
@@ -87,6 +92,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Default:      "public",
 				ForceNew:     true, // TODO: There currently isn't an API to update this in-place, even though it's possible in the UI
 				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
+				Description:  "Whether the created portfolio should be visible to everyone, or only specific user/groups. If no visibility is specified, the default portfolio visibility will be `public`.",
 			},
 			"selection_mode": {
 				Type:         schema.TypeString,
@@ -94,6 +100,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Default:      NONE,
 				ForceNew:     false,
 				ValidateFunc: validation.StringInSlice([]string{NONE, MANUAL, TAGS, REGEXP, REST}, false),
+				Description:  "How to populate the Portfolio to create. Possible values are `NONE`, `MANUAL`, `TAGS`, `REGEXP` or `REST`. [See docs](https://docs.sonarqube.org/9.8/project-administration/managing-portfolios/#populating-portfolios) for how Portfolio population works",
 			},
 			"branch": { // Only active for TAGS, REGEXP and REST
 				Type:        schema.TypeString,
@@ -109,6 +116,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Description: "List of Project tags to populate the Portfolio from. Only active when `selection_mode` is `TAGS`",
 			},
 			"regexp": { // Only active for REGEXP
 				Type:          schema.TypeString,
@@ -116,6 +124,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 				ForceNew:      false,
 				ConflictsWith: []string{"selected_projects", "tags"},
 				ValidateFunc:  validation.StringIsValidRegExp,
+				Description:   "A regular expression that is used to match Projects with a matching name OR key. If they match, they are added to the Portfolio",
 			},
 			"selected_projects": {
 				Type:          schema.TypeSet,
@@ -139,6 +148,7 @@ func resourceSonarqubePortfolio() *schema.Resource {
 							},
 						},
 					},
+					Description: "Block set of projects to add to the portfolio. Only active when `selection_mode` is `MANUAL`. See [below for nested schema](#selected_projects)",
 				},
 			},
 		},
@@ -190,7 +200,6 @@ func validatePortfolioResource(d *schema.ResourceDiff) error {
 	default:
 		return fmt.Errorf("resourceSonarqubePortfolioCreate: selection_mode needs to be set to one of NONE, MANUAL, TAGS, REGEXP, REST")
 	}
-
 }
 
 func portfolioSetSelectionMode(d *schema.ResourceData, m interface{}, sonarQubeURL url.URL) error {
@@ -348,8 +357,7 @@ func resourceSonarqubePortfolioRead(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	updateResourceDataFromPortfolioReadResponse(d, portfolioReadResponse)
-	return nil
+	return updateResourceDataFromPortfolioReadResponse(d, portfolioReadResponse)
 }
 
 func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) error {
@@ -422,31 +430,31 @@ func resourceSonarqubePortfolioImport(d *schema.ResourceData, m interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfolioReadResponse *Portfolio) {
-
+func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfolioReadResponse *Portfolio) error {
 	d.SetId(portfolioReadResponse.Key)
-	d.Set("key", portfolioReadResponse.Key)
-	d.Set("name", portfolioReadResponse.Name)
-	d.Set("description", portfolioReadResponse.Desc)
-	d.Set("qualifier", portfolioReadResponse.Qualifier)
-	d.Set("visibility", portfolioReadResponse.Visibility)
-	d.Set("selection_mode", portfolioReadResponse.SelectionMode)
+	errs := []error{}
+	errs = append(errs, d.Set("key", portfolioReadResponse.Key))
+	errs = append(errs, d.Set("name", portfolioReadResponse.Name))
+	errs = append(errs, d.Set("description", portfolioReadResponse.Desc))
+	errs = append(errs, d.Set("qualifier", portfolioReadResponse.Qualifier))
+	errs = append(errs, d.Set("visibility", portfolioReadResponse.Visibility))
+	errs = append(errs, d.Set("selection_mode", portfolioReadResponse.SelectionMode))
 
 	// These fields may or may not be set in the reposnse from SonarQube
 	if len(portfolioReadResponse.Tags) > 0 {
-		d.Set("tags", portfolioReadResponse.Tags)
+		errs = append(errs, d.Set("tags", portfolioReadResponse.Tags))
 	}
 	if len(portfolioReadResponse.Branch) > 0 {
-		d.Set("branch", portfolioReadResponse.Branch)
+		errs = append(errs, d.Set("branch", portfolioReadResponse.Branch))
 	}
 	if len(portfolioReadResponse.Regexp) > 0 {
-		d.Set("regexp", portfolioReadResponse.Regexp)
+		errs = append(errs, d.Set("regexp", portfolioReadResponse.Regexp))
 	}
 
 	if len(portfolioReadResponse.SelectedProjects) > 0 {
-		d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects))
+		errs = append(errs, d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects)))
 	}
-
+	return errors.Join(errs...)
 }
 
 func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, error) {
@@ -564,29 +572,31 @@ func addSelectedProject(portfolioKey, projectKey string, selectedBranches []stri
 	}
 	defer resp.Body.Close()
 
+	errs := []error{}
 	for _, branch := range selectedBranches {
-		addSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+		errs = append(errs, addSelectedProjectBranch(portfolioKey, projectKey, branch, m))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func updateSelectedProject(portfolioKey, projectKey string, selectedBranches, apiSelectedBranches []string, m interface{}) error {
 	// For each branch in the terraform schema, make sure they are also in SonarQube
+	errs := []error{}
 	for _, branch := range selectedBranches {
 		if !slices.Contains(apiSelectedBranches, branch) {
-			addSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+			errs = append(errs, addSelectedProjectBranch(portfolioKey, projectKey, branch, m))
 		}
 	}
 
 	// For each branch in SonarQube, ensure it exists in the terraform schema, otherwise remove it
 	for _, branch := range apiSelectedBranches {
 		if !slices.Contains(selectedBranches, branch) {
-			deleteSelectedProjectBranch(portfolioKey, projectKey, branch, m)
+			errs = append(errs, deleteSelectedProjectBranch(portfolioKey, projectKey, branch, m))
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func addSelectedProjectBranch(portfolioKey, projectKey, branch string, m interface{}) error {

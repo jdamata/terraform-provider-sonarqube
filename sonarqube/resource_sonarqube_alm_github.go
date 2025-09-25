@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,6 +24,8 @@ type GetAlmGithub struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeAlmGithub() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube GitHub Alm/Devops Platform Integration resource. This can be used to create and manage a Alm/Devops
+Platform Integration for GitHub.`,
 		Create: resourceSonarqubeAlmGithubCreate,
 		Read:   resourceSonarqubeAlmGithubRead,
 		Update: resourceSonarqubeAlmGithubUpdate,
@@ -31,39 +34,46 @@ func resourceSonarqubeAlmGithub() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"app_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "GitHub App ID. Maximum length: 80",
 			},
 			"client_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "GitHub App Client ID. Maximum length: 80",
 			},
 			"client_secret": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "GitHub App Client Secret. Maximum length: 160",
 			},
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Unique key of the GitHUb instance setting. Maximum length: 200",
 			},
 			"private_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "GitHub App private key. Maximum length: 2500",
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "GitHub API URL. Maximum length: 2000",
 			},
 			"webhook_secret": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "GitHub App Webhook Secret. Maximum length: 160",
 			},
 		},
 	}
@@ -126,16 +136,17 @@ func resourceSonarqubeAlmGithubRead(d *schema.ResourceData, m interface{}) error
 	// Loop over all GitHub instances to see if the Alm instance exists.
 	for _, value := range AlmGithubReadResponse.Github {
 		if d.Id() == value.Key {
-			d.Set("key", value.Key)
-			d.Set("url", value.URL)
-			d.Set("app_id", value.AppID)
-			d.Set("client_id", value.ClientID)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("key", value.Key))
+			errs = append(errs, d.Set("url", value.URL))
+			errs = append(errs, d.Set("app_id", value.AppID))
+			errs = append(errs, d.Set("client_id", value.ClientID))
+			return errors.Join(errs...)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())
-
 }
+
 func resourceSonarqubeAlmGithubUpdate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/update_github"

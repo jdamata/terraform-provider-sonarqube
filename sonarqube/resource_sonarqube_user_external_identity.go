@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +14,10 @@ import (
 // Returns the resource represented by this file.
 func resourceSonarqubeUserExternalIdentity() *schema.Resource {
 	return &schema.Resource{
+		Description: `Updates the _external identity_ of a _non local_ Sonarqube User. This can be used to set the _Identity Provider_ which should be used to
+authenticate a specific user.
+
+The Sonarqube API currently does not provide an endpoint to read the _external identity_ setting of an user.`,
 		Create: resourceSonarqubeUserExternalIdentityCreate,
 		Read:   resourceSonarqubeUserExternalIdentityRead,
 		Delete: resourceSonarqubeUserExternalIdentityDelete,
@@ -20,19 +25,22 @@ func resourceSonarqubeUserExternalIdentity() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"login_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The login name of the User to update. Changing this forces a new resource to be created.",
 			},
 			"external_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The identifier of the User used by the Authentication Provider. Changing this forces a new resource to be created.",
 			},
 			"external_provider": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The key of the Authentication Provider. The Authentication Provider must be activated on Sonarqube. Changing this forces a new resource to be created.",
 			},
 		},
 	}
@@ -41,10 +49,10 @@ func resourceSonarqubeUserExternalIdentity() *schema.Resource {
 func resourceSonarqubeUserExternalIdentityCreate(d *schema.ResourceData, m interface{}) error {
 	isLocal, err := isLocal(d.Get("login_name").(string), m)
 	if err != nil {
-		return fmt.Errorf("Error updating Sonarqube user: %+v", err)
+		return fmt.Errorf("error updating Sonarqube user: %+v", err)
 	}
 	if isLocal {
-		return fmt.Errorf("Error setting external identity: Sonarqube user '%+v' is not 'external'", d.Get("login_name").(string))
+		return fmt.Errorf("error setting external identity: Sonarqube user '%+v' is not 'external'", d.Get("login_name").(string))
 	}
 
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
@@ -66,23 +74,22 @@ func resourceSonarqubeUserExternalIdentityCreate(d *schema.ResourceData, m inter
 		"resourceSonarqubeUserExternalIdentityCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("Error updating Sonarqube user: %+v", err)
+		return fmt.Errorf("error updating Sonarqube user: %+v", err)
 	}
 
 	d.SetId(d.Get("login_name").(string))
-	d.Set("external_identity", d.Get("external_identity").(string))
-	d.Set("external_provider", d.Get("external_provider").(string))
+	errs := []error{}
+	errs = append(errs, d.Set("external_identity", d.Get("external_identity").(string)))
+	errs = append(errs, d.Set("external_provider", d.Get("external_provider").(string)))
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func resourceSonarqubeUserExternalIdentityRead(d *schema.ResourceData, m interface{}) error {
-
 	return nil
 }
 
 func resourceSonarqubeUserExternalIdentityDelete(d *schema.ResourceData, m interface{}) error {
-
 	return nil
 }
 
@@ -102,7 +109,7 @@ func isLocal(login string, m interface{}) (bool, error) {
 		"resourceSonarqubeUserExternalIdentity",
 	)
 	if err != nil {
-		return false, fmt.Errorf("Error reading Sonarqube user: %+v", err)
+		return false, fmt.Errorf("error reading Sonarqube user: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -110,7 +117,7 @@ func isLocal(login string, m interface{}) (bool, error) {
 	userResponse := GetUser{}
 	err = json.NewDecoder(resp.Body).Decode(&userResponse)
 	if err != nil {
-		return false, fmt.Errorf("Failed to decode json into struct: %+v", err)
+		return false, fmt.Errorf("failed to decode json into struct: %+v", err)
 	}
 
 	// Loop over all users to find the requested user
@@ -121,5 +128,5 @@ func isLocal(login string, m interface{}) (bool, error) {
 	}
 
 	// User not found in response
-	return false, fmt.Errorf("Failed to find user: %+v", login)
+	return false, fmt.Errorf("failed to find user: %+v", login)
 }

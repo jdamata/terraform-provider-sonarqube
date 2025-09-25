@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -29,23 +30,26 @@ type Branches struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeProjectMainBranch() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeProjectMainBranchCreate,
-		Read:   resourceSonarqubeProjectMainBranchRead,
-		Delete: resourceSonarqubeProjectMainBranchDelete,
+		Description: "Provides a Sonarqube Project main branch resource. This can be used to create and manage a Sonarqube Projects main branch.",
+		Create:      resourceSonarqubeProjectMainBranchCreate,
+		Read:        resourceSonarqubeProjectMainBranchRead,
+		Delete:      resourceSonarqubeProjectMainBranchDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectMainBranchImport,
 		},
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name you want the main branch to have.",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
 			},
 		},
 	}
@@ -79,7 +83,7 @@ func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interfac
 }
 
 func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{}) error {
-	idSlice := strings.Split(d.Id(), "/")
+	idSlice := strings.SplitN(d.Id(), "/", 2)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/list"
 	sonarQubeURL.RawQuery = url.Values{
@@ -107,13 +111,12 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 	// Loop over all branches to see if the main branch we need exists.
 	for _, value := range branchReadResponse.Branches {
 		if idSlice[1] == value.Name && value.IsMain {
-			d.Set("project", idSlice[0])
-			d.Set("name", value.Name)
-			return nil
+			errProject := d.Set("project", idSlice[0])
+			errName := d.Set("name", value.Name)
+			return errors.Join(errProject, errName)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to find project main branch: %+v", d.Id())
-
 }
 
 // TODO make the delete function read the default branch name of the sonarQube instance instead of assuming

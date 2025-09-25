@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,15 +25,24 @@ type GetPermissionTemplates struct {
 
 // PermissionTemplate struct
 type PermissionTemplate struct {
-	ID                string `json:"id,omitempty"`
-	Name              string `json:"name,omitempty"`
-	Description       string `json:"description,omitempty"`
-	ProjectKeyPattern string `json:"projectKeyPattern,omitempty"`
+	ID                string                         `json:"id,omitempty"`
+	Name              string                         `json:"name,omitempty"`
+	Description       string                         `json:"description,omitempty"`
+	ProjectKeyPattern string                         `json:"projectKeyPattern,omitempty"`
+	Permissions       []PermissionTemplatePermission `json:"permissions,omitempty"`
+}
+
+// PermissionTemplatePermission struct
+type PermissionTemplatePermission struct {
+	Key                string `json:"key,omitempty"`
+	WithProjectCreator bool   `json:"withProjectCreator,omitempty"`
 }
 
 // Returns the resource represented by this file.
 func resourceSonarqubePermissionTemplate() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube Permission template resource. This can be used to create and manage Sonarqube Permission
+templates.`,
 		Create: resourceSonarqubePermissionTemplateCreate,
 		Read:   resourceSonarqubePermissionTemplateRead,
 		Update: resourceSonarqubePermissionTemplateUpdate,
@@ -44,21 +54,25 @@ func resourceSonarqubePermissionTemplate() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the Permission template to create. Do not use names with `/`. If needed, use `replace(var.permission_template_name, \"/\", \"_\")`. Changing this forces a new resource to be created.",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description of the Template.",
 			},
 			"project_key_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The project key pattern. Must be a valid Java regular expression.",
 			},
 			"default": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Set the template as the default. This can only be set for one template.",
 			},
 		},
 	}
@@ -100,6 +114,7 @@ func resourceSonarqubePermissionTemplateCreate(d *schema.ResourceData, m interfa
 
 	// If default is set to true, set this permission template as the default.
 	if d.Get("default").(bool) {
+		sonarQubeURL = m.(*ProviderConfiguration).sonarQubeURL
 		err = resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL, d.Id(), m)
 		if err != nil {
 			return err
@@ -142,15 +157,14 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 			log.Printf("[DEBUG][resourceSonarqubePermissionTemplateRead] Found PermissionTemplate with ID '%s'", value.ID)
 			// If it does, set the values of that template
 			d.SetId(value.ID)
-			d.Set("name", value.Name)
-			d.Set("description", value.Description)
-			d.Set("project_key_pattern", value.ProjectKeyPattern)
-			return nil
+			errName := d.Set("name", value.Name)
+			errDesc := d.Set("description", value.Description)
+			errProj := d.Set("project_key_pattern", value.ProjectKeyPattern)
+			return errors.Join(errName, errDesc, errProj)
 		}
 	}
 
 	return fmt.Errorf("resourceSonarqubePermissionTemplateRead: Failed to find template with ID: %+v", d.Id())
-
 }
 
 func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interface{}) error {
@@ -189,6 +203,7 @@ func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interfa
 
 	// If default is set to true, set this permission template as the default.
 	if d.Get("default").(bool) {
+		sonarQubeURL = m.(*ProviderConfiguration).sonarQubeURL
 		err = resourceSonarqubePermissionTemplateSetDefault(sonarQubeURL, d.Id(), m)
 		if err != nil {
 			return err

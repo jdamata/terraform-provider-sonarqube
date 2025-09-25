@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -47,10 +48,11 @@ type CreateQualityGateResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeQualityGate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeQualityGateCreate,
-		Read:   resourceSonarqubeQualityGateRead,
-		Update: resourceSonarqubeQualityGateUpdate,
-		Delete: resourceSonarqubeQualityGateDelete,
+		Description: "Provides a Sonarqube Quality Gate resource. This can be used to create and manage Sonarqube Quality Gates and their Conditions.",
+		Create:      resourceSonarqubeQualityGateCreate,
+		Read:        resourceSonarqubeQualityGateRead,
+		Update:      resourceSonarqubeQualityGateUpdate,
+		Delete:      resourceSonarqubeQualityGateDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeQualityGateImport,
 		},
@@ -58,25 +60,27 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the Quality Gate to create. Maximum length 100.",
 			},
 			"copy_from": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"condition"},
+				Description:   "Name of an existing Quality Gate to copy from.",
 			},
 			"is_default": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "When set to true this Quality Gate is set as default",
+				Description: "When set to true this Quality Gate is set as default.",
 				Default:     false,
 			},
 			"condition": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of conditions that the gate uses",
+				Description: "A list of conditions that the gate uses.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -86,14 +90,33 @@ func resourceSonarqubeQualityGate() *schema.Resource {
 						"metric": {
 							Type:     schema.TypeString,
 							Required: true,
+							Description: `Condition metric.
+
+  Only metrics of the following types are allowed:
+
+  - INT
+  - MILLISEC
+  - RATING
+  - WORK_DUR
+  - FLOAT
+  - PERCENT
+  - LEVEL.
+
+  The following metrics are forbidden:
+
+  - alert_status
+  - security_hotspots
+  - new_security_hotspots`,
 						},
 						"op": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Condition operator. Possible values are: LT and GT",
 						},
 						"threshold": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Condition error threshold (For ratings: A=1, B=2, C=3, D=4)",
 						},
 					},
 				},
@@ -168,14 +191,12 @@ func resourceSonarqubeQualityGateCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	if d.Get("is_default").(bool) {
-		err := setDefaultQualityGate(d, m, true)
-		if err != nil {
+		if err := setDefaultQualityGate(d, m, true); err != nil {
 			return fmt.Errorf("resourceSonarqubeQualityGateCreate: Failed to set this quality gate as default: %+v", err)
 		}
 	}
 
-	updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
-	return nil
+	return updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
 }
 
 func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) error {
@@ -183,10 +204,11 @@ func resourceSonarqubeQualityGateRead(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return err
 	}
-	updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
+	if err := updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse); err != nil {
+		return err
+	}
 	// Api returns if true if set as default is available. when is_default=true setAsDefault=false so is_default=true
-	d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
-	return nil
+	return d.Set("is_default", !qualityGateReadResponse.Actions.SetAsDefault)
 }
 
 var lock_update_default sync.Mutex
@@ -242,15 +264,13 @@ func resourceSonarqubeQualityGateUpdate(d *schema.ResourceData, m interface{}) e
 		// explicitly set as default) then we don't need to do anything (and accidentally set Sonar way as default!)
 		// In all other cases where the default has changed, we do need to update it.
 		if newDefault != !qualityGateReadResponse.Actions.SetAsDefault {
-			err := setDefaultQualityGate(d, m, newDefault)
-			if err != nil {
+			if err := setDefaultQualityGate(d, m, newDefault); err != nil {
 				return fmt.Errorf("resourceSonarqubeQualityGateUpdate: Failed to set this quality gate as default: %+v", err)
 			}
 		}
 	}
 
-	updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
-	return nil
+	return updateResourceDataFromQualityGateReadResponse(d, qualityGateReadResponse)
 }
 
 func resourceSonarqubeQualityGateDelete(d *schema.ResourceData, m interface{}) error {
@@ -355,7 +375,6 @@ func readQualityGateFromApi(d *schema.ResourceData, m interface{}) (*GetQualityG
 }
 
 func synchronizeConditions(d *schema.ResourceData, m interface{}, apiQualityGateConditions *[]ReadQualityGateConditionsResponse) (bool, error) {
-
 	changed := false
 	qualityGateConditions := d.Get("condition").([]interface{})
 
@@ -382,10 +401,10 @@ func synchronizeConditions(d *schema.ResourceData, m interface{}, apiQualityGate
 	}
 
 	if changed {
-		d.Set("condition", qualityGateConditions)
+		err = d.Set("condition", qualityGateConditions)
 	}
 
-	return changed, nil
+	return changed, err
 }
 
 func addOrUpdateCondition(d *schema.ResourceData, m interface{}, apiQualityGateConditions *[]ReadQualityGateConditionsResponse, condition interface{}, changed *bool) (string, error) {
@@ -438,17 +457,18 @@ func removeDeletedConditions(apiQualityGateConditions *[]ReadQualityGateConditio
 	return nil
 }
 
-func updateResourceDataFromQualityGateReadResponse(d *schema.ResourceData, qualityGateReadResponse *GetQualityGate) {
+func updateResourceDataFromQualityGateReadResponse(d *schema.ResourceData, qualityGateReadResponse *GetQualityGate) error {
 	d.SetId(qualityGateReadResponse.Name)
-	d.Set("name", qualityGateReadResponse.Name)
+	errs := []error{}
+	errs = append(errs, d.Set("name", qualityGateReadResponse.Name))
 	// Copied gates do not have condition blocks so we don't want to populate from the API.
 	if _, copiedGate := d.GetOk("copy_from"); !copiedGate {
-		d.Set("condition", flattenReadQualityGateConditionsResponse(&qualityGateReadResponse.Conditions))
+		errs = append(errs, d.Set("condition", flattenReadQualityGateConditionsResponse(&qualityGateReadResponse.Conditions)))
 	}
+	return errors.Join(errs...)
 }
 
 func createCondition(qualityGateName string, metric string, op string, threshold string, m interface{}) (string, error) {
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/create_condition"
 
@@ -482,7 +502,6 @@ func createCondition(qualityGateName string, metric string, op string, threshold
 }
 
 func updateCondition(id, metric, op, threshold string, m interface{}) error {
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualitygates/update_condition"
 

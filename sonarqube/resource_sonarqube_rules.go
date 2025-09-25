@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -54,10 +55,11 @@ type CreateRuleResponse struct {
 
 func resourceSonarqubeRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeRuleCreate,
-		Read:   resourceSonarqubeRuleRead,
-		Update: resourceSonarqubeRuleUpdate,
-		Delete: resourceSonarqubeRuleDelete,
+		Description: "Provides a Sonarqube Rules resource. This can be used to manage Sonarqube rules.",
+		Create:      resourceSonarqubeRuleCreate,
+		Read:        resourceSonarqubeRuleRead,
+		Update:      resourceSonarqubeRuleUpdate,
+		Delete:      resourceSonarqubeRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeRuleImporter,
 		},
@@ -67,7 +69,7 @@ func resourceSonarqubeRule() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Key of the custom rule",
+				Description: "key of the custom rule should only contain : a-z, 0-9, \\_",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringLenBetween(0, 200),
 				),
@@ -87,18 +89,20 @@ func resourceSonarqubeRule() *schema.Resource {
 				),
 			},
 			"params": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Parameters as semi-colon list of =, for example 'params=key1=v1;key2=v2' (Only for custom rule)",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `Parameters as semi-colon list of =, for example 'params=key1=v1;key2=v2' (Only for custom rule)
+  - parameter order: expression=value;filePattern=value;message=value`,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"prevent_reactivation": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "If set to true and if the rule has been deactivated (status 'REMOVED'), a status 409 will be returned",
-				Default:     "false",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `If set to true and if the rule has been deactivated (status 'REMOVED'), a status 409 will be returned
+  - Possible values - true, false, yes, no`,
+				Default: "false",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{"true", "false", "yes", "no"},
@@ -107,9 +111,10 @@ func resourceSonarqubeRule() *schema.Resource {
 				),
 			},
 			"severity": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Rule severity",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `Rule severity
+  - Possible values - INFO, MINOR, MAJOR, CRITICAL, BLOCKER`,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{"INFO", "MINOR", "MAJOR", "CRITICAL", "BLOCKER"},
@@ -118,10 +123,12 @@ func resourceSonarqubeRule() *schema.Resource {
 				),
 			},
 			"status": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Rule status",
-				Default:     "READY",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `Rule status
+  - Possible values - BETA, DEPRECATED, READY, REMOVED
+  - Default value - READY`,
+				Default: "READY",
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{"BETA", "DEPRECATED", "READY", "REMOVED"},
@@ -130,14 +137,16 @@ func resourceSonarqubeRule() *schema.Resource {
 				),
 			},
 			"template_key": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Key of the template rule in order to create a custom rule (mandatory for custom rule)",
+				Type:     schema.TypeString,
+				Required: true,
+				Description: `Key of the template rule in order to create a custom rule (mandatory for custom rule)
+  - [Example values](https://docs.sonarqube.org/latest/user-guide/rules/#header-4)`,
 			},
 			"type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Rule type",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `Rule type
+  - Possible values - CODE_SMELL, BUG, VULNERABILITY, SECURITY_HOTSPOT`,
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringInSlice(
 						[]string{"CODE_SMELL", "BUG", "VULNERABILITY", "SECURITY_HOTSPOT"},
@@ -214,13 +223,14 @@ func resourceSonarqubeRuleRead(d *schema.ResourceData, m interface{}) error {
 	for _, value := range ruleReadResponse.Rule {
 		if d.Id() == value.RuleKey {
 			d.SetId(value.RuleKey)
-			d.Set("markdown_description", value.MdDesc)
-			d.Set("name", value.Name)
-			d.Set("severity", value.Severity)
-			d.Set("template_key", value.TemplateKey)
-			d.Set("status", value.Status)
-			d.Set("type", value.Type)
-			return nil
+			errs := []error{}
+			errs = append(errs, d.Set("markdown_description", value.MdDesc))
+			errs = append(errs, d.Set("name", value.Name))
+			errs = append(errs, d.Set("severity", value.Severity))
+			errs = append(errs, d.Set("template_key", value.TemplateKey))
+			errs = append(errs, d.Set("status", value.Status))
+			errs = append(errs, d.Set("type", value.Type))
+			return errors.Join(errs...)
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeRuleRead: Failed to find project: %+v", d.Id())

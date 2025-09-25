@@ -1,0 +1,43 @@
+name: tfplugindocs generate
+
+on:
+  pull_request_target:
+    paths:
+      - .github/workflows/tfplugindocs-generate.yml
+      - Makefile
+      - docs/**
+      - examples/**
+      - templates/**
+      - sonarqube/**
+
+jobs:
+  tfplugindocs_generate:
+    name: tfplugindocs generate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false # don't write token to git config
+          fetch-depth: 0
+          ref: '${{ github.head_ref }}'
+          repository: '${{ github.event.pull_request.head.repo.full_name }}'
+
+      - name: Setup Go with version from tools/go.mod
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/go.mod
+          cache-dependency-path: tools/go.sum
+
+      - name: Install tools and generate documentation
+        run: |
+          make tools
+          make docs
+
+      - name: Commit and push generated documentation
+        uses: actions-js/push@v1.5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.head_ref }}
+          message: "[skip ci] chore(docs): tfplugindocs generate"
+          repository: ${{ github.event.pull_request.head.repo.full_name }}

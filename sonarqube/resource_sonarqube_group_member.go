@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,9 +27,10 @@ type GetGroupMembersResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeGroupMember() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSonarqubeGroupMemberCreate,
-		Read:   resourceSonarqubeGroupMemberRead,
-		Delete: resourceSonarqubeGroupMemberDelete,
+		Description: "Provides a Sonarqube Group Member resource. This can be used to add or remove user to or from Sonarqube Groups.",
+		Create:      resourceSonarqubeGroupMemberCreate,
+		Read:        resourceSonarqubeGroupMemberRead,
+		Delete:      resourceSonarqubeGroupMemberDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeGroupMemberImport,
 		},
@@ -36,14 +38,16 @@ func resourceSonarqubeGroupMember() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the Group to add a member to. Changing this forces a new resource to be created.",
 			},
 			"login_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The `login_name` of the User to add as a member. Changing this forces a new resource to be created.",
 			},
 		},
 	}
@@ -114,8 +118,11 @@ func resourceSonarqubeGroupMemberRead(d *schema.ResourceData, m interface{}) err
 		if d.Get("login_name").(string) == value.LoginName {
 			// If it does, set the values of that group membership
 			d.SetId(createGroupMembershipId(d.Get("name").(string), d.Get("login_name").(string)))
-			d.Set("name", d.Get("name").(string))
-			d.Set("login_name", value.LoginName)
+			errName := d.Set("name", d.Get("name").(string))
+			errLogin := d.Set("login_name", value.LoginName)
+			if err := errors.Join(errName, errLogin); err != nil {
+				return nil
+			}
 			readSuccess = true
 			break
 		}
@@ -161,10 +168,10 @@ func resourceSonarqubeGroupMemberImport(d *schema.ResourceData, m interface{}) (
 
 	exists, _ := checkGroupMemberExists(groupName, loginName, m)
 	if exists {
-		d.Set("name", groupName)
-		d.Set("login_name", loginName)
+		errName := d.Set("name", groupName)
+		errLogin := d.Set("login_name", loginName)
 
-		return []*schema.ResourceData{d}, nil
+		return []*schema.ResourceData{d}, errors.Join(errName, errLogin)
 	} else {
 		return nil, fmt.Errorf("User '%s' not a member of group '%s'", loginName, groupName)
 	}

@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,6 +15,8 @@ import (
 // Returns the resource represented by this file.
 func resourceSonarqubeGitlabBinding() *schema.Resource {
 	return &schema.Resource{
+		Description: `Provides a Sonarqube GitLab binding resource. This can be used to create and manage the binding between a
+GitLab repository and a SonarQube project`,
 		Create: resourceSonarqubeGitlabBindingCreate,
 		// You can update any project binding with the same API call as the CREATE
 		Update: resourceSonarqubeGitlabBindingCreate,
@@ -25,22 +28,26 @@ func resourceSonarqubeGitlabBinding() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"alm_setting": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "GitLab ALM setting key",
 			},
 			"monorepo": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "false",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "false",
+				Description: "Is this project part of a monorepo. Default value: false",
 			},
 			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "SonarQube project key. Changing this will force a new resource to be created",
 			},
 			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The GitLab project ID",
 			},
 		},
 	}
@@ -118,12 +125,13 @@ func resourceSonarqubeGitlabBindingRead(d *schema.ResourceData, m interface{}) e
 	}
 	// Loop over all branches to see if the main branch we need exists.
 	if idSlice[1] == BindingReadResponse.Repository && BindingReadResponse.Alm == "gitlab" {
-		d.Set("project", idSlice[0])
-		d.Set("repository", idSlice[1])
-		d.Set("alm_setting", BindingReadResponse.Key)
-		d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo))
+		errs := []error{}
+		errs = append(errs, d.Set("project", idSlice[0]))
+		errs = append(errs, d.Set("repository", idSlice[1]))
+		errs = append(errs, d.Set("alm_setting", BindingReadResponse.Key))
+		errs = append(errs, d.Set("monorepo", strconv.FormatBool(BindingReadResponse.Monorepo)))
 
-		return nil
+		return errors.Join(errs...)
 	}
 	return fmt.Errorf("resourceSonarqubeGitlabBindingRead: Failed to find gitlab binding: %+v", d.Id())
 }
