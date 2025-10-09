@@ -421,3 +421,22 @@ func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
 	})
 
 }
+
+func TestAccSonarqubeProjectBadgeToken(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectBasicConfig(rnd, "testAccSonarqubeProjectBadgeToken", "testAccSonarqubeProjectBadgeToken", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectBadgeToken"),
+					resource.TestCheckResourceAttrSet(name, "badge_token"),
+				),
+			},
+		},
+	})
+}

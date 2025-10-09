@@ -39,3 +39,22 @@ func TestAccSonarqubeProjectDataSource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSonarqubeProjectDataSourceBadgeToken(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "data.sonarqube_project." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectDataSourceConfig(rnd, "testAccSonarqubeProjectDSBadgeToken", "testAccSonarqubeProjectDSBadgeToken", "public"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectDSBadgeToken"),
+					resource.TestCheckResourceAttrSet(name, "badge_token"),
+				),
+			},
+		},
+	})
+}
