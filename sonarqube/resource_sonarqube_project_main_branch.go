@@ -33,6 +33,7 @@ func resourceSonarqubeProjectMainBranch() *schema.Resource {
 		Description: "Provides a Sonarqube Project main branch resource. This can be used to create and manage a Sonarqube Projects main branch.",
 		Create:      resourceSonarqubeProjectMainBranchCreate,
 		Read:        resourceSonarqubeProjectMainBranchRead,
+		Update:      resourceSonarqubeProjectMainBranchUpdate,
 		Delete:      resourceSonarqubeProjectMainBranchDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectMainBranchImport,
@@ -42,7 +43,6 @@ func resourceSonarqubeProjectMainBranch() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
 				Description: "The name you want the main branch to have.",
 			},
 			"project": {
@@ -57,10 +57,10 @@ func resourceSonarqubeProjectMainBranch() *schema.Resource {
 
 func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/rename"
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/set_main"
 
 	sonarQubeURL.RawQuery = url.Values{
-		"name":    []string{d.Get("name").(string)},
+		"branch":  []string{d.Get("name").(string)},
 		"project": []string{d.Get("project").(string)},
 	}.Encode()
 
@@ -117,6 +117,33 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 		}
 	}
 	return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to find project main branch: %+v", d.Id())
+}
+
+func resourceSonarqubeProjectMainBranchUpdate(d *schema.ResourceData, m interface{}) error {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/set_main"
+
+	sonarQubeURL.RawQuery = url.Values{
+		"branch":  []string{d.Get("name").(string)},
+		"project": []string{d.Get("project").(string)},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubeProjectMainBranchUpdate",
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	id := fmt.Sprintf("%v/%v", d.Get("project").(string), d.Get("name").(string))
+	d.SetId(id)
+
+	return resourceSonarqubeProjectMainBranchRead(d, m)
 }
 
 // TODO make the delete function read the default branch name of the sonarQube instance instead of assuming
