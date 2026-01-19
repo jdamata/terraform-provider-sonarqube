@@ -92,3 +92,59 @@ func TestAccSonarqubeProjectMainBranchName(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSonarqubeProjectMainBranchSetMain(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project_main_branch." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectMainBranchName(rnd, "testAccSonarqubeProjectMainBranchSetMain", "main"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchSetMain"),
+					resource.TestCheckResourceAttr(name, "name", "main"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchSetMain"),
+					resource.TestCheckResourceAttr(name, "name", "main"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectMainBranchRenameNonExistent(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_project_main_branch." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeProjectMainBranchName(rnd, "testAccSonarqubeProjectMainBranchRenameNonExistent", "non-existent-branch"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchRenameNonExistent"),
+					resource.TestCheckResourceAttr(name, "name", "non-existent-branch"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "project", "testAccSonarqubeProjectMainBranchRenameNonExistent"),
+					resource.TestCheckResourceAttr(name, "name", "non-existent-branch"),
+				),
+			},
+		},
+	})
+}
