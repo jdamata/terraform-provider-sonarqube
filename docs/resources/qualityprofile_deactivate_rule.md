@@ -32,7 +32,7 @@ resource "sonarqube_qualityprofile" "xml" {
 }
 
 resource "sonarqube_qualityprofile_deactivate_rule" "xml_rule" {
-  key  = sonarqube_qualityprofile.xml.key # .id also works
+  key  = sonarqube_qualityprofile.xml.key
   rule = sonarqube_rule.allowed_maven_dependencies.id
 }
 ```

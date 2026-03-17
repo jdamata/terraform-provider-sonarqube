@@ -35,10 +35,10 @@ data "sonarqube_qualityprofile_active_rules" "example" {
 
 Read-Only:
 
-- `key` (String) Rule key.
-- `language` (String) Rule language.
-- `name` (String) Rule name.
-- `repo` (String) Rule repository.
-- `severity` (String) Rule severity.
-- `status` (String) Rule status.
-- `type` (String) Rule type.
+- `key` (String)
+- `language` (String)
+- `name` (String)
+- `repo` (String)
+- `severity` (String)
+- `status` (String)
+- `type` (String)
