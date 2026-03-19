@@ -44,6 +44,7 @@ func TestAccSonarqubeUserTokenBasic(t *testing.T) {
 				Config: testAccSonarqubeUserTokenBasicConfig(rnd, "testAccSonarqubeUserToken"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserToken"),
+					resource.TestCheckResourceAttr(name, "type", string(UserToken)),
 				),
 			},
 		},
@@ -78,6 +79,7 @@ func TestAccSonarqubeUserTokenWithExpirationDate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenWithExpirationDate"),
 					resource.TestCheckResourceAttr(name, "expiration_date", expiration_date),
+					resource.TestCheckResourceAttr(name, "type", string(UserToken)),
 				),
 			},
 		},
@@ -108,6 +110,7 @@ func TestAccSonarqubeUserTokenNoLogin(t *testing.T) {
 				Config: testAccSonarqubeUserTokenNoLoginConfig(rnd, "testAccSonarqubeUserTokenNoLogin"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenNoLogin"),
+					resource.TestCheckResourceAttr(name, "type", string(UserToken)),
 				),
 			},
 		},
@@ -139,7 +142,7 @@ func TestAccSonarqubeUserTokenGlobalAnalysisToken(t *testing.T) {
 				Config: testAccSonarqubeUserTokenGlobalAnalysisTokenConfig(rnd, "testAccSonarqubeUserTokenGlobalAnalysisToken"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenGlobalAnalysisToken"),
-					resource.TestCheckResourceAttr(name, "type", "GLOBAL_ANALYSIS_TOKEN"),
+					resource.TestCheckResourceAttr(name, "type", string(GlobalAnalysisToken)),
 				),
 			},
 		},
@@ -177,7 +180,7 @@ func TestAccSonarqubeUserTokenProjectAnalysisToken(t *testing.T) {
 				Config: testAccSonarqubeUserTokenProjectAnalysisTokenConfig(rnd, "testAccSonarqubeUserTokenProjectAnalysisToken"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenProjectAnalysisToken"),
-					resource.TestCheckResourceAttr(name, "type", "PROJECT_ANALYSIS_TOKEN"),
+					resource.TestCheckResourceAttr(name, "type", string(ProjectAnalysisToken)),
 				),
 			},
 		},
