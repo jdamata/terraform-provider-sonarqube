@@ -2,7 +2,9 @@ package sonarqube
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -57,10 +59,20 @@ func TestAccSonarqubeNewCodePeriodsGlobalNumberOfDays(t *testing.T) {
 	name := "sonarqube_new_code_periods." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { 
+			testAccPreCheck(t)
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsGlobalNumberOfDays(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
@@ -131,6 +143,14 @@ func TestAccSonarqubeNewCodePeriodsBranchNumberOfDays(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsBranchNumberOfDays(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
@@ -201,10 +221,20 @@ func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
 	name := "sonarqube_new_code_periods." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() { 
+			testAccPreCheck(t)
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as REFERENCE_BRANCH is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsBranchReferenceBranch(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "REFERENCE_BRANCH"),
@@ -274,6 +304,14 @@ func TestAccSonarqubeNewCodePeriodsProjectNumberOfDays(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as NUMBER_OF_DAYS is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping NUMBER_OF_DAYS test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsProjectNumberOfDays(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "NUMBER_OF_DAYS"),
@@ -294,6 +332,7 @@ func testAccSonarqubeNewCodePeriodsProjectReferenceProject(rnd string) string {
 		}
 
         resource "sonarqube_new_code_periods" "%[1]s" {
+			branch = "main"
 			project = sonarqube_project.%[1]s.project
 			type = "REFERENCE_BRANCH"
 			value = "development"
@@ -309,12 +348,118 @@ func TestAccSonarqubeNewCodePeriodsProjectReferenceProject(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					// Skip test on Community edition as REFERENCE_BRANCH is not supported
+					if testAccProvider != nil && testAccProvider.Meta() != nil {
+						if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+							t.Skip("Skipping REFERENCE_BRANCH test - not supported in Community edition")
+						}
+					}
+				},
 				Config: testAccSonarqubeNewCodePeriodsProjectReferenceProject(rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "type", "REFERENCE_BRANCH"),
+					resource.TestCheckResourceAttr(name, "branch", "main"),
 					resource.TestCheckResourceAttr(name, "project", rnd),
 					resource.TestCheckResourceAttr(name, "value", "development"),
 				),
+			},
+		},
+	})
+}
+
+// Import tests
+func TestAccSonarqubeNewCodePeriodsImportGlobal(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsGlobalPreviousVersion(rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "newCodePeriod",
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeNewCodePeriodsImportProject(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
+					resource.TestCheckResourceAttr(name, "project", rnd),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "newCodePeriod/" + rnd,
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeNewCodePeriodsImportBranch(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsBranchPreviousVersion(rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "type", "PREVIOUS_VERSION"),
+					resource.TestCheckResourceAttr(name, "branch", "main"),
+					resource.TestCheckResourceAttr(name, "project", rnd),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "newCodePeriod/" + rnd + "/main",
+			},
+		},
+	})
+}
+
+func TestAccSonarqubeNewCodePeriodsImportInvalidFormat(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_new_code_periods." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeNewCodePeriodsGlobalPreviousVersion(rnd),
+			},
+			{
+				ResourceName:  name,
+				ImportState:   true,
+				ImportStateId: "invalidFormat",
+				ExpectError:   regexp.MustCompile("invalid import ID format"),
 			},
 		},
 	})
