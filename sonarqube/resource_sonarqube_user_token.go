@@ -210,6 +210,9 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 				if d.Get("login_name").(string) != "" || d.Get("name").(string) == "" {
 					errs = append(errs, d.Set("login_name", getTokensResponse.Login))
 				}
+				if d.Get("type").(string) != value.Type {
+					errs = append(errs, d.Set("type", value.Type))
+				}
 				errs = append(errs, d.Set("name", value.Name))
 				if value.ExpirationDate != "" {
 					dateReceived, errTimeParse := time.Parse("2006-01-02T15:04:05-0700", value.ExpirationDate)
