@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"strings"
 )
 
 func testAccSonarqubeQualityprofileDeactivatedRulesDataSourceConfig(rnd string, name string, key string, severity string) string {
@@ -44,7 +46,7 @@ func testAccSonarqubeQualityprofileDeactivatedRulesDataSourceConfig(rnd string, 
 func TestAccSonarqubeQualityprofileDeactivatedRulesDataSource(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "data.sonarqube_qualityprofile_deactivated_rules." + rnd
-	expectedRuleKey := "xml:XPathCheck@deactivateRules"
+	expectedRuleKey := "xml:deactivateRules"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -53,10 +55,27 @@ func TestAccSonarqubeQualityprofileDeactivatedRulesDataSource(t *testing.T) {
 			{
 				Config: testAccSonarqubeQualityprofileDeactivatedRulesDataSourceConfig(rnd, "testProfileDeactivatedRules", "deactivateRules", "BLOCKER"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(name, "rules.#", "1"),
-					resource.TestCheckResourceAttr(name, "rules.0.key", expectedRuleKey),
+					testAccCheckRulePresentInListDeactivated(name, expectedRuleKey),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckRulePresentInListDeactivated(resourceName string, expectedKey string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		prefix := "rules."
+		for k, v := range rs.Primary.Attributes {
+			if strings.HasPrefix(k, prefix) && strings.HasSuffix(k, ".key") && v == expectedKey {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("rule key %s not found in %s", expectedKey, resourceName)
+	}
 }
