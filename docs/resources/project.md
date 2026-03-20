@@ -50,6 +50,7 @@ resource "sonarqube_project" "main" {
 
 ### Read-Only
 
+- `badge_token` (String) The badge token for the project.
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--setting"></a>
