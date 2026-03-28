@@ -17,6 +17,7 @@ type GetBinding struct {
 	Key                   string `json:"key"`
 	Alm                   string `json:"alm"`
 	Repository            string `json:"repository"`
+	Slug                  string `json:"slug,omitempty"`
 	URL                   string `json:"url"`
 	SummaryCommentEnabled bool   `json:"summaryCommentEnabled,omitempty"`
 	Monorepo              bool   `json:"monorepo"`

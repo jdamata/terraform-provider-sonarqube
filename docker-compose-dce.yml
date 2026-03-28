@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   sonarqube:
     image: "sonarqube:${TAG}-app"
@@ -47,10 +45,19 @@ services:
     volumes:
       - search-data-1:/opt/sonarqube/data
     healthcheck:
-        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: >
+          sh -c '
+            URL="http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s";
+            if command -v curl > /dev/null 2>&1; then
+              RESPONSE=$$(curl -s "$$URL");
+            else
+              RESPONSE=$$(wget --no-proxy -qO- "$$URL");
+            fi;
+            echo "$$RESPONSE" | grep -q -e "\"status\":\"green\"" -e "\"status\":\"yellow\"";
+          '
         interval: 25s
         timeout: 1s
-        retries: 3
+        retries: 9
         start_period: 55s
   search-2:
     image: "sonarqube:${TAG}-search"
@@ -71,10 +78,19 @@ services:
     volumes:
       - search-data-2:/opt/sonarqube/data
     healthcheck:
-        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: >
+          sh -c '
+            URL="http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s";
+            if command -v curl > /dev/null 2>&1; then
+              RESPONSE=$$(curl -s "$$URL");
+            else
+              RESPONSE=$$(wget --no-proxy -qO- "$$URL");
+            fi;
+            echo "$$RESPONSE" | grep -q -e "\"status\":\"green\"" -e "\"status\":\"yellow\"";
+          '
         interval: 25s
         timeout: 1s
-        retries: 3
+        retries: 9
         start_period: 55s
   search-3:
     image: "sonarqube:${TAG}-search"
@@ -95,10 +111,19 @@ services:
     volumes:
       - search-data-3:/opt/sonarqube/data
     healthcheck:
-        test: wget --no-proxy -qO- "http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s" | grep -q -e '"status":"green"' -e '"status":"yellow"';  if [ $? -eq 0 ]; then exit 0; else exit 1; fi
+        test: >
+          sh -c '
+            URL="http://$$SONAR_CLUSTER_NODE_NAME:9001/_cluster/health?wait_for_status=yellow&timeout=50s";
+            if command -v curl > /dev/null 2>&1; then
+              RESPONSE=$$(curl -s "$$URL");
+            else
+              RESPONSE=$$(wget --no-proxy -qO- "$$URL");
+            fi;
+            echo "$$RESPONSE" | grep -q -e "\"status\":\"green\"" -e "\"status\":\"yellow\"";
+          '
         interval: 25s
         timeout: 1s
-        retries: 3
+        retries: 9
         start_period: 55s
   db:
     image: postgres:13

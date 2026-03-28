@@ -10,7 +10,7 @@ import (
 
 func TestAccSonarqubeNewCodePeriodsImportUnit(t *testing.T) {
 	rnd := generateRandomResourceName()
-	
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -25,7 +25,7 @@ func TestAccSonarqubeNewCodePeriodsImportUnit(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateId:     "newCodePeriod",
 			},
-			// Test project import  
+			// Test project import
 			{
 				Config: testAccSonarqubeNewCodePeriodsProjectPreviousVersion(rnd + "project"),
 			},
@@ -33,7 +33,7 @@ func TestAccSonarqubeNewCodePeriodsImportUnit(t *testing.T) {
 				ResourceName:      "sonarqube_new_code_periods." + rnd + "project",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     fmt.Sprintf("newCodePeriod/%s", rnd + "project"),
+				ImportStateId:     fmt.Sprintf("newCodePeriod/%s", rnd+"project"),
 			},
 			// Test another project import for variety
 			{
@@ -43,7 +43,7 @@ func TestAccSonarqubeNewCodePeriodsImportUnit(t *testing.T) {
 				ResourceName:      "sonarqube_new_code_periods." + rnd + "project2",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     fmt.Sprintf("newCodePeriod/%s", rnd + "project2"),
+				ImportStateId:     fmt.Sprintf("newCodePeriod/%s", rnd+"project2"),
 			},
 			// Test invalid import format - use Community-compatible PREVIOUS_VERSION
 			{

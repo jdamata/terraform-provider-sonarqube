@@ -3,8 +3,8 @@ package sonarqube
 import (
 	"fmt"
 	"regexp"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -59,7 +59,7 @@ func TestAccSonarqubeNewCodePeriodsGlobalNumberOfDays(t *testing.T) {
 	name := "sonarqube_new_code_periods." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { 
+		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		Providers: testAccProviders,
@@ -221,7 +221,7 @@ func TestAccSonarqubeNewCodePeriodsBranchReferenceBranch(t *testing.T) {
 	name := "sonarqube_new_code_periods." + rnd
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { 
+		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		Providers: testAccProviders,
