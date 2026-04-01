@@ -316,6 +316,34 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
+	// handle project key updates (api/projects/update_key)
+	// MUST happen before other updates that reference the project key
+	if d.HasChange("project") {
+		oldKey, newKey := d.GetChange("project")
+
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_key"
+		sonarQubeURL.RawQuery = url.Values{
+			"from": []string{oldKey.(string)},
+			"to":   []string{newKey.(string)},
+		}.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubeProjectUpdate",
+		)
+		if err != nil {
+			return fmt.Errorf("error updating Sonarqube project key: %+v", err)
+		}
+		defer resp.Body.Close()
+
+		// Update the id like in github provider (https://github.com/integrations/terraform-provider-github/blob/b7e63d63c59b9b1df9c6d05204bdaa1b349e8c8a/github/resource_github_repository.go#L746-L750)
+		d.SetId(newKey.(string))
+	}
+
 	// handle default updates (api/users/update)
 	if d.HasChange("visibility") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
@@ -343,33 +371,6 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
 		}
-	}
-
-	// handle project key updates (api/projects/update_key)
-	if d.HasChange("project") {
-		oldKey, newKey := d.GetChange("project")
-
-		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_key"
-		sonarQubeURL.RawQuery = url.Values{
-			"from": []string{oldKey.(string)},
-			"to":   []string{newKey.(string)},
-		}.Encode()
-
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"POST",
-			sonarQubeURL.String(),
-			http.StatusNoContent,
-			"resourceSonarqubeProjectUpdate",
-		)
-		if err != nil {
-			return fmt.Errorf("error updating Sonarqube project key: %+v", err)
-		}
-		defer resp.Body.Close()
-
-		// Update the id like in github provider (https://github.com/integrations/terraform-provider-github/blob/b7e63d63c59b9b1df9c6d05204bdaa1b349e8c8a/github/resource_github_repository.go#L746-L750)
-		d.SetId(newKey.(string))
 	}
 
 	if d.HasChange("setting") {
