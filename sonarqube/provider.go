@@ -109,6 +109,9 @@ func Provider() *schema.Provider {
 			"sonarqube_alm_bitbucket":                        resourceSonarqubeAlmBitbucket(),
 			"sonarqube_bitbucket_binding":                    resourceSonarqubeBitbucketBinding(),
 			"sonarqube_new_code_periods":                     resourceSonarqubeNewCodePeriodsBinding(),
+			"sonarqube_project_links":                        resourceSonarqubeProjectLinks(),
+			"sonarqube_secured_setting":                      resourceSonarqubeSecuredSetting(),
+			"sonarqube_permission_template_default":          resourceSonarqubePermissionTemplateDefault(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"sonarqube_user":                             dataSourceSonarqubeUser(),
@@ -132,6 +135,7 @@ func Provider() *schema.Provider {
 			"sonarqube_rule":                             dataSourceSonarqubeRule(),
 			"sonarqube_languages":                        dataSourceSonarqubeLanguages(),
 			"sonarqube_permission_templates":             dataSourceSonarqubePermissionTemplates(),
+			"sonarqube_measures":                         dataSourceSonarqubeMeasures(),
 		},
 		ConfigureFunc: configureProvider,
 	}
