@@ -140,8 +140,25 @@ func resourceSonarqubePermissionTemplateDefaultUpdate(d *schema.ResourceData, m 
 }
 
 func resourceSonarqubePermissionTemplateDefaultDelete(d *schema.ResourceData, m interface{}) error {
-	// There is no API endpoint to unset a default template in SonarQube.
-	// Remove the resource from Terraform state only.
+	// Reset to the built-in "Default template" so the custom template can be safely deleted afterwards.
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/set_default_template"
+	sonarQubeURL.RawQuery = url.Values{
+		"templateName": []string{"Default template"},
+		"qualifier":    []string{d.Get("qualifier").(string)},
+	}.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"POST",
+		sonarQubeURL.String(),
+		http.StatusNoContent,
+		"resourceSonarqubePermissionTemplateDefaultDelete",
+	)
+	if err != nil {
+		return fmt.Errorf("resourceSonarqubePermissionTemplateDefaultDelete: Failed to reset default template: %+v", err)
+	}
+	defer resp.Body.Close()
 	return nil
 }
 
