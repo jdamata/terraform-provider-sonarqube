@@ -1,6 +1,6 @@
 module github.com/jdamata/terraform-provider-sonarqube
 
-go 1.24
+go 1.25.8
 
 require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
