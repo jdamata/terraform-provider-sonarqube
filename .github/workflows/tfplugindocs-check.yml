@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix/tfplugindocs-terraform-on-path
   
 jobs:
   tfplugindocs_check:
