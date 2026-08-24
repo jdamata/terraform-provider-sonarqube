@@ -29,6 +29,13 @@ jobs:
           go-version-file: tools/go.mod
           cache-dependency-path: tools/go.sum
 
+      # tfplugindocs uses the terraform binary from PATH; without it, it downloads
+      # one and verifies the signature against an expired HashiCorp PGP key.
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
       - name: Install tools and generate documentation
         run: |
           make tools
