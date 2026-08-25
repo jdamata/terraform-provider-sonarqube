@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Project used in CreateProjectResponse
@@ -73,10 +74,11 @@ func resourceSonarqubeProject() *schema.Resource {
 				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
 			},
 			"visibility": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "public",
-				Description: "Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used. Valid values are `public` and `private`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "public",
+				Description:  "Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used. Valid values are `public` and `private`.",
+				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
 			"tags": {
 				Type:     schema.TypeList,

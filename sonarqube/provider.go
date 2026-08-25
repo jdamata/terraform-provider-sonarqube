@@ -36,13 +36,14 @@ func Provider() *schema.Provider {
 				Optional:     true,
 				Sensitive:    true,
 				RequiredWith: []string{"user"},
+				ExactlyOneOf: []string{"token", "pass"},
 			},
 			"token": {
 				Type:         schema.TypeString,
 				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_TOKEN", "SONARQUBE_TOKEN"}, nil),
 				Optional:     true,
 				Sensitive:    true,
-				ExactlyOneOf: []string{"pass"},
+				ExactlyOneOf: []string{"token", "pass"},
 			},
 			"host": {
 				Type:        schema.TypeString,
@@ -57,6 +58,17 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"INSTALLED_VERSION"}, ""),
 				Optional:    true,
+				ValidateFunc: func(v interface{}, k string) (warnings []string, errors []error) {
+					value := v.(string)
+					if value == "" {
+						return
+					}
+					_, err := version.NewVersion(value)
+					if err != nil {
+						errors = append(errors, fmt.Errorf("%q is not a valid version string: %v", k, err))
+					}
+					return
+				},
 			},
 			"installed_edition": {
 				Type:        schema.TypeString,
