@@ -56,27 +56,66 @@ func resourceSonarqubeProjectMainBranch() *schema.Resource {
 }
 
 func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interface{}) error {
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/rename"
+	project := d.Get("project").(string)
+	name := d.Get("name").(string)
 
-	sonarQubeURL.RawQuery = url.Values{
-		"name":    []string{d.Get("name").(string)},
-		"project": []string{d.Get("project").(string)},
-	}.Encode()
-
-	resp, err := httpRequestHelper(
-		m.(*ProviderConfiguration).httpClient,
-		"POST",
-		sonarQubeURL.String(),
-		http.StatusNoContent,
-		"resourceSonarqubeProjectMainBranchCreate",
-	)
+	// Check if branch already exists
+	branches, err := getProjectBranches(project, m)
 	if err != nil {
-		return err
+		return fmt.Errorf("resourceSonarqubeProjectMainBranchCreate: Failed to get project branches: %w", err)
 	}
-	defer resp.Body.Close()
 
-	id := fmt.Sprintf("%v/%v", d.Get("project").(string), d.Get("name").(string))
+	branchExists := false
+	for _, branch := range branches {
+		if branch.Name == name {
+			branchExists = true
+			break
+		}
+	}
+
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+
+	if branchExists {
+		// If branch exists, set it as main
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/set_main"
+		sonarQubeURL.RawQuery = url.Values{
+			"branch":  []string{name},
+			"project": []string{project},
+		}.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubeProjectMainBranchCreate/SetMain",
+		)
+		if err != nil {
+			return err
+		}
+		resp.Body.Close()
+	} else {
+		// If branch does not exist, rename the current main branch
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/rename"
+		sonarQubeURL.RawQuery = url.Values{
+			"name":    []string{name},
+			"project": []string{project},
+		}.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubeProjectMainBranchCreate/Rename",
+		)
+		if err != nil {
+			return err
+		}
+		resp.Body.Close()
+	}
+
+	id := fmt.Sprintf("%v/%v", project, name)
 	d.SetId(id)
 
 	return resourceSonarqubeProjectMainBranchRead(d, m)
@@ -84,10 +123,30 @@ func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interfac
 
 func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{}) error {
 	idSlice := strings.SplitN(d.Id(), "/", 2)
+	project := idSlice[0]
+	name := idSlice[1]
+
+	branches, err := getProjectBranches(project, m)
+	if err != nil {
+		return err
+	}
+
+	// Loop over all branches to see if the main branch we need exists.
+	for _, value := range branches {
+		if name == value.Name && value.IsMain {
+			errProject := d.Set("project", project)
+			errName := d.Set("name", value.Name)
+			return errors.Join(errProject, errName)
+		}
+	}
+	return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to find project main branch: %+v", d.Id())
+}
+
+func getProjectBranches(project string, m interface{}) ([]Branches, error) {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/list"
 	sonarQubeURL.RawQuery = url.Values{
-		"project": []string{idSlice[0]},
+		"project": []string{project},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
@@ -95,10 +154,10 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 		"GET",
 		sonarQubeURL.String(),
 		http.StatusOK,
-		"resourceSonarqubeProjectMainBranchRead",
+		"getProjectBranches",
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -106,17 +165,10 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 	branchReadResponse := GetBranches{}
 	err = json.NewDecoder(resp.Body).Decode(&branchReadResponse)
 	if err != nil {
-		return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to decode json into struct: %+v", err)
+		return nil, fmt.Errorf("getProjectBranches: Failed to decode json into struct: %+v", err)
 	}
-	// Loop over all branches to see if the main branch we need exists.
-	for _, value := range branchReadResponse.Branches {
-		if idSlice[1] == value.Name && value.IsMain {
-			errProject := d.Set("project", idSlice[0])
-			errName := d.Set("name", value.Name)
-			return errors.Join(errProject, errName)
-		}
-	}
-	return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to find project main branch: %+v", d.Id())
+
+	return branchReadResponse.Branches, nil
 }
 
 // TODO make the delete function read the default branch name of the sonarQube instance instead of assuming
