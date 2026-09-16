@@ -385,15 +385,14 @@ func TestAccSonarqubeProjectSettingsFieldValues(t *testing.T) {
 	rnd := generateRandomResourceName()
 	name := "sonarqube_project." + rnd
 
-	var settingValuesKey string
-	var settingValuesKeyData []string
-	// Some settings are not available in community edition
-	if strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
+	settingValuesKey := "sonar.dbcleaner.branchesToKeepWhenInactive"
+	settingValuesKeyData := []string{"master", "main", "release/*"}
+	// Some settings are not available in community edition. Meta() is only populated once
+	// the provider has been configured, which has not happened when this runs.
+	if testAccProvider != nil && testAccProvider.Meta() != nil &&
+		strings.ToLower(testAccProvider.Meta().(*ProviderConfiguration).sonarQubeEdition) == "community" {
 		settingValuesKey = "sonar.terraform.file.suffixes"
 		settingValuesKeyData = []string{".tf", ".tfvars", ".hcl"}
-	} else {
-		settingValuesKey = "sonar.dbcleaner.branchesToKeepWhenInactive"
-		settingValuesKeyData = []string{"master", "main", "release/*"}
 	}
 
 	resource.Test(t, resource.TestCase{
