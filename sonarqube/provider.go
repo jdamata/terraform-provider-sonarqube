@@ -263,6 +263,10 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 	}
 
 	sonarqubeVersion := gjson.GetBytes(responseData, "System.Version").String()
+	// In DCE, version is not at System.Version but in each application node
+	if sonarqubeVersion == "" {
+		sonarqubeVersion = gjson.GetBytes(responseData, "Application Nodes.0.System.Version").String()
+	}
 	sonarqubeEdition := gjson.GetBytes(responseData, "System.Edition").String()
 	return sonarqubeVersion, sonarqubeEdition, nil
 }
