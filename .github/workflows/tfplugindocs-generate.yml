@@ -24,7 +24,7 @@ jobs:
           repository: '${{ github.event.pull_request.head.repo.full_name }}'
 
       - name: Setup Go with version from tools/go.mod
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: tools/go.mod
           cache-dependency-path: tools/go.sum
