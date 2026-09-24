@@ -40,7 +40,7 @@ jobs:
           make docs
 
       - name: Commit and push generated documentation
-        uses: actions-js/push@v1.5
+        uses: actions-js/push@v1.6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
