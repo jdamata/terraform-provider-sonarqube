@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - master
-  
+  pull_request:
+    branches:
+      - master
+
 jobs:
   tfplugindocs_check:
     name: tfplugindocs check
@@ -12,10 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: tools/go.mod
           cache-dependency-path: tools/go.sum
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_wrapper: false
 
       - run: |
           make tools

@@ -20,7 +20,7 @@ jobs:
       - name: Start Sonarqube dce
         run: docker compose -f docker-compose-dce.yml --env-file ${{ matrix.env }} up -d 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: 1.25
       - name: build and vet the provider
@@ -28,7 +28,7 @@ jobs:
         env:
           GO111MODULE: on
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_wrapper: false
       - name: run acceptance tests
