@@ -226,7 +226,10 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to find user token: %+v", d.Id())
+	// Token was revoked outside Terraform. Clear the ID so the next plan recreates it
+	// instead of failing on refresh.
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) error {
