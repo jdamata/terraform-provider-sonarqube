@@ -65,10 +65,12 @@ func resourceSonarqubeQualityProfileDeactivateRuleCreate(d *schema.ResourceData,
 func resourceSonarqubeQualityProfileDeactivateRuleDelete(d *schema.ResourceData, m interface{}) error {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/activate_rule"
+	// No reset=true here: on a profile that inherits the rule, SonarQube answers 204 to
+	// activate_rule with reset=true but leaves the rule inactive, so the deactivation was
+	// never undone.
 	sonarQubeURL.RawQuery = url.Values{
-		"key":   []string{d.Get("key").(string)},
-		"rule":  []string{d.Get("rule").(string)},
-		"reset": []string{"true"},
+		"key":  []string{d.Get("key").(string)},
+		"rule": []string{d.Get("rule").(string)},
 	}.Encode()
 
 	resp, err := httpRequestHelper(
