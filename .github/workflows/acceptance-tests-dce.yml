@@ -28,7 +28,7 @@ jobs:
         env:
           GO111MODULE: on
       - name: Setup terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_wrapper: false
       - name: run acceptance tests
