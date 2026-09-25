@@ -210,6 +210,9 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 				if d.Get("login_name").(string) != "" || d.Get("name").(string) == "" {
 					errs = append(errs, d.Set("login_name", getTokensResponse.Login))
 				}
+				if d.Get("type").(string) != value.Type {
+					errs = append(errs, d.Set("type", value.Type))
+				}
 				errs = append(errs, d.Set("name", value.Name))
 				if value.ExpirationDate != "" {
 					dateReceived, errTimeParse := time.Parse("2006-01-02T15:04:05-0700", value.ExpirationDate)
@@ -223,7 +226,10 @@ func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to find user token: %+v", d.Id())
+	// Token was revoked outside Terraform. Clear the ID so the next plan recreates it
+	// instead of failing on refresh.
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeUserTokenDelete(d *schema.ResourceData, m interface{}) error {

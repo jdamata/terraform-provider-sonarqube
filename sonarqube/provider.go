@@ -36,13 +36,14 @@ func Provider() *schema.Provider {
 				Optional:     true,
 				Sensitive:    true,
 				RequiredWith: []string{"user"},
+				ExactlyOneOf: []string{"token", "pass"},
 			},
 			"token": {
 				Type:         schema.TypeString,
 				DefaultFunc:  schema.MultiEnvDefaultFunc([]string{"SONAR_TOKEN", "SONARQUBE_TOKEN"}, nil),
 				Optional:     true,
 				Sensitive:    true,
-				ExactlyOneOf: []string{"pass"},
+				ExactlyOneOf: []string{"token", "pass"},
 			},
 			"host": {
 				Type:        schema.TypeString,
@@ -57,6 +58,17 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"INSTALLED_VERSION"}, ""),
 				Optional:    true,
+				ValidateFunc: func(v interface{}, k string) (warnings []string, errors []error) {
+					value := v.(string)
+					if value == "" {
+						return
+					}
+					_, err := version.NewVersion(value)
+					if err != nil {
+						errors = append(errors, fmt.Errorf("%q is not a valid version string: %v", k, err))
+					}
+					return
+				},
 			},
 			"installed_edition": {
 				Type:        schema.TypeString,
@@ -101,28 +113,41 @@ func Provider() *schema.Provider {
 			"sonarqube_rule":                                 resourceSonarqubeRule(),
 			"sonarqube_setting":                              resourceSonarqubeSettings(),
 			"sonarqube_qualityprofile_activate_rule":         resourceSonarqubeQualityProfileRule(),
+			"sonarqube_qualityprofile_deactivate_rule":       resourceSonarqubeQualityProfileDeactivateRule(),
 			"sonarqube_alm_github":                           resourceSonarqubeAlmGithub(),
 			"sonarqube_github_binding":                       resourceSonarqubeGithubBinding(),
 			"sonarqube_alm_gitlab":                           resourceSonarqubeAlmGitlab(),
 			"sonarqube_gitlab_binding":                       resourceSonarqubeGitlabBinding(),
+			"sonarqube_alm_bitbucket":                        resourceSonarqubeAlmBitbucket(),
+			"sonarqube_bitbucket_binding":                    resourceSonarqubeBitbucketBinding(),
 			"sonarqube_new_code_periods":                     resourceSonarqubeNewCodePeriodsBinding(),
+			"sonarqube_project_links":                        resourceSonarqubeProjectLinks(),
+			"sonarqube_secured_setting":                      resourceSonarqubeSecuredSetting(),
+			"sonarqube_permission_template_default":          resourceSonarqubePermissionTemplateDefault(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"sonarqube_user":                 dataSourceSonarqubeUser(),
-			"sonarqube_users":                dataSourceSonarqubeUsers(),
-			"sonarqube_user_tokens":          dataSourceSonarqubeUserTokens(),
-			"sonarqube_group":                dataSourceSonarqubeGroup(),
-			"sonarqube_groups":               dataSourceSonarqubeGroups(),
-			"sonarqube_group_members":        dataSourceSonarqubeGroupMembers(),
-			"sonarqube_project":              dataSourceSonarqubeProject(),
-			"sonarqube_portfolio":            dataSourceSonarqubePortfolio(),
-			"sonarqube_qualityprofile":       dataSourceSonarqubeQualityProfile(),
-			"sonarqube_qualityprofiles":      dataSourceSonarqubeQualityProfiles(),
-			"sonarqube_qualitygate":          dataSourceSonarqubeQualityGate(),
-			"sonarqube_qualitygates":         dataSourceSonarqubeQualityGates(),
-			"sonarqube_rule":                 dataSourceSonarqubeRule(),
-			"sonarqube_languages":            dataSourceSonarqubeLanguages(),
-			"sonarqube_permission_templates": dataSourceSonarqubePermissionTemplates(),
+			"sonarqube_user":                             dataSourceSonarqubeUser(),
+			"sonarqube_users":                            dataSourceSonarqubeUsers(),
+			"sonarqube_user_tokens":                      dataSourceSonarqubeUserTokens(),
+			"sonarqube_group":                            dataSourceSonarqubeGroup(),
+			"sonarqube_groups":                           dataSourceSonarqubeGroups(),
+			"sonarqube_group_members":                    dataSourceSonarqubeGroupMembers(),
+			"sonarqube_project":                          dataSourceSonarqubeProject(),
+			"sonarqube_portfolio":                        dataSourceSonarqubePortfolio(),
+			"sonarqube_qualityprofile":                   dataSourceSonarqubeQualityProfile(),
+			"sonarqube_qualityprofiles":                  dataSourceSonarqubeQualityProfiles(),
+			"sonarqube_qualityprofile_active_rules":      dataSourceSonarqubeQualityProfileActiveRules(),
+			"sonarqube_qualityprofile_deactivated_rules": dataSourceSonarqubeQualityProfileDeactivatedRules(),
+			"sonarqube_alm_azure":                        dataSourceSonarqubeAlmAzure(),
+			"sonarqube_alm_github":                       dataSourceSonarqubeAlmGithub(),
+			"sonarqube_alm_gitlab":                       dataSourceSonarqubeAlmGitlab(),
+			"sonarqube_alm_bitbucket":                    dataSourceSonarqubeAlmBitbucket(),
+			"sonarqube_qualitygate":                      dataSourceSonarqubeQualityGate(),
+			"sonarqube_qualitygates":                     dataSourceSonarqubeQualityGates(),
+			"sonarqube_rule":                             dataSourceSonarqubeRule(),
+			"sonarqube_languages":                        dataSourceSonarqubeLanguages(),
+			"sonarqube_permission_templates":             dataSourceSonarqubePermissionTemplates(),
+			"sonarqube_measures":                         dataSourceSonarqubeMeasures(),
 		},
 		ConfigureFunc: configureProvider,
 	}
@@ -238,6 +263,10 @@ func sonarqubeSystemInfo(client *retryablehttp.Client, sonarqube url.URL) (strin
 	}
 
 	sonarqubeVersion := gjson.GetBytes(responseData, "System.Version").String()
+	// In DCE, version is not at System.Version but in each application node
+	if sonarqubeVersion == "" {
+		sonarqubeVersion = gjson.GetBytes(responseData, "Application Nodes.0.System.Version").String()
+	}
 	sonarqubeEdition := gjson.GetBytes(responseData, "System.Edition").String()
 	return sonarqubeVersion, sonarqubeEdition, nil
 }

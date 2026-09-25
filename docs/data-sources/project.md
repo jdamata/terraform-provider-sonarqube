@@ -27,6 +27,7 @@ data "sonarqube_project" "project" {
 
 ### Read-Only
 
+- `badge_token` (String) The badge token for the project.
 - `id` (String) The ID of this resource.
 - `name` (String) Name of the project
 - `visibility` (String) Project visibility
