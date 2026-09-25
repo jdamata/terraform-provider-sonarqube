@@ -17,4 +17,13 @@ description: |-
 ### Example: create a project and set its new code period to a reference branch
 {{ tffile "examples/resources/sonarqube_new_code_periods/project.tf" }}
 
+### Example: set a branch-specific new code period
+{{ tffile "examples/resources/sonarqube_new_code_periods/branch.tf" }}
+
 {{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ tffile "examples/resources/sonarqube_new_code_periods/import.sh" }}

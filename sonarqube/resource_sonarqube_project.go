@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // Project used in CreateProjectResponse
@@ -34,11 +35,17 @@ type ProjectComponent struct {
 	Version      string   `json:"version"`
 	Tags         []string `json:"tags,omitempty"`
 	Visibility   string   `json:"visibility"`
+	BadgeToken   string   `json:"token,omitempty"`
 }
 
 // CreateProjectResponse for unmarshalling response body of project creation
 type CreateProjectResponse struct {
 	Project Project `json:"project"`
+}
+
+// BadgeTokenResponse for unmarshalling response body of badge token endpoint
+type BadgeTokenResponse struct {
+	Token string `json:"token"`
 }
 
 // Returns the resource represented by this file.
@@ -67,10 +74,11 @@ func resourceSonarqubeProject() *schema.Resource {
 				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
 			},
 			"visibility": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "public",
-				Description: "Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used. Valid values are `public` and `private`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "public",
+				Description:  "Whether the created project should be visible to everyone, or only specific user/groups. If no visibility is specified, the default project visibility of the organization will be used. Valid values are `public` and `private`.",
+				ValidateFunc: validation.StringInSlice([]string{"public", "private"}, false),
 			},
 			"tags": {
 				Type:     schema.TypeList,
@@ -80,6 +88,11 @@ func resourceSonarqubeProject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Description: "A list of tags to put on the project.",
+			},
+			"badge_token": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The badge token for the project.",
 			},
 			"setting": {
 				Type:        schema.TypeList,
@@ -224,11 +237,41 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode json into struct: %+v", err)
 	}
 
+	// Get badge token
+	badgeTokenURL := m.(*ProviderConfiguration).sonarQubeURL
+	badgeTokenURL.Path = strings.TrimSuffix(badgeTokenURL.Path, "/") + "/api/project_badges/token"
+	badgeTokenURL.RawQuery = url.Values{
+		"project": []string{d.Get("project").(string)},
+	}.Encode()
+
+	badgeResp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"GET",
+		badgeTokenURL.String(),
+		http.StatusOK,
+		"resourceSonarqubeProjectRead",
+	)
+	if err != nil {
+		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to get badge token: %+v", err)
+	}
+	defer badgeResp.Body.Close()
+
+	// Decode badge token response
+	badgeTokenResponse := BadgeTokenResponse{}
+	err = json.NewDecoder(badgeResp.Body).Decode(&badgeTokenResponse)
+	if err != nil {
+		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode badge token json: %+v", err)
+	}
+
+	// Set the token in the project component
+	projectReadResponse.Component.BadgeToken = badgeTokenResponse.Token
+
 	d.SetId(projectReadResponse.Component.Key)
 	errName := d.Set("name", projectReadResponse.Component.Name)
 	errProject := d.Set("project", projectReadResponse.Component.Key)
 	errVisibility := d.Set("visibility", projectReadResponse.Component.Visibility)
-	if err := errors.Join(errName, errProject, errVisibility); err != nil {
+	errToken := d.Set("badge_token", projectReadResponse.Component.BadgeToken)
+	if err := errors.Join(errName, errProject, errVisibility, errToken); err != nil {
 		return err
 	}
 
@@ -275,6 +318,34 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
+	// handle project key updates (api/projects/update_key)
+	// MUST happen before other updates that reference the project key
+	if d.HasChange("project") {
+		oldKey, newKey := d.GetChange("project")
+
+		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_key"
+		sonarQubeURL.RawQuery = url.Values{
+			"from": []string{oldKey.(string)},
+			"to":   []string{newKey.(string)},
+		}.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"POST",
+			sonarQubeURL.String(),
+			http.StatusNoContent,
+			"resourceSonarqubeProjectUpdate",
+		)
+		if err != nil {
+			return fmt.Errorf("error updating Sonarqube project key: %+v", err)
+		}
+		defer resp.Body.Close()
+
+		// Update the id like in github provider (https://github.com/integrations/terraform-provider-github/blob/b7e63d63c59b9b1df9c6d05204bdaa1b349e8c8a/github/resource_github_repository.go#L746-L750)
+		d.SetId(newKey.(string))
+	}
+
 	// handle default updates (api/users/update)
 	if d.HasChange("visibility") {
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
@@ -302,33 +373,6 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
 		}
-	}
-
-	// handle project key updates (api/projects/update_key)
-	if d.HasChange("project") {
-		oldKey, newKey := d.GetChange("project")
-
-		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/projects/update_key"
-		sonarQubeURL.RawQuery = url.Values{
-			"from": []string{oldKey.(string)},
-			"to":   []string{newKey.(string)},
-		}.Encode()
-
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"POST",
-			sonarQubeURL.String(),
-			http.StatusNoContent,
-			"resourceSonarqubeProjectUpdate",
-		)
-		if err != nil {
-			return fmt.Errorf("error updating Sonarqube project key: %+v", err)
-		}
-		defer resp.Body.Close()
-
-		// Update the id like in github provider (https://github.com/integrations/terraform-provider-github/blob/b7e63d63c59b9b1df9c6d05204bdaa1b349e8c8a/github/resource_github_repository.go#L746-L750)
-		d.SetId(newKey.(string))
 	}
 
 	if d.HasChange("setting") {

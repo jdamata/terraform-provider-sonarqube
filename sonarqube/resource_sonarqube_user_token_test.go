@@ -2,6 +2,9 @@ package sonarqube
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -44,6 +47,7 @@ func TestAccSonarqubeUserTokenBasic(t *testing.T) {
 				Config: testAccSonarqubeUserTokenBasicConfig(rnd, "testAccSonarqubeUserToken"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserToken"),
+					resource.TestCheckResourceAttr(name, "type", string(UserToken)),
 				),
 			},
 		},
@@ -78,6 +82,7 @@ func TestAccSonarqubeUserTokenWithExpirationDate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenWithExpirationDate"),
 					resource.TestCheckResourceAttr(name, "expiration_date", expiration_date),
+					resource.TestCheckResourceAttr(name, "type", string(UserToken)),
 				),
 			},
 		},
@@ -108,6 +113,7 @@ func TestAccSonarqubeUserTokenNoLogin(t *testing.T) {
 				Config: testAccSonarqubeUserTokenNoLoginConfig(rnd, "testAccSonarqubeUserTokenNoLogin"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenNoLogin"),
+					resource.TestCheckResourceAttr(name, "type", string(UserToken)),
 				),
 			},
 		},
@@ -139,7 +145,7 @@ func TestAccSonarqubeUserTokenGlobalAnalysisToken(t *testing.T) {
 				Config: testAccSonarqubeUserTokenGlobalAnalysisTokenConfig(rnd, "testAccSonarqubeUserTokenGlobalAnalysisToken"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenGlobalAnalysisToken"),
-					resource.TestCheckResourceAttr(name, "type", "GLOBAL_ANALYSIS_TOKEN"),
+					resource.TestCheckResourceAttr(name, "type", string(GlobalAnalysisToken)),
 				),
 			},
 		},
@@ -177,9 +183,50 @@ func TestAccSonarqubeUserTokenProjectAnalysisToken(t *testing.T) {
 				Config: testAccSonarqubeUserTokenProjectAnalysisTokenConfig(rnd, "testAccSonarqubeUserTokenProjectAnalysisToken"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "testAccSonarqubeUserTokenProjectAnalysisToken"),
-					resource.TestCheckResourceAttr(name, "type", "PROJECT_ANALYSIS_TOKEN"),
+					resource.TestCheckResourceAttr(name, "type", string(ProjectAnalysisToken)),
 				),
 			},
 		},
 	})
+}
+
+func TestAccSonarqubeUserTokenRevokedOutOfBand(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_user_token." + rnd
+	tokenName := "testAccSonarqubeUserTokenRevokedOutOfBand"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeUserTokenBasicConfig(rnd, tokenName),
+				Check:  resource.TestCheckResourceAttr(name, "name", tokenName),
+			},
+			{
+				// Revoke behind Terraform's back, then refresh. Before the fix this step
+				// failed with "Failed to find user token"; now the resource drops out of
+				// state and the plan proposes recreating it.
+				PreConfig:          func() { testAccRevokeUserToken(t, tokenName, tokenName) },
+				Config:             testAccSonarqubeUserTokenBasicConfig(rnd, tokenName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccRevokeUserToken(t *testing.T, login string, tokenName string) {
+	conf := testAccProvider.Meta().(*ProviderConfiguration)
+	sonarQubeURL := conf.sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_tokens/revoke"
+	sonarQubeURL.RawQuery = url.Values{
+		"login": []string{login},
+		"name":  []string{tokenName},
+	}.Encode()
+	resp, err := httpRequestHelper(conf.httpClient, "POST", sonarQubeURL.String(), http.StatusNoContent, "testAccRevokeUserToken")
+	if err != nil {
+		t.Fatalf("revoking token out of band: %v", err)
+	}
+	defer resp.Body.Close()
 }

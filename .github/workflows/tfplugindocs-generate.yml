@@ -24,10 +24,15 @@ jobs:
           repository: '${{ github.event.pull_request.head.repo.full_name }}'
 
       - name: Setup Go with version from tools/go.mod
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: tools/go.mod
           cache-dependency-path: tools/go.sum
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_wrapper: false
 
       - name: Install tools and generate documentation
         run: |
@@ -35,7 +40,7 @@ jobs:
           make docs
 
       - name: Commit and push generated documentation
-        uses: actions-js/push@v1.5
+        uses: actions-js/push@v1.6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.head_ref }}
