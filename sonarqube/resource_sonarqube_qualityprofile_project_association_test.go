@@ -123,6 +123,11 @@ func TestAccSonarqubeQualityProfileProjectAssociationSonarWay(t *testing.T) {
 // testAccSonarqubeDirectRequest calls the SonarQube API with the test credentials. It does not
 // go through the provider, so it works before the provider has been configured.
 func testAccSonarqubeDirectRequest(t *testing.T, method string, path string, params url.Values, expectedStatus int) []byte {
+	// Callers run this before resource.Test, which is what normally skips acceptance tests
+	// when TF_ACC is unset, so without this check plain go test ./... fails here.
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("acceptance test: set TF_ACC to run")
+	}
 	testAccPreCheck(t)
 	target := strings.TrimSuffix(os.Getenv("SONAR_HOST"), "/") + path + "?" + params.Encode()
 	req, err := http.NewRequest(method, target, http.NoBody)
