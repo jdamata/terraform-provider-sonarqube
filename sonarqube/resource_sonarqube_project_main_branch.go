@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -66,17 +67,26 @@ func resourceSonarqubeProjectMainBranchCreate(d *schema.ResourceData, m interfac
 	}
 
 	branchExists := false
+	alreadyMain := false
 	for _, branch := range branches {
 		if branch.Name == name {
 			branchExists = true
+			alreadyMain = branch.IsMain
 			break
 		}
 	}
 
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	conf := m.(*ProviderConfiguration)
+	sonarQubeURL := conf.sonarQubeURL
 
-	if branchExists {
-		// If branch exists, set it as main
+	if alreadyMain {
+		// Nothing to change. Calling set_main here would also fail below 10.2, where the
+		// endpoint does not exist, even though the desired state is already in place.
+	} else if branchExists {
+		setMainMinimumVersion, _ := version.NewVersion("10.2")
+		if conf.sonarQubeVersion.LessThan(setMainMinimumVersion) {
+			return fmt.Errorf("resourceSonarqubeProjectMainBranchCreate: branch %q already exists in project %q; making an existing branch the main branch requires SonarQube 10.2 or later (running %s)", name, project, conf.sonarQubeVersion)
+		}
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/project_branches/set_main"
 		sonarQubeURL.RawQuery = url.Values{
 			"branch":  []string{name},
