@@ -140,6 +140,14 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 		}
 	}
 
+	// The profile no longer exists, so neither can the association. This also happens when a
+	// SonarQube upgrade renames a built-in profile, e.g. 2026.5 commercial editions split
+	// "Sonar way" into "Sonar way core", "Sonar way extended" and "Sonar way comprehensive".
+	if qualityProfileID == "" {
+		d.SetId("")
+		return nil
+	}
+
 	// With the qualityProfileID we can check if the project name is associated
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURLSubPath, "/") + "/api/qualityprofiles/projects"
 	sonarQubeURL.RawQuery = url.Values{
@@ -177,7 +185,8 @@ func resourceSonarqubeQualityProfileProjectAssociationRead(d *schema.ResourceDat
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubeQualityProfileProjectAssociationRead: Failed to find project association: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeQualityProfileProjectAssociationDelete(d *schema.ResourceData, m interface{}) error {
@@ -197,6 +206,11 @@ func resourceSonarqubeQualityProfileProjectAssociationDelete(d *schema.ResourceD
 		"resourceSonarqubeQualityProfileProjectAssociationDelete",
 	)
 	if err != nil {
+		// The profile is already gone, so the association went with it.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("resourceSonarqubeQualityProfileProjectAssociationDelete: Failed to delete quality profile: %+v", err)
 	}
 	defer resp.Body.Close()
