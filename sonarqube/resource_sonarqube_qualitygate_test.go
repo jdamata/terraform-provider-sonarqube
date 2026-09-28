@@ -310,3 +310,77 @@ func checkSonarWayIsDefault(s *terraform.State) error {
 	}
 	return nil
 }
+
+// Conditions in an order that is not alphabetical by metric, which is what the API returns.
+func testAccSonarqubeQualitygateConditionOrderConfig(rnd string, name string, metrics []string) string {
+	conditions := ""
+	for _, metric := range metrics {
+		conditions += fmt.Sprintf(`
+			condition {
+				metric    = "%s"
+				op        = "GT"
+				threshold = "1"
+			}
+`, metric)
+	}
+	return fmt.Sprintf(`
+		resource "sonarqube_qualitygate" "%[1]s" {
+			name = "%[2]s"
+			%[3]s
+		}`, rnd, name, conditions)
+}
+
+// The harness plans again after every apply and fails the step if the plan is not empty, so a
+// gate whose conditions are not listed alphabetically used to fail right here (#282). The
+// second step reorders the same conditions, which must also settle without a diff.
+func TestAccSonarqubeQualitygateConditionOrder(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_qualitygate." + rnd
+	gate := "testAccSonarqubeQualitygateConditionOrder"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubeQualitygateConditionOrderConfig(rnd, gate, []string{"reliability_rating", "new_security_rating", "new_maintainability_rating"}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "condition.0.metric", "reliability_rating"),
+					resource.TestCheckResourceAttr(name, "condition.1.metric", "new_security_rating"),
+					resource.TestCheckResourceAttr(name, "condition.2.metric", "new_maintainability_rating"),
+				),
+			},
+			{
+				Config: testAccSonarqubeQualitygateConditionOrderConfig(rnd, gate, []string{"new_maintainability_rating", "reliability_rating", "new_security_rating"}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "condition.0.metric", "new_maintainability_rating"),
+					resource.TestCheckResourceAttr(name, "condition.1.metric", "reliability_rating"),
+					resource.TestCheckResourceAttr(name, "condition.2.metric", "new_security_rating"),
+				),
+			},
+		},
+	})
+}
+
+func TestOrderConditionsLike(t *testing.T) {
+	api := []ReadQualityGateConditionsResponse{{Metric: "a"}, {Metric: "b"}, {Metric: "c"}, {Metric: "d"}}
+	current := []interface{}{
+		map[string]interface{}{"metric": "c"},
+		map[string]interface{}{"metric": "a"},
+	}
+	got := orderConditionsLike(api, current)
+	var metrics []string
+	for _, c := range got {
+		metrics = append(metrics, c.Metric)
+	}
+	// Known metrics in current's order, then the rest in the API's order.
+	if want := "c,a,b,d"; strings.Join(metrics, ",") != want {
+		t.Fatalf("got %s, want %s", strings.Join(metrics, ","), want)
+	}
+	if api[0].Metric != "a" {
+		t.Fatal("input slice was modified")
+	}
+	if got := orderConditionsLike(api, nil); got[0].Metric != "a" || got[3].Metric != "d" {
+		t.Fatal("with no current order the API's order must be kept")
+	}
+}
