@@ -34,9 +34,7 @@ $ make -i testacc
 
 ## Generate documentation
 
-Documentation is generated using `tfplugindocs`. These are auto-generated when creating a PR to the project. 
-
-If you wish to generate documentation locally to verify it's accuracy, run the following commands:
+Documentation is generated using `tfplugindocs`. CI fails if the committed docs are out of date, so regenerate them and commit the result whenever you change a resource schema, description or example:
 
 ```sh
 $ make tools
