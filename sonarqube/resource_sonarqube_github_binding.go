@@ -133,6 +133,13 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 		"resourceSonarqubeGithubBindingRead",
 	)
 	if err != nil {
+		// get_binding answers 404 both when the project is no longer bound and when the
+		// project itself no longer exists, e.g. after it was recreated.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -154,7 +161,8 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 
 		return errors.Join(errs...)
 	}
-	return fmt.Errorf("resourceSonarqubeGithubBindingRead: Failed to find github binding: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeGithubBindingDelete(d *schema.ResourceData, m interface{}) error {
@@ -176,6 +184,11 @@ func resourceSonarqubeGithubBindingDelete(d *schema.ResourceData, m interface{})
 		"resourceSonarqubeGithubBindingDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()

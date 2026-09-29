@@ -116,7 +116,8 @@ func resourceSonarqubeAlmBitbucketRead(d *schema.ResourceData, m interface{}) er
 			return errors.Join(errKey, errUrl)
 		}
 	}
-	return fmt.Errorf("resourceSonarqubeAlmBitbucketRead: Failed to find bitbucket alm setting: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeAlmBitbucketUpdate(d *schema.ResourceData, m interface{}) error {
@@ -159,6 +160,11 @@ func resourceSonarqubeAlmBitbucketDelete(d *schema.ResourceData, m interface{}) 
 		"resourceSonarqubeAlmBitbucketDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
