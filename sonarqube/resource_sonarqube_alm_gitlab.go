@@ -116,7 +116,8 @@ func resourceSonarqubeAlmGitlabRead(d *schema.ResourceData, m interface{}) error
 			return errors.Join(errKey, errUrl)
 		}
 	}
-	return fmt.Errorf("resourceSonarqubeGitlabBindingRead: Failed to find gitlab binding: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeAlmGitlabUpdate(d *schema.ResourceData, m interface{}) error {
@@ -159,6 +160,11 @@ func resourceSonarqubeAlmGitlabDelete(d *schema.ResourceData, m interface{}) err
 		"resourceSonarqubeAlmGitlabDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()

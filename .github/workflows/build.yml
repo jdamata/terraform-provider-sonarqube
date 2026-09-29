@@ -18,3 +18,5 @@ jobs:
         run: make
         env:
           GO111MODULE: on
+      - name: unit tests
+        run: go test ./...
