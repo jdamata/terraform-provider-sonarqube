@@ -126,7 +126,8 @@ func resourceSonarqubeAlmAzureRead(d *schema.ResourceData, m interface{}) error 
 			return errors.Join(errKey, errURL)
 		}
 	}
-	return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to find azure binding: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeAlmAzureUpdate(d *schema.ResourceData, m interface{}) error {
@@ -173,6 +174,11 @@ func resourceSonarqubeAlmAzureDelete(d *schema.ResourceData, m interface{}) erro
 		"resourceSonarqubeAlmAzureDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()

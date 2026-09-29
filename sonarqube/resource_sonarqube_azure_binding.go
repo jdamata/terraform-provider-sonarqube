@@ -137,6 +137,13 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 		"resourceSonarqubeAzureBindingRead",
 	)
 	if err != nil {
+		// get_binding answers 404 both when the project is no longer bound and when the
+		// project itself no longer exists, e.g. after it was recreated.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -160,7 +167,8 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 
 		return errors.Join(errs...)
 	}
-	return fmt.Errorf("resourceSonarqubeAzureBindingRead: Failed to find azure binding: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeAzureBindingDelete(d *schema.ResourceData, m interface{}) error {
@@ -182,6 +190,11 @@ func resourceSonarqubeAzureBindingDelete(d *schema.ResourceData, m interface{}) 
 		"resourceSonarqubeAzureBindingDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()

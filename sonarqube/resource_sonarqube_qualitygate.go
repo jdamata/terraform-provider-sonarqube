@@ -378,11 +378,6 @@ func synchronizeConditions(d *schema.ResourceData, m interface{}, apiQualityGate
 	changed := false
 	qualityGateConditions := d.Get("condition").([]interface{})
 
-	// Make sure the order is always the same for when we are comparing lists of conditions
-	sort.Slice(qualityGateConditions, func(i, j int) bool {
-		return qualityGateConditions[i].(map[string]interface{})["metric"].(string) < qualityGateConditions[j].(map[string]interface{})["metric"].(string)
-	})
-
 	// Determine which conditions have been added or changed and update those
 	for i, condition := range qualityGateConditions {
 		conditionId, err := addOrUpdateCondition(d, m, apiQualityGateConditions, condition, &changed)
@@ -463,7 +458,8 @@ func updateResourceDataFromQualityGateReadResponse(d *schema.ResourceData, quali
 	errs = append(errs, d.Set("name", qualityGateReadResponse.Name))
 	// Copied gates do not have condition blocks so we don't want to populate from the API.
 	if _, copiedGate := d.GetOk("copy_from"); !copiedGate {
-		errs = append(errs, d.Set("condition", flattenReadQualityGateConditionsResponse(&qualityGateReadResponse.Conditions)))
+		conditions := orderConditionsLike(qualityGateReadResponse.Conditions, d.Get("condition").([]interface{}))
+		errs = append(errs, d.Set("condition", flattenReadQualityGateConditionsResponse(&conditions)))
 	}
 	return errors.Join(errs...)
 }
@@ -571,6 +567,34 @@ func updateQualityGateName(d *schema.ResourceData, m interface{}) error {
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+// orderConditionsLike returns the API conditions in the order their metrics appear in current,
+// which is the configuration during create and update and the prior state during refresh.
+// condition is a list, so it is compared by position: without this the API's alphabetical
+// order shows up as a permanent diff whenever the configuration lists metrics differently.
+// A metric can only appear once per gate, so it identifies a condition. Conditions not in
+// current, such as ones added outside Terraform, keep the API's order at the end.
+func orderConditionsLike(api []ReadQualityGateConditionsResponse, current []interface{}) []ReadQualityGateConditionsResponse {
+	position := make(map[string]int, len(current))
+	for i, c := range current {
+		if condition, ok := c.(map[string]interface{}); ok {
+			if metric, ok := condition["metric"].(string); ok {
+				position[metric] = i
+			}
+		}
+	}
+	ordered := make([]ReadQualityGateConditionsResponse, len(api))
+	copy(ordered, api)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		pi, iKnown := position[ordered[i].Metric]
+		pj, jKnown := position[ordered[j].Metric]
+		if iKnown && jKnown {
+			return pi < pj
+		}
+		return iKnown && !jKnown
+	})
+	return ordered
 }
 
 func flattenReadQualityGateConditionsResponse(input *[]ReadQualityGateConditionsResponse) []interface{} {
