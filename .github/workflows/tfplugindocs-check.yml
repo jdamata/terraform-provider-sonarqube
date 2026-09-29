@@ -28,4 +28,4 @@ jobs:
           make tools
           make docs
           git add -N docs/
-          git diff --exit-code
+          git diff --exit-code || { echo "::error::Generated docs are out of date. Run 'make docs' and commit the result."; exit 1; }
