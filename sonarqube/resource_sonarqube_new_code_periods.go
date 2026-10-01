@@ -138,38 +138,33 @@ func resourceSonarqubeNewCodePeriodsCreate(d *schema.ResourceData, m interface{}
 }
 
 func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) error {
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/new_code_periods/show"
-
-	rawQuery := url.Values{}
 	branch := d.Get("branch").(string)
-	if branch != "" {
-		rawQuery.Add("branch", branch)
-	}
 	project := d.Get("project").(string)
-	if project != "" {
-		rawQuery.Add("project", project)
-	}
-	sonarQubeURL.RawQuery = rawQuery.Encode()
 
-	resp, err := httpRequestHelper(
-		m.(*ProviderConfiguration).httpClient,
-		"GET",
-		sonarQubeURL.String(),
-		http.StatusOK,
-		"resourceSonarqubeNewCodePeriodsRead",
-	)
+	NewCodePeriodsReadResponse, err := showNewCodePeriod(m, project, branch)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	// Decode response into struct
-	NewCodePeriodsReadResponse := NewCodePeriod{}
-	err = json.NewDecoder(resp.Body).Decode(&NewCodePeriodsReadResponse)
-	if err != nil {
-		return fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to decode json into struct: %+v", err)
+	// Community edition has no project-level setting: a project-level set is stored on the main
+	// branch, and the project level keeps reporting the inherited default.
+	if branch == "" && project != "" && NewCodePeriodsReadResponse.Inherited {
+		mainBranch, err := projectMainBranchName(project, m)
+		if err != nil {
+			return err
+		}
+		if mainBranch != "" {
+			mainBranchPeriod, err := showNewCodePeriod(m, project, mainBranch)
+			if err != nil {
+				return err
+			}
+			if !mainBranchPeriod.Inherited {
+				mainBranchPeriod.Branch = ""
+				NewCodePeriodsReadResponse = mainBranchPeriod
+			}
+		}
 	}
+
 	// Check that the project and branch match
 	if branch == NewCodePeriodsReadResponse.Branch && project == NewCodePeriodsReadResponse.Project {
 
@@ -193,6 +188,51 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	return fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to find new code period: %+v", d.Id())
+}
+
+func showNewCodePeriod(m interface{}, project string, branch string) (NewCodePeriod, error) {
+	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
+	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/new_code_periods/show"
+
+	rawQuery := url.Values{}
+	if branch != "" {
+		rawQuery.Add("branch", branch)
+	}
+	if project != "" {
+		rawQuery.Add("project", project)
+	}
+	sonarQubeURL.RawQuery = rawQuery.Encode()
+
+	resp, err := httpRequestHelper(
+		m.(*ProviderConfiguration).httpClient,
+		"GET",
+		sonarQubeURL.String(),
+		http.StatusOK,
+		"resourceSonarqubeNewCodePeriodsRead",
+	)
+	if err != nil {
+		return NewCodePeriod{}, err
+	}
+	defer resp.Body.Close()
+
+	period := NewCodePeriod{}
+	if err := json.NewDecoder(resp.Body).Decode(&period); err != nil {
+		return NewCodePeriod{}, fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to decode json into struct: %+v", err)
+	}
+	return period, nil
+}
+
+func projectMainBranchName(project string, m interface{}) (string, error) {
+	branches, err := getProjectBranches(project, m)
+	if err != nil {
+		return "", err
+	}
+	for _, b := range branches {
+		if b.IsMain {
+			return b.Name, nil
+		}
+	}
+	return "", nil
 }
 
 func resourceSonarqubeNewCodePeriodsDelete(d *schema.ResourceData, m interface{}) error {
