@@ -8,6 +8,8 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
 jobs:
   tfplugindocs_check:
     name: tfplugindocs check
