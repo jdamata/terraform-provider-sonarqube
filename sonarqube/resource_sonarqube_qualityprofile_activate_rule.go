@@ -130,6 +130,11 @@ func resourceSonarqubeQualityProfileRuleDelete(d *schema.ResourceData, m interfa
 		"resourceSonarqubeQualityProfileRuleDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("resourceSonarqubeQualityProfileRuleDelete: Failed to delete quality profile: %+v", err)
 	}
 	defer resp.Body.Close()
@@ -152,6 +157,11 @@ func resourceSonarqubeQualityProfileRuleRead(d *schema.ResourceData, m interface
 		"resourceSonarqubeQualityProfileRuleRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -167,7 +177,8 @@ func resourceSonarqubeQualityProfileRuleRead(d *schema.ResourceData, m interface
 		return nil
 	}
 
-	return fmt.Errorf("resourceSonarqubeQualityProfileRuleRead: Failed to find project: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeQualityProfileRuleImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

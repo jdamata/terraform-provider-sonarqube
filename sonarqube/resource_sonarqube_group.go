@@ -203,6 +203,11 @@ func resourceSonarqubeGroupDelete(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeGroupDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("error deleting Sonarqube group: %+v", err)
 	}
 	defer resp.Body.Close()

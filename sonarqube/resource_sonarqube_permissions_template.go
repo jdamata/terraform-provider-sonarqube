@@ -139,6 +139,11 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 		"resourceSonarqubePermissionTemplateRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error reading Sonarqube permission templates: %+v", err)
 	}
 	defer resp.Body.Close()
@@ -164,7 +169,8 @@ func resourceSonarqubePermissionTemplateRead(d *schema.ResourceData, m interface
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubePermissionTemplateRead: Failed to find template with ID: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubePermissionTemplateUpdate(d *schema.ResourceData, m interface{}) error {
@@ -228,6 +234,11 @@ func resourceSonarqubePermissionTemplateDelete(d *schema.ResourceData, m interfa
 		"resourceSonarqubePermissionTemplateDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("error deleting Sonarqube permission template: %+v", err)
 	}
 	defer resp.Body.Close()

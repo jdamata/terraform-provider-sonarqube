@@ -439,3 +439,21 @@ func TestAccSonarqubeProjectBadgeToken(t *testing.T) {
 		},
 	})
 }
+
+func TestProjectSettingsStateSkipsNullSetting(t *testing.T) {
+	api := []Setting{
+		{Key: "sonar.a", Value: "1"},
+		{Key: "sonar.b", Value: "2"},
+		{Key: "sonar.inherited", Value: "x", Inherited: true},
+	}
+	got := projectSettingsState([]interface{}{nil, map[string]interface{}{"key": "sonar.b"}}, api)
+	if len(got) != 2 {
+		t.Fatalf("got %d settings, want 2: %+v", len(got), got)
+	}
+	if k := got[0].(map[string]interface{})["key"]; k != "sonar.b" {
+		t.Errorf("first setting = %v, want the configured sonar.b", k)
+	}
+	if k := got[1].(map[string]interface{})["key"]; k != "sonar.a" {
+		t.Errorf("second setting = %v, want the non-inherited sonar.a", k)
+	}
+}

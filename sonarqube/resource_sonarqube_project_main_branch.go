@@ -149,7 +149,8 @@ func resourceSonarqubeProjectMainBranchRead(d *schema.ResourceData, m interface{
 			return errors.Join(errProject, errName)
 		}
 	}
-	return fmt.Errorf("resourceSonarqubeProjectMainBranchRead: Failed to find project main branch: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func getProjectBranches(project string, m interface{}) ([]Branches, error) {
@@ -167,6 +168,11 @@ func getProjectBranches(project string, m interface{}) ([]Branches, error) {
 		"getProjectBranches",
 	)
 	if err != nil {
+		// The project no longer exists, so neither do its branches.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil, nil
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -198,6 +204,11 @@ func resourceSonarqubeProjectMainBranchDelete(d *schema.ResourceData, m interfac
 		"resourceSonarqubeProjectMainBranchDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()

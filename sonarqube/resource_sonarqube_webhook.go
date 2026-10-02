@@ -129,6 +129,11 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 		"resourceWebhookRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("resourceWebhookRead: Failed to call %s: %+v", sonarQubeURL.Path, err)
 	}
 	defer resp.Body.Close()
@@ -158,7 +163,8 @@ func resourceSonarqubeWebhookRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	return fmt.Errorf("resourceWebhookRead: Failed to find webhook with key %s", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeWebhookUpdate(d *schema.ResourceData, m interface{}) error {
@@ -210,6 +216,11 @@ func resourceSonarqubeWebhookDelete(d *schema.ResourceData, m interface{}) error
 		"resourceWebhookDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("resourceWebhookDelete: Failed to delete webhook: %+v", err)
 	}
 	defer resp.Body.Close()

@@ -163,6 +163,11 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 		"resourceSonarqubeQualityProfileRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -186,7 +191,8 @@ func resourceSonarqubeQualityProfileRead(d *schema.ResourceData, m interface{}) 
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubeQualityProfileRead: Failed to find project: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}) error {
@@ -213,6 +219,11 @@ func resourceSonarqubeQualityProfileDelete(d *schema.ResourceData, m interface{}
 		"resourceSonarqubeQualityProfileDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("resourceSonarqubeQualityProfileDelete: Failed to delete quality profile: %+v", err)
 	}
 	defer resp.Body.Close()

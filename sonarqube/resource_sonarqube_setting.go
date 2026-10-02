@@ -122,6 +122,11 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 		"resourceSonarqubeSettingsRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -143,7 +148,8 @@ func resourceSonarqubeSettingsRead(d *schema.ResourceData, m interface{}) error 
 			return errors.Join(errs...)
 		}
 	}
-	return fmt.Errorf("resourceSonarqubeSettingsRead: Failed to find setting: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) error {
@@ -161,6 +167,11 @@ func resourceSonarqubeSettingsDelete(d *schema.ResourceData, m interface{}) erro
 		"resourceSonarqubeSettingsDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
