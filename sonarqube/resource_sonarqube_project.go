@@ -225,6 +225,11 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeProjectRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -408,6 +413,11 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 		"resourceSonarqubeProjectDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()

@@ -141,9 +141,13 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 	branch := d.Get("branch").(string)
 	project := d.Get("project").(string)
 
-	NewCodePeriodsReadResponse, err := showNewCodePeriod(m, project, branch)
+	NewCodePeriodsReadResponse, found, err := showNewCodePeriod(m, project, branch)
 	if err != nil {
 		return err
+	}
+	if !found {
+		d.SetId("")
+		return nil
 	}
 
 	// Community edition has no project-level setting: a project-level set is stored on the main
@@ -154,11 +158,11 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 		if mainBranch != "" {
-			mainBranchPeriod, err := showNewCodePeriod(m, project, mainBranch)
+			mainBranchPeriod, found, err := showNewCodePeriod(m, project, mainBranch)
 			if err != nil {
 				return err
 			}
-			if !mainBranchPeriod.Inherited {
+			if found && !mainBranchPeriod.Inherited {
 				mainBranchPeriod.Branch = ""
 				NewCodePeriodsReadResponse = mainBranchPeriod
 			}
@@ -187,10 +191,12 @@ func resourceSonarqubeNewCodePeriodsRead(d *schema.ResourceData, m interface{}) 
 		return errors.Join(errs...)
 	}
 
-	return fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to find new code period: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
-func showNewCodePeriod(m interface{}, project string, branch string) (NewCodePeriod, error) {
+// showNewCodePeriod returns found=false when the project or branch no longer exists.
+func showNewCodePeriod(m interface{}, project string, branch string) (period NewCodePeriod, found bool, err error) {
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/new_code_periods/show"
 
@@ -211,15 +217,18 @@ func showNewCodePeriod(m interface{}, project string, branch string) (NewCodePer
 		"resourceSonarqubeNewCodePeriodsRead",
 	)
 	if err != nil {
-		return NewCodePeriod{}, err
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return NewCodePeriod{}, false, nil
+		}
+		return NewCodePeriod{}, false, err
 	}
 	defer resp.Body.Close()
 
-	period := NewCodePeriod{}
 	if err := json.NewDecoder(resp.Body).Decode(&period); err != nil {
-		return NewCodePeriod{}, fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to decode json into struct: %+v", err)
+		return NewCodePeriod{}, false, fmt.Errorf("resourceSonarqubeNewCodePeriodsRead: Failed to decode json into struct: %+v", err)
 	}
-	return period, nil
+	return period, true, nil
 }
 
 func projectMainBranchName(project string, m interface{}) (string, error) {
@@ -258,6 +267,11 @@ func resourceSonarqubeNewCodePeriodsDelete(d *schema.ResourceData, m interface{}
 		"resourceSonarqubeNewCodePeriodsDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return err
 	}
 	defer resp.Body.Close()
