@@ -284,27 +284,7 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to read project settings: %+v", err)
 		}
 
-		var settings []interface{}
-		var settingsKey []string
-		if len(componentSettings) > 0 {
-			// looks for backend value for defined settings
-			for _, s := range componentSettings {
-				for _, apiSetting := range projectSettings {
-					if s.(map[string]interface{})["key"].(string) == apiSetting.Key {
-						settings = append(settings, apiSetting.ToMap())
-						settingsKey = append(settingsKey, apiSetting.Key)
-					}
-				}
-			}
-		}
-		// checks for any defined setting (not inherited)
-		for _, apiSetting := range projectSettings {
-			if !apiSetting.Inherited && !slices.Contains(settingsKey, apiSetting.Key) {
-				settings = append(settings, apiSetting.ToMap())
-				settingsKey = append(settingsKey, apiSetting.Key)
-			}
-		}
-		d.Set("setting", settings)
+		settings := projectSettingsState(componentSettings, projectSettings)
 		if err := d.Set("setting", settings); err != nil {
 			return err
 		}
@@ -315,6 +295,34 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return err
+}
+
+// projectSettingsState keeps the configured settings in their order, followed by any other
+// setting set on the project. Older versions could write a setting with every field
+// null into state, which d.Get returns as a nil element.
+func projectSettingsState(componentSettings []interface{}, projectSettings []Setting) []interface{} {
+	var settings []interface{}
+	var settingsKey []string
+	for _, s := range componentSettings {
+		setting, ok := s.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		key, _ := setting["key"].(string)
+		for _, apiSetting := range projectSettings {
+			if key == apiSetting.Key {
+				settings = append(settings, apiSetting.ToMap())
+				settingsKey = append(settingsKey, apiSetting.Key)
+			}
+		}
+	}
+	for _, apiSetting := range projectSettings {
+		if !apiSetting.Inherited && !slices.Contains(settingsKey, apiSetting.Key) {
+			settings = append(settings, apiSetting.ToMap())
+			settingsKey = append(settingsKey, apiSetting.Key)
+		}
+	}
+	return settings
 }
 
 func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error {
