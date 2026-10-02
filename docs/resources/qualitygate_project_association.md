@@ -46,7 +46,7 @@ resource "sonarqube_qualitygate_project_association" "main" {
 
 ### Optional
 
-- `gateid` (String)
+- `gateid` (String, Deprecated) Not used: the association is made by `gatename`. Will be removed in the next major version.
 - `gatename` (String) The name of the Quality Gate
 
 ### Read-Only
