@@ -148,6 +148,11 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeUserRead",
 	)
 	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error reading Sonarqube user: %+v", err)
 	}
 	defer resp.Body.Close()
@@ -172,7 +177,8 @@ func resourceSonarqubeUserRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	return fmt.Errorf("resourceSonarqubeUserRead: Failed to find user: %+v", d.Id())
+	d.SetId("")
+	return nil
 }
 
 func resourceSonarqubeUserUpdate(d *schema.ResourceData, m interface{}) error {
@@ -241,6 +247,11 @@ func resourceSonarqubeUserDelete(d *schema.ResourceData, m interface{}) error {
 		"resourceSonarqubeUserDelete",
 	)
 	if err != nil {
+		// Already gone, e.g. removed in the UI or the project was deleted: nothing to do.
+		if resp.StatusCode == http.StatusNotFound {
+			resp.Body.Close()
+			return nil
+		}
 		return fmt.Errorf("error deleting (deactivating) Sonarqube user: %+v", err)
 	}
 	defer resp.Body.Close()

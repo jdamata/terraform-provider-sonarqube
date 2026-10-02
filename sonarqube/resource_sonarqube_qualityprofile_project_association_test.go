@@ -148,7 +148,8 @@ func testAccSonarqubeDirectRequest(t *testing.T, method string, path string, par
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.StatusCode != expectedStatus {
+	// expectedStatus 0 accepts any 2xx: some write endpoints return 200 on one version and 204 on another.
+	if resp.StatusCode != expectedStatus && (expectedStatus != 0 || resp.StatusCode/100 != 2) {
 		t.Fatalf("%s %s: got HTTP %d, want %d: %s", method, path, resp.StatusCode, expectedStatus, body)
 	}
 	return body
