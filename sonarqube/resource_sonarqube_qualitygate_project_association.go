@@ -34,9 +34,11 @@ func resourceSonarqubeQualityGateProjectAssociation() *schema.Resource {
 		// Define the fields of this schema.
 		Schema: map[string]*schema.Schema{
 			"gateid": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Not used: the association is made by `gatename`. Will be removed in the next major version.",
+				Deprecated:  "gateid is ignored and will be removed in the next major version. Use gatename.",
 			},
 			"gatename": {
 				Type:        schema.TypeString,
