@@ -1,7 +1,12 @@
 package sonarqube
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 func TestSanitizeSensitiveURLs(t *testing.T) {
@@ -115,4 +120,40 @@ type testError struct {
 
 func (e *testError) Error() string {
 	return e.message
+}
+
+func TestHttpRequestHelperErrorMessage(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want string
+	}{
+		{"errors list", `{"errors":[{"msg":"Project not found"}]}`, "API returned an error for resource test: Project not found"},
+		{"result field", `{"result":"Password must be at least 12 characters long"}`, "API returned an error for resource test: Password must be at least 12 characters long"},
+		{"v2 message field", `{"message":"Group not found"}`, "API returned an error for resource test: Group not found"},
+		{"empty errors list", `{"errors":[]}`, "statusCode: 400 does not match expectedResponseCode: 200 for resource test. No error message found in the response body"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer server.Close()
+			client := retryablehttp.NewClient()
+			client.RetryMax = 0
+			client.Logger = nil
+
+			resp, err := httpRequestHelper(client, "POST", server.URL, http.StatusOK, "test")
+			if err == nil {
+				t.Fatal("expected an error")
+			}
+			if resp.StatusCode != http.StatusBadRequest {
+				t.Errorf("status = %d, want 400", resp.StatusCode)
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Errorf("error = %q, want it to contain %q", err.Error(), tt.want)
+			}
+		})
+	}
 }
