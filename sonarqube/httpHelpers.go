@@ -9,9 +9,22 @@ import (
 	"regexp"
 )
 
-// ErrorResponse struct
+// ErrorResponse struct. Most endpoints report errors in Errors; some newer ones use Result
+// (e.g. api/users/change_password) or Message (api/v2).
 type ErrorResponse struct {
-	Errors []ErrorMessage `json:"errors,omitempty"`
+	Errors  []ErrorMessage `json:"errors,omitempty"`
+	Result  string         `json:"result,omitempty"`
+	Message string         `json:"message,omitempty"`
+}
+
+func (e ErrorResponse) firstMessage() string {
+	if len(e.Errors) > 0 && e.Errors[0].Message != "" {
+		return e.Errors[0].Message
+	}
+	if e.Result != "" {
+		return e.Result
+	}
+	return e.Message
 }
 
 // ErrorMessage struct
@@ -53,10 +66,11 @@ func httpRequestHelper(client *retryablehttp.Client, method string, sonarqubeURL
 		if err != nil {
 			return *resp, fmt.Errorf("failed to decode error response json into struct for resource %s: %+v", resource, err)
 		}
-		if len(errorResponse.Errors) == 0 {
-			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode for resource %s: %v. No error message found in the response body", resp.StatusCode, resource, expectedResponseCode)
+		message := errorResponse.firstMessage()
+		if message == "" {
+			return *resp, fmt.Errorf("statusCode: %v does not match expectedResponseCode: %v for resource %s. No error message found in the response body", resp.StatusCode, expectedResponseCode, resource)
 		}
-		return *resp, fmt.Errorf("API returned an error for resource %s: %+v", resource, errorResponse.Errors[0].Message)
+		return *resp, fmt.Errorf("API returned an error for resource %s: %s", resource, message)
 	}
 
 	return *resp, nil
