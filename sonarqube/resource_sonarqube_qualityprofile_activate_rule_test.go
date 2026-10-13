@@ -71,3 +71,25 @@ func TestAccSonarqubeQualityprofileActivateRuleBasic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSonarqubeQualityprofileActivateRuleDefaultSeverity(t *testing.T) {
+	rnd := generateRandomResourceName()
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+					resource "sonarqube_qualityprofile" "%[1]s" {
+						name     = "testAccActivateRuleDefaultSeverity"
+						language = "java"
+					}
+					resource "sonarqube_qualityprofile_activate_rule" "%[1]s" {
+						key  = sonarqube_qualityprofile.%[1]s.key
+						rule = "java:S1481"
+					}`, rnd),
+				Check: resource.TestCheckResourceAttr("sonarqube_qualityprofile_activate_rule."+rnd, "id", "java:S1481"),
+			},
+		},
+	})
+}
