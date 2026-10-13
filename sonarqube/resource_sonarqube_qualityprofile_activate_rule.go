@@ -90,13 +90,19 @@ func resourceSonarqubeQualityProfileRuleCreate(d *schema.ResourceData, m interfa
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/qualityprofiles/activate_rule"
 
-	sonarQubeURL.RawQuery = url.Values{
-		"key":      []string{d.Get("key").(string)},
-		"params":   []string{d.Get("params").(string)},
-		"reset":    []string{d.Get("reset").(string)},
-		"rule":     []string{d.Get("rule").(string)},
-		"severity": []string{d.Get("severity").(string)},
-	}.Encode()
+	query := url.Values{
+		"key":   []string{d.Get("key").(string)},
+		"reset": []string{d.Get("reset").(string)},
+		"rule":  []string{d.Get("rule").(string)},
+	}
+	// SonarQube rejects an empty severity, so leave it out to get the rule's default.
+	if severity := d.Get("severity").(string); severity != "" {
+		query.Set("severity", severity)
+	}
+	if params := d.Get("params").(string); params != "" {
+		query.Set("params", params)
+	}
+	sonarQubeURL.RawQuery = query.Encode()
 
 	resp, err := httpRequestHelper(
 		m.(*ProviderConfiguration).httpClient,
@@ -106,7 +112,7 @@ func resourceSonarqubeQualityProfileRuleCreate(d *schema.ResourceData, m interfa
 		"resourceSonarqubeQualityProfileRuleCreate",
 	)
 	if err != nil {
-		return fmt.Errorf("resourceSonarqubeQualityProfileRuleCreate: Failed to delete quality profile: %+v", err)
+		return fmt.Errorf("resourceSonarqubeQualityProfileRuleCreate: Failed to activate rule: %+v", err)
 	}
 	defer resp.Body.Close()
 
@@ -135,7 +141,7 @@ func resourceSonarqubeQualityProfileRuleDelete(d *schema.ResourceData, m interfa
 			resp.Body.Close()
 			return nil
 		}
-		return fmt.Errorf("resourceSonarqubeQualityProfileRuleDelete: Failed to delete quality profile: %+v", err)
+		return fmt.Errorf("resourceSonarqubeQualityProfileRuleDelete: Failed to deactivate rule: %+v", err)
 	}
 	defer resp.Body.Close()
 
