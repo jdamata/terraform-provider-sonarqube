@@ -19,7 +19,7 @@ func testSweepSonarqubeGitlabBinding(r string) error {
 	return nil
 }
 func testAccPreCheckGitlabBindingSupport(t *testing.T) {
-	if err := checkGitlabBindingSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
+	if testAccIsCommunityEdition(t) {
 		t.Skipf("Skipping test of unsupported feature (Gitlab Binding)")
 	}
 }

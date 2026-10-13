@@ -58,18 +58,7 @@ Bitbucket Data Center repository and a SonarQube project`,
 	}
 }
 
-func checkBitbucketBindingSupport(conf *ProviderConfiguration) error {
-	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		return fmt.Errorf("Bitbucket Bindings are not supported in the Community edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
-	}
-	return nil
-}
-
 func resourceSonarqubeBitbucketBindingCreate(d *schema.ResourceData, m interface{}) error {
-	if err := checkBitbucketBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_bitbucket_binding"
 
@@ -89,7 +78,7 @@ func resourceSonarqubeBitbucketBindingCreate(d *schema.ResourceData, m interface
 		"resourceSonarqubeBitbucketBindingCreate",
 	)
 	if err != nil {
-		return err
+		return bindingNotSupportedHint(m.(*ProviderConfiguration), "Bitbucket", err)
 	}
 	defer resp.Body.Close()
 
@@ -100,10 +89,6 @@ func resourceSonarqubeBitbucketBindingCreate(d *schema.ResourceData, m interface
 }
 
 func resourceSonarqubeBitbucketBindingRead(d *schema.ResourceData, m interface{}) error {
-	if err := checkBitbucketBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	idSlice := strings.SplitN(d.Id(), "/", 2)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/get_binding"
@@ -152,10 +137,6 @@ func resourceSonarqubeBitbucketBindingRead(d *schema.ResourceData, m interface{}
 }
 
 func resourceSonarqubeBitbucketBindingDelete(d *schema.ResourceData, m interface{}) error {
-	if err := checkBitbucketBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/delete_binding"
 	sonarQubeURL.RawQuery = url.Values{

@@ -72,18 +72,7 @@ GitHub repository and a SonarQube project`,
 	}
 }
 
-func checkGithubBindingSupport(conf *ProviderConfiguration) error {
-	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		return fmt.Errorf("GitHub Bindings are not supported in the Community edition of SonarQube. You are using: SonaQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
-	}
-	return nil
-}
-
 func resourceSonarqubeGithubBindingCreate(d *schema.ResourceData, m interface{}) error {
-	if err := checkGithubBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_github_binding"
 
@@ -103,7 +92,7 @@ func resourceSonarqubeGithubBindingCreate(d *schema.ResourceData, m interface{})
 		"resourceSonarqubeGithubBindingCreate",
 	)
 	if err != nil {
-		return err
+		return bindingNotSupportedHint(m.(*ProviderConfiguration), "GitHub", err)
 	}
 	defer resp.Body.Close()
 
@@ -114,10 +103,6 @@ func resourceSonarqubeGithubBindingCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) error {
-	if err := checkGithubBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	idSlice := strings.SplitN(d.Id(), "/", 2)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/get_binding"
@@ -166,10 +151,6 @@ func resourceSonarqubeGithubBindingRead(d *schema.ResourceData, m interface{}) e
 }
 
 func resourceSonarqubeGithubBindingDelete(d *schema.ResourceData, m interface{}) error {
-	if err := checkGithubBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/delete_binding"
 	sonarQubeURL.RawQuery = url.Values{

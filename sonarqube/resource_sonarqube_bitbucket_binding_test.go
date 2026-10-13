@@ -20,7 +20,7 @@ func testSweepSonarqubeBitbucketBinding(r string) error {
 }
 
 func testAccPreCheckBitbucketBindingSupport(t *testing.T) {
-	if err := checkBitbucketBindingSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
+	if testAccIsCommunityEdition(t) {
 		t.Skipf("Skipping test of unsupported feature (Bitbucket Binding)")
 	}
 }
