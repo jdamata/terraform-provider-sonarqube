@@ -39,8 +39,8 @@ resource "sonarqube_project" "main" {
 
 ### Required
 
-- `name` (String) The name of the Project to create
-- `project` (String) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.
+- `name` (String) The name of the Project to create. Changing it creates a new project, which loses the project's analysis history, because SonarQube has no API to rename a project. To rename one, let the next analysis set the name through `sonar.projectName` and add `lifecycle { ignore_changes = [name] }`.
+- `project` (String) Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon. Changing it updates the key in place and keeps the project's history.
 
 ### Optional
 
