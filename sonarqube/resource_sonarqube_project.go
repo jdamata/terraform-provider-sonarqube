@@ -66,12 +66,12 @@ func resourceSonarqubeProject() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of the Project to create",
+				Description: "The name of the Project to create. Changing it creates a new project, which loses the project's analysis history, because SonarQube has no API to rename a project. To rename one, let the next analysis set the name through `sonar.projectName` and add `lifecycle { ignore_changes = [name] }`.",
 			},
 			"project": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon.",
+				Description: "Key of the project. Maximum length 400. All letters, digits, dash, underscore, period or colon. Changing it updates the key in place and keeps the project's history.",
 			},
 			"visibility": {
 				Type:         schema.TypeString,
