@@ -80,26 +80,36 @@ func dataSourceSonarqubeQualityProfileActiveRulesRead(d *schema.ResourceData, m 
 }
 
 func readQualityProfileRules(profileKey string, active bool, m interface{}) ([]Rule, error) {
+	return searchRules(url.Values{
+		"qprofile":   []string{profileKey},
+		"activation": []string{strconv.FormatBool(active)},
+	}, m)
+}
+
+// searchRules returns every rule matching filters, following all pages of api/rules/search.
+func searchRules(filters url.Values, m interface{}) ([]Rule, error) {
 	page := 1
 	pageSize := 500
 	rules := []Rule{}
 
 	for {
+		query := url.Values{}
+		for k, v := range filters {
+			query[k] = v
+		}
+		query.Set("p", strconv.Itoa(page))
+		query.Set("ps", strconv.Itoa(pageSize))
+
 		sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 		sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/rules/search"
-		sonarQubeURL.RawQuery = url.Values{
-			"qprofile":   []string{profileKey},
-			"activation": []string{strconv.FormatBool(active)},
-			"p":          []string{strconv.Itoa(page)},
-			"ps":         []string{strconv.Itoa(pageSize)},
-		}.Encode()
+		sonarQubeURL.RawQuery = query.Encode()
 
 		resp, err := httpRequestHelper(
 			m.(*ProviderConfiguration).httpClient,
 			"GET",
 			sonarQubeURL.String(),
 			http.StatusOK,
-			"readQualityProfileRules",
+			"searchRules",
 		)
 		if err != nil {
 			return nil, err
@@ -108,7 +118,7 @@ func readQualityProfileRules(profileKey string, active bool, m interface{}) ([]R
 		ruleReadResponse := GetRule{}
 		if err := json.NewDecoder(resp.Body).Decode(&ruleReadResponse); err != nil {
 			_ = resp.Body.Close()
-			return nil, fmt.Errorf("readQualityProfileRules: Failed to decode json into struct: %+v", err)
+			return nil, fmt.Errorf("searchRules: Failed to decode json into struct: %+v", err)
 		}
 		_ = resp.Body.Close()
 
