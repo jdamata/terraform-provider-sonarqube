@@ -19,7 +19,7 @@ func testSweepSonarqubeAzureBinding(r string) error {
 	return nil
 }
 func testAccPreCheckAzureBindingSupport(t *testing.T) {
-	if err := checkAzureBindingSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
+	if testAccIsCommunityEdition(t) {
 		t.Skipf("Skipping test of unsupported feature (Azure Binding)")
 	}
 }

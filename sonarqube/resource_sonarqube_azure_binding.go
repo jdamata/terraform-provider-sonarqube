@@ -70,18 +70,7 @@ Azure Devops repository and a SonarQube project`,
 	}
 }
 
-func checkAzureBindingSupport(conf *ProviderConfiguration) error {
-	if strings.ToLower(conf.sonarQubeEdition) == "community" {
-		return fmt.Errorf("azure devops bindings are not supported in the Community edition of SonarQube. You are using: SonarQube %s version %s", conf.sonarQubeEdition, conf.sonarQubeVersion)
-	}
-	return nil
-}
-
 func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) error {
-	if err := checkAzureBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/set_azure_binding"
 
@@ -101,7 +90,7 @@ func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) 
 		"resourceSonarqubeAzureBindingCreate",
 	)
 	if err != nil {
-		return err
+		return bindingNotSupportedHint(m.(*ProviderConfiguration), "Azure DevOps", err)
 	}
 	defer resp.Body.Close()
 
@@ -117,10 +106,6 @@ func resourceSonarqubeAzureBindingCreate(d *schema.ResourceData, m interface{}) 
 }
 
 func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) error {
-	if err := checkAzureBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	// id consists of "project/project_name/repository"
 	idSlice := strings.SplitN(d.Id(), "/", 3)
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
@@ -172,10 +157,6 @@ func resourceSonarqubeAzureBindingRead(d *schema.ResourceData, m interface{}) er
 }
 
 func resourceSonarqubeAzureBindingDelete(d *schema.ResourceData, m interface{}) error {
-	if err := checkAzureBindingSupport(m.(*ProviderConfiguration)); err != nil {
-		return err
-	}
-
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/alm_settings/delete_binding"
 	sonarQubeURL.RawQuery = url.Values{
