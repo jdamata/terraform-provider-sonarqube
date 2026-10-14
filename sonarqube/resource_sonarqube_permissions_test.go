@@ -253,3 +253,35 @@ func TestAccSonarqubePermissionImportGroup(t *testing.T) {
 		},
 	})
 }
+
+// More than one page of api/permissions/template_groups (100 groups), so a group past the first
+// page is only found if Read follows every page.
+func TestAccSonarqubePermissionTemplateGroupBeyondFirstPage(t *testing.T) {
+	rnd := generateRandomResourceName()
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+					resource "sonarqube_permission_template" "%[1]s" {
+						name = "%[1]s"
+					}
+					resource "sonarqube_group" "%[1]s" {
+						count = 105
+						name  = format("%[1]s-%%03d", count.index)
+					}
+					resource "sonarqube_permissions" "%[1]s" {
+						count       = 105
+						group_name  = sonarqube_group.%[1]s[count.index].name
+						template_id = sonarqube_permission_template.%[1]s.id
+						permissions = ["user", "codeviewer"]
+					}`, rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("sonarqube_permissions."+rnd+".104", "group_name", rnd+"-104"),
+					resource.TestCheckResourceAttr("sonarqube_permissions."+rnd+".104", "permissions.#", "2"),
+				),
+			},
+		},
+	})
+}

@@ -1,8 +1,11 @@
 package sonarqube
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -155,5 +158,41 @@ func TestHttpRequestHelperErrorMessage(t *testing.T) {
 				t.Errorf("error = %q, want it to contain %q", err.Error(), tt.want)
 			}
 		})
+	}
+}
+
+func TestReadPermissionPagesFollowsEveryPage(t *testing.T) {
+	pages := map[string]string{
+		"1": `{"paging":{"total":5},"groups":[{"name":"a"},{"name":"b"}]}`,
+		"2": `{"paging":{"total":5},"groups":[{"name":"c"},{"name":"d"}]}`,
+		"3": `{"paging":{"total":5},"groups":[{"name":"e"}]}`,
+	}
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		_, _ = w.Write([]byte(pages[r.URL.Query().Get("p")]))
+	}))
+	defer server.Close()
+	endpoint, _ := url.Parse(server.URL)
+	client := retryablehttp.NewClient()
+	client.Logger = nil
+	m := &ProviderConfiguration{httpClient: client}
+
+	names := []string{}
+	found, err := readPermissionPages(m, *endpoint, url.Values{"ps": {"2"}}, func(body io.Reader) (int, int64, error) {
+		page := GetGroupPermissions{}
+		if err := json.NewDecoder(body).Decode(&page); err != nil {
+			return 0, 0, err
+		}
+		for _, g := range page.Groups {
+			names = append(names, g.Name)
+		}
+		return len(page.Groups), page.Paging.Total, nil
+	})
+	if err != nil || !found {
+		t.Fatalf("found=%v err=%v", found, err)
+	}
+	if strings.Join(names, ",") != "a,b,c,d,e" || requests != 3 {
+		t.Errorf("got %v after %d requests, want a..e after 3", names, requests)
 	}
 }
