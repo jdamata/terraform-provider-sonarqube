@@ -51,7 +51,7 @@ resource "sonarqube_permissions" "john_project_read" {
 
 ### Required
 
-- `permissions` (Set of String) A list of permissions that should be applied. Possible values are: `admin`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `scan`, `user`.
+- `permissions` (Set of String) A list of permissions that should be applied. Possible values for global permissions are: `admin`, `gateadmin`, `profileadmin`, `architectureadmin`, `provisioning`, `scan`, `applicationcreator`, `portfoliocreator`. Possible values for project permissions (and permission templates) are: `admin`, `codeviewer`, `issueadmin`, `securityhotspotadmin`, `architectureadmin`, `scan`, `user`. The provider does not validate these values; they are checked by SonarQube, so newer SonarQube versions may accept more.
 
 ### Optional
 
