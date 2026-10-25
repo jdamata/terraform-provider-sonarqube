@@ -25,9 +25,13 @@ data "sonarqube_project" "project" {
 
 - `project` (String) The project key of the project
 
+### Optional
+
+- `retrieve_badge_token` (Boolean) Retrieve and store the project's badge token. Set to false to omit its value and skip the badge-token endpoint.
+
 ### Read-Only
 
-- `badge_token` (String) The badge token for the project.
+- `badge_token` (String, Sensitive) The badge token for the project.
 - `id` (String) The ID of this resource.
 - `name` (String) Name of the project
 - `visibility` (String) Project visibility

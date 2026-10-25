@@ -19,4 +19,13 @@ description: |-
 ### Example: create a project, project analysis token, and output the token value
 {{ tffile "examples/resources/sonarqube_user_token/project-analysis-token.tf" }}
 
+### Example: manage an externally issued token without storing its value
+{{ tffile "examples/resources/sonarqube_user_token/metadata-only-token.tf" }}
+
+With `metadata_only = true`, the resource requires an existing token with the configured name, type, project and, when specified, expiration date. It reads metadata and revokes the token when destroyed, but never generates or returns the credential. An external issuer must create the token before this resource is created. Express that dependency explicitly when both are part of the same Terraform configuration.
+
+Switching an existing resource to this mode clears the token value from subsequent state snapshots without recreating or revoking it. Historical state snapshots and saved plans are unchanged; rotate any credential that must no longer be available from them. Disabling metadata-only mode cannot recover a token value, because SonarQube only reveals it at issuance.
+
+If the external token disappears, refresh removes it from state. Metadata-only creation then fails until the issuer provides a replacement; it does not silently generate a credential that no consumer can retrieve.
+
 {{ .SchemaMarkdown | trimspace }}

@@ -17,4 +17,11 @@ description: |-
 ### Example: a project with associated settings
 {{ tffile "examples/resources/sonarqube_project/project-settings.tf" }}
 
+### Example: manage a project without retrieving its badge token
+{{ tffile "examples/resources/sonarqube_project/project-without-badge-token.tf" }}
+
+Setting `retrieve_badge_token = false` skips the badge-token endpoint and clears the value from subsequent state snapshots. It does not revoke the server-side badge token or remove historical state snapshots and saved plans. Retrieval remains enabled by default.
+
+For an import that must not retrieve the badge credential, use `terraform import sonarqube_project.example 'my-project?retrieve_badge_token=false'`. An ordinary project-key import preserves the default behavior and retrieves the badge token; configuration alone is not available to the importer.
+
 {{ .SchemaMarkdown | trimspace }}
