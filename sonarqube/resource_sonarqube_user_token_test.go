@@ -254,6 +254,75 @@ func TestAccSonarqubeUserTokenMetadataOnly(t *testing.T) {
 	})
 }
 
+func TestAccSonarqubeUserTokenMetadataOnlyMatchingMetadata(t *testing.T) {
+	expiration := time.Now().UTC().AddDate(0, 0, 30).Format("2006-01-02")
+	for _, tc := range []struct {
+		name       string
+		tokenType  TokenType
+		expiration string
+	}{
+		{name: "project", tokenType: ProjectAnalysisToken},
+		{name: "project_with_expiration", tokenType: ProjectAnalysisToken, expiration: expiration},
+		{name: "user_with_expiration", tokenType: UserToken, expiration: expiration},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			name := "metadata-match-" + generateRandomResourceName()
+			projectConfig := ""
+			projectKeyConfig := ""
+			options := url.Values{"type": {string(tc.tokenType)}}
+			checks := []resource.TestCheckFunc{
+				resource.TestCheckResourceAttr("sonarqube_user_token.test", "name", name),
+				resource.TestCheckResourceAttr("sonarqube_user_token.test", "type", string(tc.tokenType)),
+				resource.TestCheckResourceAttr("sonarqube_user_token.test", "metadata_only", "true"),
+				resource.TestCheckResourceAttr("sonarqube_user_token.test", "token", ""),
+			}
+			if tc.tokenType == ProjectAnalysisToken {
+				projectConfig = fmt.Sprintf(`
+resource "sonarqube_project" "test" {
+  name                 = %[1]q
+  project              = %[1]q
+  retrieve_badge_token = false
+}
+`, name)
+				projectKeyConfig = "project_key = sonarqube_project.test.project"
+				options.Set("projectKey", name)
+				checks = append(checks, resource.TestCheckResourceAttr("sonarqube_user_token.test", "project_key", name))
+			}
+			expirationConfig := ""
+			if tc.expiration != "" {
+				options.Set("expirationDate", tc.expiration)
+				expirationConfig = fmt.Sprintf("expiration_date = %q", tc.expiration)
+				checks = append(checks, resource.TestCheckResourceAttr("sonarqube_user_token.test", "expiration_date", tc.expiration))
+			}
+			config := projectConfig + fmt.Sprintf(`
+resource "sonarqube_user_token" "test" {
+  name          = %q
+  type          = %q
+  metadata_only = true
+  %s
+  %s
+}
+`, name, tc.tokenType, projectKeyConfig, expirationConfig)
+			steps := []resource.TestStep{}
+			if projectConfig != "" {
+				steps = append(steps, resource.TestStep{Config: projectConfig})
+			}
+			steps = append(steps,
+				resource.TestStep{
+					PreConfig: func() { testAccIssueExternalToken(t, name, options) },
+					Config:    config,
+					Check:     resource.ComposeTestCheckFunc(checks...),
+				},
+				resource.TestStep{Config: config, PlanOnly: true},
+			)
+			resource.Test(t, resource.TestCase{
+				PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
+				Steps: steps,
+			})
+		})
+	}
+}
+
 func TestAccSonarqubeUserTokenMetadataOnlyMissing(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
