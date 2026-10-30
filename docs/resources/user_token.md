@@ -63,10 +63,6 @@ resource "sonarqube_user_token" "analysis_metadata" {
   type          = "PROJECT_ANALYSIS_TOKEN"
   project_key   = "my-project"
   metadata_only = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 ```
 
@@ -95,3 +91,11 @@ If the external token disappears, refresh removes it from state. Metadata-only c
 
 - `id` (String) The ID of this resource.
 - `token` (String, Sensitive) The token value.
+
+## Rotation and replacement safety
+
+For an existing resource, plans that change `name`, `type`, `project_key`, `expiration_date` or `login_name` are rejected if either the previous or planned mode is `metadata_only`. This prevents Terraform from revoking a delivered credential before discovering that its replacement cannot be adopted. Changing only `metadata_only` remains supported.
+
+Rotate using a separate resource address for each generation. Issue the new token externally, add its metadata resource alongside the old one, and apply while both generations remain declared. Deliver and verify the new credential before removing the old resource in a later apply; removing it revokes the old token. `create_before_destroy` on a single address does not bypass the replacement guard.
+
+Keys for `for_each` generations must be known during planning. A token name may still come from an apply-time issuer when creating a new resource address. The provider does not enforce delivery to a secret store or consumer.

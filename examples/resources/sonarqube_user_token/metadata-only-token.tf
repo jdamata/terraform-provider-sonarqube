@@ -5,8 +5,4 @@ resource "sonarqube_user_token" "analysis_metadata" {
   type          = "PROJECT_ANALYSIS_TOKEN"
   project_key   = "my-project"
   metadata_only = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }

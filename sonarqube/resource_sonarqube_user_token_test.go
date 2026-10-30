@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,7 +11,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	testingTerraform "github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func init() {
@@ -281,7 +284,6 @@ func TestAccSonarqubeUserTokenMetadataOnlyMatchingMetadata(t *testing.T) {
 resource "sonarqube_project" "test" {
   name                 = %[1]q
   project              = %[1]q
-  retrieve_badge_token = false
 }
 `, name)
 				projectKeyConfig = "project_key = sonarqube_project.test.project"
@@ -425,13 +427,11 @@ func TestAccSonarqubeUserTokenMetadataOnlyRejectsProject(t *testing.T) {
   resource "sonarqube_project" "source" {
    name = "%[1]s-source"
    project = "%[1]s-source"
-   retrieve_badge_token = false
-  }
+   }
   resource "sonarqube_project" "other" {
    name = "%[1]s-other"
    project = "%[1]s-other"
-   retrieve_badge_token = false
-  }
+   }
  `, name)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
@@ -469,5 +469,180 @@ func TestAccSonarqubeUserTokenMetadataOnlyRejectsExpiration(t *testing.T) {
    }`, name, expected),
 			ExpectError: regexp.MustCompile("does not have the expected expiration date"),
 		}},
+	})
+}
+
+func TestMetadataOnlyTokenReplacementDiff(t *testing.T) {
+	original := map[string]string{
+		"name": "issued", "type": "PROJECT_ANALYSIS_TOKEN", "project_key": "project",
+		"expiration_date": "2030-01-01", "login_name": "owner", "metadata_only": "true",
+	}
+	for _, field := range []string{"name", "type", "project_key", "expiration_date", "login_name"} {
+		for _, modes := range []struct{ old, new bool }{{true, true}, {true, false}, {false, true}, {false, false}} {
+			t.Run(fmt.Sprintf("%s/%v-to-%v", field, modes.old, modes.new), func(t *testing.T) {
+				attrs := map[string]string{}
+				config := map[string]interface{}{}
+				for key, value := range original {
+					attrs[key] = value
+					config[key] = value
+				}
+				attrs["metadata_only"] = fmt.Sprint(modes.old)
+				config["metadata_only"] = modes.new
+				changes := map[string]string{"name": "next", "type": "USER_TOKEN", "project_key": "other", "expiration_date": "2030-02-01", "login_name": "other"}
+				config[field] = changes[field]
+				_, err := resourceSonarqubeUserToken().Diff(context.Background(), &terraform.InstanceState{
+					ID: "owner/issued", Attributes: attrs,
+				}, terraform.NewResourceConfigRaw(config), nil)
+				wantError := modes.old || modes.new
+				if (err != nil) != wantError {
+					t.Fatalf("Diff error = %v, want error %v", err, wantError)
+				}
+				if err != nil && !strings.Contains(err.Error(), "cannot change "+field) {
+					t.Fatal(err)
+				}
+			})
+		}
+	}
+	for _, mode := range []bool{false, true} {
+		t.Run(fmt.Sprintf("mode-only/%v", mode), func(t *testing.T) {
+			config := map[string]interface{}{}
+			for key, value := range original {
+				config[key] = value
+			}
+			config["metadata_only"] = mode
+			if _, err := resourceSonarqubeUserToken().Diff(context.Background(), &terraform.InstanceState{
+				ID: "owner/issued", Attributes: original,
+			}, terraform.NewResourceConfigRaw(config), nil); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+	t.Run("initial-adoption", func(t *testing.T) {
+		if _, err := resourceSonarqubeUserToken().Diff(context.Background(), nil, terraform.NewResourceConfigRaw(map[string]interface{}{
+			"name": "74D93920-ED26-11E3-AC10-0800200C9A66", "metadata_only": true,
+		}), nil); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("unknown-replacement-name", func(t *testing.T) {
+		config := map[string]interface{}{}
+		for key, value := range original {
+			config[key] = value
+		}
+		config["metadata_only"] = true
+		config["name"] = "74D93920-ED26-11E3-AC10-0800200C9A66"
+		if _, err := resourceSonarqubeUserToken().Diff(context.Background(), &terraform.InstanceState{
+			ID: "owner/issued", Attributes: original,
+		}, terraform.NewResourceConfigRaw(config), nil); err == nil {
+			t.Fatal("unknown replacement name must be refused")
+		}
+	})
+}
+
+func TestAccSonarqubeUserTokenMetadataOnlyReplacementRefused(t *testing.T) {
+	name := "metadata-guard-" + generateRandomResourceName()
+	projects := fmt.Sprintf(`
+resource "sonarqube_project" "source" {
+  name = %[1]q
+  project = %[1]q
+}
+resource "sonarqube_project" "other" {
+  name = "%[1]s-other"
+  project = "%[1]s-other"
+}
+`, name)
+	base := map[string]string{
+		"name": fmt.Sprintf("%q", name), "type": `"PROJECT_ANALYSIS_TOKEN"`,
+		"project_key": "sonarqube_project.source.project", "metadata_only": "true",
+	}
+	configFor := func(field, value string) string {
+		values := map[string]string{}
+		for key, v := range base {
+			values[key] = v
+		}
+		if field != "" {
+			values[field] = value
+		}
+		config := projects + `resource "sonarqube_user_token" "test" {` + "\n"
+		for _, key := range []string{"name", "type", "project_key", "metadata_only", "expiration_date", "login_name"} {
+			if v, ok := values[key]; ok {
+				config += key + " = " + v + "\n"
+			}
+		}
+		return config + "}"
+	}
+	check := resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr("sonarqube_user_token.test", "token", ""),
+		func(_ *testingTerraform.State) error {
+			tokens, err := readSonarqubeUserTokens(testAccProvider.Meta(), "")
+			if err != nil {
+				return err
+			}
+			for _, token := range tokens.Tokens {
+				if token.Name == name && token.Project.Key == name {
+					return nil
+				}
+			}
+			return fmt.Errorf("adopted token %q was revoked after a rejected plan", name)
+		},
+	)
+	steps := []resource.TestStep{
+		{Config: projects},
+		{PreConfig: func() {
+			testAccIssueExternalToken(t, name, url.Values{"type": {string(ProjectAnalysisToken)}, "projectKey": {name}})
+		}, Config: configFor("", ""), Check: check},
+	}
+	for _, change := range []struct{ field, value string }{
+		{"project_key", "sonarqube_project.other.project"}, {"name", fmt.Sprintf("%q", name+"-next")},
+		{"type", `"USER_TOKEN"`}, {"expiration_date", fmt.Sprintf("%q", time.Now().UTC().AddDate(0, 0, 30).Format("2006-01-02"))},
+		{"login_name", `"another-owner"`},
+	} {
+		steps = append(steps,
+			resource.TestStep{Config: configFor(change.field, change.value), ExpectError: regexp.MustCompile("cannot change " + change.field)},
+			resource.TestStep{Config: configFor("", ""), Check: check},
+		)
+	}
+	resource.Test(t, resource.TestCase{PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders, Steps: steps})
+}
+
+func TestAccSonarqubeUserTokenMetadataOnlyRotationSeparateAddresses(t *testing.T) {
+	name := "metadata-rotation-" + generateRandomResourceName()
+	oldName, newName := name+"-old", name+"-new"
+	oldConfig := fmt.Sprintf(`resource "sonarqube_user_token" "old" {
+  name = %q
+  metadata_only = true
+}
+`, oldName)
+	newConfig := fmt.Sprintf(`resource "sonarqube_user_token" "next" {
+  name = %q
+  metadata_only = true
+}
+`, newName)
+	check := func(wantOld bool) resource.TestCheckFunc {
+		return func(_ *testingTerraform.State) error {
+			tokens, err := readSonarqubeUserTokens(testAccProvider.Meta(), "")
+			if err != nil {
+				return err
+			}
+			foundOld, foundNew := false, false
+			for _, token := range tokens.Tokens {
+				foundOld = foundOld || token.Name == oldName
+				foundNew = foundNew || token.Name == newName
+			}
+			if foundOld != wantOld || !foundNew {
+				return fmt.Errorf("rotation token presence: old=%v (want %v), new=%v (want true)", foundOld, wantOld, foundNew)
+			}
+			return nil
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{PreConfig: func() { testAccIssueExternalToken(t, oldName) }, Config: oldConfig},
+			{PreConfig: func() { testAccIssueExternalToken(t, newName) }, Config: oldConfig + newConfig,
+				Check: resource.ComposeTestCheckFunc(check(true), resource.TestCheckResourceAttr("sonarqube_user_token.next", "token", ""))},
+			{Config: newConfig, Check: check(false)},
+			{Config: newConfig, PlanOnly: true},
+		},
 	})
 }

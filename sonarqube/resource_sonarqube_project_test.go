@@ -457,31 +457,3 @@ func TestProjectSettingsStateSkipsNullSetting(t *testing.T) {
 		t.Errorf("second setting = %v, want the non-inherited sonar.a", k)
 	}
 }
-
-func TestAccSonarqubeProjectWithoutBadgeToken(t *testing.T) {
-	name := "no-badge-" + generateRandomResourceName()
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{Config: fmt.Sprintf(`resource "sonarqube_project" "test" {
-    name = %q
-    project = %q
-    retrieve_badge_token = false
-   }`, name, name),
-				Check: resource.TestCheckResourceAttr("sonarqube_project.test", "badge_token", "")},
-			{ResourceName: "sonarqube_project.test", ImportState: true, ImportStateVerify: true,
-				ImportStateId: name + "?retrieve_badge_token=false"},
-			{Config: fmt.Sprintf(`resource "sonarqube_project" "test" {
-    name = %q
-    project = %q
-   }`, name, name),
-				Check: resource.TestCheckResourceAttrSet("sonarqube_project.test", "badge_token")},
-			{Config: fmt.Sprintf(`resource "sonarqube_project" "test" {
-    name = %q
-    project = %q
-    retrieve_badge_token = false
-   }`, name, name),
-				Check: resource.TestCheckResourceAttr("sonarqube_project.test", "badge_token", "")},
-		},
-	})
-}

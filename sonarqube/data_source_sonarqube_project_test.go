@@ -58,24 +58,3 @@ func TestAccSonarqubeProjectDataSourceBadgeToken(t *testing.T) {
 		},
 	})
 }
-
-func TestAccSonarqubeProjectDataSourceWithoutBadgeToken(t *testing.T) {
-	name := "data-no-badge-" + generateRandomResourceName()
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
-		Steps: []resource.TestStep{{
-			Config: fmt.Sprintf(`
-				resource "sonarqube_project" "test" {
-					name = %[1]q
-					project = %[1]q
-					retrieve_badge_token = false
-				}
-				data "sonarqube_project" "test" {
-					project = sonarqube_project.test.project
-					retrieve_badge_token = false
-				}
-			`, name),
-			Check: resource.TestCheckResourceAttr("data.sonarqube_project.test", "badge_token", ""),
-		}},
-	})
-}

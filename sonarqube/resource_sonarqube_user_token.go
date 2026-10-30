@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -48,11 +49,12 @@ const (
 // Returns the resource represented by this file.
 func resourceSonarqubeUserToken() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.",
-		Create:      resourceSonarqubeUserTokenCreate,
-		Read:        resourceSonarqubeUserTokenRead,
-		Update:      resourceSonarqubeUserTokenRead,
-		Delete:      resourceSonarqubeUserTokenDelete,
+		Description:   "Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.",
+		Create:        resourceSonarqubeUserTokenCreate,
+		Read:          resourceSonarqubeUserTokenRead,
+		Update:        resourceSonarqubeUserTokenRead,
+		Delete:        resourceSonarqubeUserTokenDelete,
+		CustomizeDiff: preventMetadataOnlyTokenReplacement,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeUserTokenImport,
 		},
@@ -308,6 +310,26 @@ func validateTokenMetadata(d *schema.ResourceData, token Token) error {
 	}
 	if token.Type == string(ProjectAnalysisToken) && token.Project.Key != d.Get("project_key").(string) {
 		return fmt.Errorf("token %q belongs to project %q, expected %q", token.Name, token.Project.Key, d.Get("project_key"))
+	}
+	return nil
+}
+
+// Replacing an adopted token deletes a credential that this provider cannot
+// reissue. Guard both mode transitions so disabling the flag in the same plan
+// cannot bypass this protection. A new resource address can adopt a generation
+// before the old address is explicitly destroyed.
+func preventMetadataOnlyTokenReplacement(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if d.Id() == "" {
+		return nil
+	}
+	oldMode, newMode := d.GetChange("metadata_only")
+	if !oldMode.(bool) && !newMode.(bool) {
+		return nil
+	}
+	for _, field := range []string{"name", "type", "project_key", "expiration_date", "login_name"} {
+		if d.HasChange(field) {
+			return fmt.Errorf("cannot change %s on an existing token when metadata_only is enabled: issue a new token and adopt it at a separate resource address before destroying the old token", field)
+		}
 	}
 	return nil
 }

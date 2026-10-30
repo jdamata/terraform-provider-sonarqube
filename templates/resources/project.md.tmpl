@@ -17,31 +17,4 @@ description: |-
 ### Example: a project with associated settings
 {{ tffile "examples/resources/sonarqube_project/project-settings.tf" }}
 
-### Example: manage a project without retrieving its badge token
-{{ tffile "examples/resources/sonarqube_project/project-without-badge-token.tf" }}
-
-Setting `retrieve_badge_token = false` skips the badge-token endpoint and clears the value from subsequent state snapshots. It does not revoke the server-side badge token or remove historical state snapshots and saved plans. Retrieval remains enabled by default.
-
-For an import that must not retrieve the badge credential, use `terraform import sonarqube_project.example 'my-project?retrieve_badge_token=false'`. An ordinary project-key import preserves the default behavior and retrieves the badge token; configuration alone is not available to the importer.
-
-## Migration: sensitive badge-token outputs
-
-`badge_token` is now marked sensitive on both the project resource and the project data source. Existing root outputs that expose either attribute must declare `sensitive = true`; otherwise Terraform rejects the output during planning.
-
-```terraform
-output "project_badge_token" {
-  value     = sonarqube_project.main.badge_token
-  sensitive = true
-}
-
-output "existing_project_badge_token" {
-  value     = data.sonarqube_project.project.badge_token
-  sensitive = true
-}
-```
-
-Marking an output sensitive redacts its normal display; it does not remove the value from state or saved plans.
-
-To stop retrieving and storing the badge token, set `retrieve_badge_token = false` on each relevant resource or data source and remove outputs and consumers that require its value. This clears the value from subsequent state snapshots without revoking the server-side token or changing historical snapshots and saved plans.
-
 {{ .SchemaMarkdown | trimspace }}
