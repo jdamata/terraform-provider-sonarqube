@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -349,34 +351,24 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/users"
 			RawQuery.Add("q", loginName.(string))
 		}
-		sonarQubeURL.RawQuery = RawQuery.Encode()
-
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"GET",
-			sonarQubeURL.String(),
-			http.StatusOK,
-			"resourceSonarqubePermissionsRead",
-		)
-		if err != nil {
-			if resp.StatusCode == http.StatusNotFound {
-				resp.Body.Close()
-				d.SetId("")
-				return nil
+		users := []User{}
+		found, err := readPermissionPages(m, sonarQubeURL, RawQuery, func(body io.Reader) (int, int64, error) {
+			page := GetUser{}
+			if err := json.NewDecoder(body).Decode(&page); err != nil {
+				return 0, 0, err
 			}
-			return fmt.Errorf("error reading Sonarqube permissions: %+v", err)
-		}
-		defer resp.Body.Close()
-
-		// Decode response into struct
-		users := GetUser{}
-		err = json.NewDecoder(resp.Body).Decode(&users)
+			users = append(users, page.Users...)
+			return len(page.Users), page.Paging.Total, nil
+		})
 		if err != nil {
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+			return err
+		}
+		if !found {
+			d.SetId("")
+			return nil
 		}
 
-		// Loop over all groups to see if the group we need exists.
-		for _, value := range users.Users {
+		for _, value := range users {
 			if strings.EqualFold(value.Login, loginName.(string)) {
 				errName := d.Set("login_name", value.Login)
 				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
@@ -400,34 +392,24 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 			sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/permissions/groups"
 			RawQuery.Add("q", groupName)
 		}
-		sonarQubeURL.RawQuery = RawQuery.Encode()
-
-		resp, err := httpRequestHelper(
-			m.(*ProviderConfiguration).httpClient,
-			"GET",
-			sonarQubeURL.String(),
-			http.StatusOK,
-			"resourceSonarqubePermissionsRead",
-		)
-		if err != nil {
-			if resp.StatusCode == http.StatusNotFound {
-				resp.Body.Close()
-				d.SetId("")
-				return nil
+		groups := []GroupPermission{}
+		found, err := readPermissionPages(m, sonarQubeURL, RawQuery, func(body io.Reader) (int, int64, error) {
+			page := GetGroupPermissions{}
+			if err := json.NewDecoder(body).Decode(&page); err != nil {
+				return 0, 0, err
 			}
-			return fmt.Errorf("resourceSonarqubePermissionsRead: error reading Sonarqube permissions: %+v", err)
-		}
-		defer resp.Body.Close()
-
-		// Decode response into struct
-		groups := GetGroupPermissions{}
-		err = json.NewDecoder(resp.Body).Decode(&groups)
+			groups = append(groups, page.Groups...)
+			return len(page.Groups), page.Paging.Total, nil
+		})
 		if err != nil {
-			return fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+			return err
+		}
+		if !found {
+			d.SetId("")
+			return nil
 		}
 
-		// Loop over all groups to see if the group we need exists.
-		for _, value := range groups.Groups {
+		for _, value := range groups {
 			if strings.EqualFold(value.Name, groupName) {
 				errGroup := d.Set("group_name", value.Name)
 				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
@@ -481,6 +463,41 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 
 	d.SetId("")
 	return nil
+}
+
+// readPermissionPages requests every page of a permissions listing, passing each page body to
+// decode, which returns how many entries the page held and the total SonarQube reports. It
+// returns found=false when SonarQube answers 404, e.g. because the project or template is gone.
+func readPermissionPages(m interface{}, endpoint url.URL, query url.Values, decode func(io.Reader) (int, int64, error)) (bool, error) {
+	seen := int64(0)
+	for page := 1; ; page++ {
+		query.Set("p", strconv.Itoa(page))
+		endpoint.RawQuery = query.Encode()
+
+		resp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"GET",
+			endpoint.String(),
+			http.StatusOK,
+			"resourceSonarqubePermissionsRead",
+		)
+		if err != nil {
+			if resp.StatusCode == http.StatusNotFound {
+				resp.Body.Close()
+				return false, nil
+			}
+			return false, fmt.Errorf("error reading Sonarqube permissions: %+v", err)
+		}
+		count, total, err := decode(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return false, fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+		}
+		seen += int64(count)
+		if count == 0 || seen >= total {
+			return true, nil
+		}
+	}
 }
 
 func resourceSonarqubePermissionsUpdate(d *schema.ResourceData, m interface{}) error {
