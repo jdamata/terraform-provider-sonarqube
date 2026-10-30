@@ -664,3 +664,16 @@ func TestAccSonarqubePortfolioApplications(t *testing.T) {
 		},
 	})
 }
+
+func TestCheckPortfolioSupportEditionNames(t *testing.T) {
+	for edition, supported := range map[string]bool{
+		"Enterprise": true, "enterprise": true,
+		"Data Center": true, "Datacenter": true, "datacenter": true,
+		"Developer": false, "Community": false,
+	} {
+		err := checkPortfolioSupport(&ProviderConfiguration{sonarQubeEdition: edition})
+		if (err == nil) != supported {
+			t.Errorf("edition %q: got err=%v, want supported=%v", edition, err, supported)
+		}
+	}
+}
