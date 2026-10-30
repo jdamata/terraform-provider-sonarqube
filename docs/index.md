@@ -57,3 +57,7 @@ The following arguments are supported:
   is dangerous and should only be done for local testing.
 - `anonymize_user_on_delete` - (Optional) Allows anonymizing users on destroy. Requires Sonarqube version >= `9.7`. This can be helpful
   to comply with regulations like [GDPR](https://en.wikipedia.org/wiki/General_Data_Protection_Regulation).
+
+## Badge-token sensitivity feature flag
+
+Badge tokens remain non-sensitive by default for compatibility with public badge-URL outputs. Set `SONARQUBE_BADGE_TOKEN_SENSITIVE=true` in the Terraform process environment to opt in to sensitive badge attributes on project resources and data sources. Keep this schema flag consistent between plan and apply and across provider aliases. Root outputs using these attributes must then declare `sensitive = true`. Sensitivity does not remove values from state. See the project resource documentation for migration examples.
