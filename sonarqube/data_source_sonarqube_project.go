@@ -24,9 +24,16 @@ func dataSourceSonarqubeProject() *schema.Resource {
 				Computed:    true,
 				Description: "Project visibility",
 			},
+			"retrieve_badge_token": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Retrieve and store the project's badge token. Set to false to omit its value and skip the badge-token endpoint.",
+			},
 			"badge_token": {
 				Type:        schema.TypeString,
 				Computed:    true,
+				Sensitive:   badgeTokenSensitive(),
 				Description: "The badge token for the project.",
 			},
 		},
