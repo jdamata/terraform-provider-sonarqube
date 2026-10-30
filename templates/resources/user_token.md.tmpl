@@ -19,4 +19,21 @@ description: |-
 ### Example: create a project, project analysis token, and output the token value
 {{ tffile "examples/resources/sonarqube_user_token/project-analysis-token.tf" }}
 
+### Example: manage an externally issued token without storing its value
+{{ tffile "examples/resources/sonarqube_user_token/metadata-only-token.tf" }}
+
+With `metadata_only = true`, the resource requires an existing token with the configured name, type, project and, when specified, expiration date. It reads metadata and revokes the token when destroyed, but never generates or returns the credential. An external issuer must create the token before this resource is created. Express that dependency explicitly when both are part of the same Terraform configuration.
+
+Switching an existing resource to this mode clears the token value from subsequent state snapshots without recreating or revoking it. Historical state snapshots and saved plans are unchanged; rotate any credential that must no longer be available from them. Disabling metadata-only mode cannot recover a token value, because SonarQube only reveals it at issuance.
+
+If the external token disappears, refresh removes it from state. Metadata-only creation then fails until the issuer provides a replacement; it does not silently generate a credential that no consumer can retrieve.
+
 {{ .SchemaMarkdown | trimspace }}
+
+## Rotation and replacement safety
+
+For an existing resource, plans that change `name`, `type`, `project_key`, `expiration_date` or `login_name` are rejected if either the previous or planned mode is `metadata_only`. This prevents Terraform from revoking a delivered credential before discovering that its replacement cannot be adopted. Changing only `metadata_only` remains supported.
+
+Rotate using a separate resource address for each generation. Issue the new token externally, add its metadata resource alongside the old one, and apply while both generations remain declared. Deliver and verify the new credential before removing the old resource in a later apply; removing it revokes the old token. `create_before_destroy` on a single address does not bypass the replacement guard.
+
+Keys for `for_each` generations must be known during planning. A token name may still come from an apply-time issuer when creating a new resource address. The provider does not enforce delivery to a secret store or consumer.

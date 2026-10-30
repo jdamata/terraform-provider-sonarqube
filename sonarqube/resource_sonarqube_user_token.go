@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -48,10 +49,12 @@ const (
 // Returns the resource represented by this file.
 func resourceSonarqubeUserToken() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.",
-		Create:      resourceSonarqubeUserTokenCreate,
-		Read:        resourceSonarqubeUserTokenRead,
-		Delete:      resourceSonarqubeUserTokenDelete,
+		Description:   "Provides a Sonarqube User token resource. This can be used to manage Sonarqube User tokens.",
+		Create:        resourceSonarqubeUserTokenCreate,
+		Read:          resourceSonarqubeUserTokenRead,
+		Update:        resourceSonarqubeUserTokenRead,
+		Delete:        resourceSonarqubeUserTokenDelete,
+		CustomizeDiff: preventMetadataOnlyTokenReplacement,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeUserTokenImport,
 		},
@@ -78,6 +81,12 @@ func resourceSonarqubeUserToken() *schema.Resource {
 				Computed:    true,
 				Description: "The expiration date of the token being generated, in ISO 8601 format (YYYY-MM-DD). If not set, default to no expiration.",
 			},
+			"metadata_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Manage only the metadata and revocation of an already issued token. Creation fails if the named token does not exist or its type or project does not match. The token value is never stored in state in this mode. Changing this setting does not recreate the token, and disabling it cannot recover an existing token value.",
+			},
 			"token": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -103,6 +112,23 @@ func resourceSonarqubeUserToken() *schema.Resource {
 }
 
 func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) error {
+	if d.Get("metadata_only").(bool) {
+		tokens, err := readSonarqubeUserTokens(m, d.Get("login_name").(string))
+		if err != nil {
+			return err
+		}
+		for _, token := range tokens.Tokens {
+			if token.Name != d.Get("name").(string) {
+				continue
+			}
+			if err := validateTokenMetadata(d, token); err != nil {
+				return err
+			}
+			d.SetId(fmt.Sprintf("%s/%s", tokens.Login, token.Name))
+			return resourceSonarqubeUserTokenRead(d, m)
+		}
+		return fmt.Errorf("token %q must already exist when metadata_only is enabled", d.Get("name").(string))
+	}
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_tokens/generate"
 
@@ -169,40 +195,26 @@ func resourceSonarqubeUserTokenCreate(d *schema.ResourceData, m interface{}) err
 }
 
 func resourceSonarqubeUserTokenRead(d *schema.ResourceData, m interface{}) error {
-	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
-	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/user_tokens/search"
-
-	// split d.Id into login_name and the token name (foo/bar)
 	login_name := strings.Split(d.Id(), "/")
-	if login_name[0] != "" {
-		sonarQubeURL.RawQuery = url.Values{
-			"login": []string{login_name[0]},
-		}.Encode()
-	}
-
-	resp, err := httpRequestHelper(
-		m.(*ProviderConfiguration).httpClient,
-		"GET",
-		sonarQubeURL.String(),
-		http.StatusOK,
-		"resourceSonarqubeUserTokenRead",
-	)
+	getTokensResponse, err := readSonarqubeUserTokens(m, login_name[0])
 	if err != nil {
-		return fmt.Errorf("error reading Sonarqube user tokens: %+v", err)
+		return err
 	}
-	defer resp.Body.Close()
-
-	// Decode response into struct
-	getTokensResponse := GetTokens{}
-	err = json.NewDecoder(resp.Body).Decode(&getTokensResponse)
-	if err != nil {
-		return fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to decode json into struct: %+v", err)
+	if d.Get("metadata_only").(bool) {
+		if err := d.Set("token", nil); err != nil {
+			return err
+		}
 	}
 
 	// Loop over all user token to see if the current token exists.
 	if getTokensResponse.Tokens != nil {
 		for _, value := range getTokensResponse.Tokens {
 			if login_name[1] == value.Name {
+				if d.Get("metadata_only").(bool) {
+					if err := validateTokenMetadata(d, value); err != nil {
+						return err
+					}
+				}
 				d.SetId(fmt.Sprintf("%s/%s", getTokensResponse.Login, value.Name))
 				errs := []error{}
 				// Set login_name only if it's a token for another user (not the authenticated one),
@@ -265,4 +277,59 @@ func resourceSonarqubeUserTokenImport(d *schema.ResourceData, m interface{}) ([]
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
+}
+
+func readSonarqubeUserTokens(m interface{}, login string) (*GetTokens, error) {
+	conf := m.(*ProviderConfiguration)
+	endpoint := conf.sonarQubeURL
+	endpoint.Path = strings.TrimSuffix(endpoint.Path, "/") + "/api/user_tokens/search"
+	if login != "" {
+		endpoint.RawQuery = url.Values{"login": []string{login}}.Encode()
+	}
+	response, err := httpRequestHelper(conf.httpClient, "GET", endpoint.String(), http.StatusOK, "resourceSonarqubeUserTokenRead")
+	if err != nil {
+		return nil, fmt.Errorf("error reading Sonarqube user tokens: %w", err)
+	}
+	defer response.Body.Close()
+	var tokens GetTokens
+	if err := json.NewDecoder(response.Body).Decode(&tokens); err != nil {
+		return nil, fmt.Errorf("resourceSonarqubeUserTokenRead: Failed to decode json into struct: %w", err)
+	}
+	return &tokens, nil
+}
+
+func validateTokenMetadata(d *schema.ResourceData, token Token) error {
+	if expected, ok := d.GetOk("expiration_date"); ok {
+		expiration, err := time.Parse("2006-01-02T15:04:05-0700", token.ExpirationDate)
+		if err != nil || expiration.Format("2006-01-02") != expected.(string) {
+			return fmt.Errorf("token %q does not have the expected expiration date", token.Name)
+		}
+	}
+	if token.Type != d.Get("type").(string) {
+		return fmt.Errorf("token %q has type %q, expected %q", token.Name, token.Type, d.Get("type"))
+	}
+	if token.Type == string(ProjectAnalysisToken) && token.Project.Key != d.Get("project_key").(string) {
+		return fmt.Errorf("token %q belongs to project %q, expected %q", token.Name, token.Project.Key, d.Get("project_key"))
+	}
+	return nil
+}
+
+// Replacing an adopted token deletes a credential that this provider cannot
+// reissue. Guard both mode transitions so disabling the flag in the same plan
+// cannot bypass this protection. A new resource address can adopt a generation
+// before the old address is explicitly destroyed.
+func preventMetadataOnlyTokenReplacement(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if d.Id() == "" {
+		return nil
+	}
+	oldMode, newMode := d.GetChange("metadata_only")
+	if !oldMode.(bool) && !newMode.(bool) {
+		return nil
+	}
+	for _, field := range []string{"name", "type", "project_key", "expiration_date", "login_name"} {
+		if d.HasChange(field) {
+			return fmt.Errorf("cannot change %s on an existing token when metadata_only is enabled: issue a new token and adopt it at a separate resource address before destroying the old token", field)
+		}
+	}
+	return nil
 }
