@@ -57,3 +57,7 @@ The following arguments are supported:
   is dangerous and should only be done for local testing.
 - `anonymize_user_on_delete` - (Optional) Allows anonymizing users on destroy. Requires Sonarqube version >= `9.7`. This can be helpful
   to comply with regulations like [GDPR](https://en.wikipedia.org/wiki/General_Data_Protection_Regulation).
+
+## Next-major badge-token migration
+
+Project-resource and project-data-source `badge_token` attributes are now always sensitive. Root outputs exposing a token or a badge URL derived from it must declare `sensitive = true`. The `SONARQUBE_BADGE_TOKEN_SENSITIVE` early opt-in flag is no longer needed and cannot disable sensitivity. Sensitivity redacts normal display but does not remove values from state. See the project resource documentation for migration examples and `retrieve_badge_token = false` to skip credential retrieval.
