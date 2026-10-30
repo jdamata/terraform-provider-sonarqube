@@ -46,17 +46,9 @@ resource "sonarqube_project" "without_badge_token" {
 
 Setting `retrieve_badge_token = false` skips the badge-token endpoint and clears the value from subsequent state snapshots. It does not revoke the server-side badge token or remove historical state snapshots and saved plans. Retrieval remains enabled by default.
 
-## Optional early migration: sensitive badge-token outputs
+## Next-major migration: sensitive badge-token outputs
 
-`badge_token` remains non-sensitive by default on the project resource and data source, preserving existing badge-URL outputs. To opt in to sensitive outputs before the next major version, set the feature flag in the environment running Terraform:
-
-```shell
-export SONARQUBE_BADGE_TOKEN_SENSITIVE=true
-```
-
-The flag is disabled by default; only the literal `true` enables it. It selects the provider schema before configuration, applies to every provider alias in the process, and must have the same value for plan and apply, including CI and remote execution environments. It is not a provider configuration argument.
-
-When enabled, root outputs exposing `badge_token`, including badge URLs built from it, must declare `sensitive = true`; otherwise Terraform rejects the plan.
+`badge_token` is now always sensitive on both the project resource and data source. Root outputs exposing it, including badge URLs built from it, must declare `sensitive = true`; otherwise Terraform rejects the plan. The previous `SONARQUBE_BADGE_TOKEN_SENSITIVE` early opt-in is no longer needed, and setting it to `false` does not disable sensitivity.
 
 ```terraform
 output "project_badge_token" {
@@ -89,7 +81,7 @@ Sensitivity redacts normal display; the value still exists in state and saved pl
 
 ### Read-Only
 
-- `badge_token` (String) The badge token for the project.
+- `badge_token` (String, Sensitive) The badge token for the project.
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--setting"></a>

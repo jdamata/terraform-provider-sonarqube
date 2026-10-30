@@ -2,13 +2,13 @@ package sonarqube
 
 import "testing"
 
-func TestBadgeTokenSensitivityOptIn(t *testing.T) {
+func TestBadgeTokenSensitivityNextMajor(t *testing.T) {
 	for _, tc := range []struct {
 		flag string
 		want bool
 	}{
-		{flag: "", want: false},
-		{flag: "false", want: false},
+		{flag: "", want: true},
+		{flag: "false", want: true},
 		{flag: "true", want: true},
 	} {
 		t.Run("flag="+tc.flag, func(t *testing.T) {

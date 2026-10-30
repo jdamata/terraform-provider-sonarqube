@@ -33,7 +33,7 @@ func dataSourceSonarqubeProject() *schema.Resource {
 			"badge_token": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Sensitive:   badgeTokenSensitive(),
+				Sensitive:   true,
 				Description: "The badge token for the project.",
 			},
 		},

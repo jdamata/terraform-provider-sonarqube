@@ -508,7 +508,7 @@ output "data_badge_url" {
 `, name)
 	unmarked := fmt.Sprintf(config, "", "")
 	steps := []resource.TestStep{}
-	if badgeTokenSensitive() {
+	if Provider().ResourcesMap["sonarqube_project"].Schema["badge_token"].Sensitive {
 		steps = append(steps, resource.TestStep{
 			Config: unmarked, ExpectError: regexp.MustCompile("Output refers to sensitive values"),
 		})
