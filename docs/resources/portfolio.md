@@ -31,6 +31,7 @@ resource "sonarqube_portfolio" "main" {
 
 ### Optional
 
+- `applications` (Set of String) Keys of the applications to include in the portfolio. Applications are added independently of `selection_mode`.
 - `branch` (String) Which branch to analyze. If nothing, or '' is specified, the main branch is used.
 - `regexp` (String) A regular expression that is used to match Projects with a matching name OR key. If they match, they are added to the Portfolio
 - `selected_projects` (Block Set) A set of projects to add to the portfolio. (see [below for nested schema](#nestedblock--selected_projects))

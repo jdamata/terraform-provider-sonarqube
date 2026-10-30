@@ -117,3 +117,44 @@ func TestAccSonarqubePortfolioDataSourceRegex(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSonarqubePortfolioDataSourceManualWithApplications(t *testing.T) {
+	rnd := generateRandomResourceName()
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+					resource "sonarqube_project" "%[1]s" {
+						name       = "%[1]s-project"
+						project    = "%[1]s-project"
+						visibility = "public"
+					}
+					resource "sonarqube_application" "%[1]s" {
+						key  = "%[1]s-app"
+						name = "%[1]s-app"
+					}
+					resource "sonarqube_portfolio" "%[1]s" {
+						key            = "%[1]s"
+						name           = "%[1]s"
+						description    = "Manual portfolio"
+						selection_mode = "MANUAL"
+						selected_projects {
+							project_key = sonarqube_project.%[1]s.project
+						}
+						applications = [sonarqube_application.%[1]s.key]
+					}
+					data "sonarqube_portfolio" "%[1]s" {
+						key = sonarqube_portfolio.%[1]s.key
+					}`, rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.sonarqube_portfolio."+rnd, "selection_mode", "MANUAL"),
+					resource.TestCheckResourceAttr("data.sonarqube_portfolio."+rnd, "selected_projects.#", "1"),
+					resource.TestCheckResourceAttr("data.sonarqube_portfolio."+rnd, "applications.#", "1"),
+					resource.TestCheckTypeSetElemAttr("data.sonarqube_portfolio."+rnd, "applications.*", rnd+"-app"),
+				),
+			},
+		},
+	})
+}

@@ -28,6 +28,14 @@ type Portfolio struct {
 	Tags             []string           `json:"tags,omitempty"`
 	Regexp           string             `json:"regexp,omitempty"`
 	SelectedProjects []PortfolioProject `json:"selectedProjects,omitempty"`
+	SubViews         []PortfolioSubView `json:"subViews,omitempty"`
+}
+
+// PortfolioSubView is an application or portfolio included in a portfolio. Key is prefixed with
+// the parent portfolio's key; OriginalKey is the included component's own key.
+type PortfolioSubView struct {
+	Qualifier   string `json:"qualifier"`
+	OriginalKey string `json:"originalKey"`
 }
 
 // Portfolio project
@@ -150,6 +158,12 @@ func resourceSonarqubePortfolio() *schema.Resource {
 					},
 					Description: "Block set of projects to add to the portfolio. Only active when `selection_mode` is `MANUAL`. See [below for nested schema](#selected_projects)",
 				},
+			},
+			"applications": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Keys of the applications to include in the portfolio. Applications are added independently of `selection_mode`.",
 			},
 		},
 	}
@@ -344,6 +358,9 @@ func resourceSonarqubePortfolioCreate(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return err
 	}
+	if err := synchronizePortfolioApplications(d, m, schema.NewSet(schema.HashString, nil), d.Get("applications").(*schema.Set)); err != nil {
+		return err
+	}
 
 	return resourceSonarqubePortfolioRead(d, m)
 }
@@ -391,6 +408,12 @@ func resourceSonarqubePortfolioUpdate(d *schema.ResourceData, m interface{}) err
 		err := portfolioSetSelectionMode(d, m, m.(*ProviderConfiguration).sonarQubeURL)
 		if err != nil {
 			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
+		}
+	}
+	if d.HasChange("applications") {
+		oldSet, newSet := d.GetChange("applications")
+		if err := synchronizePortfolioApplications(d, m, oldSet.(*schema.Set), newSet.(*schema.Set)); err != nil {
+			return err
 		}
 	}
 
@@ -454,7 +477,33 @@ func updateResourceDataFromPortfolioReadResponse(d *schema.ResourceData, portfol
 	if len(portfolioReadResponse.SelectedProjects) > 0 {
 		errs = append(errs, d.Set("selected_projects", flattenReadPortfolioSelectedProjectsResponse(&portfolioReadResponse.SelectedProjects)))
 	}
+
+	applications := []string{}
+	for _, subView := range portfolioReadResponse.SubViews {
+		if subView.Qualifier == "APP" {
+			applications = append(applications, subView.OriginalKey)
+		}
+	}
+	errs = append(errs, d.Set("applications", applications))
 	return errors.Join(errs...)
+}
+
+// add_application fails for an application that is already in the portfolio, so only the
+// difference is sent.
+func synchronizePortfolioApplications(d *schema.ResourceData, m interface{}, oldSet, newSet *schema.Set) error {
+	for _, application := range stringSet(oldSet.Difference(newSet)) {
+		params := url.Values{"portfolio": {d.Id()}, "application": {application}}
+		if err := applicationPost(m, "/api/views/remove_application", params, http.StatusNoContent, "synchronizePortfolioApplications"); err != nil {
+			return err
+		}
+	}
+	for _, application := range stringSet(newSet.Difference(oldSet)) {
+		params := url.Values{"portfolio": {d.Id()}, "application": {application}}
+		if err := applicationPost(m, "/api/views/add_application", params, http.StatusOK, "synchronizePortfolioApplications"); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func readPortfolioFromApi(d *schema.ResourceData, m interface{}) (*Portfolio, error) {

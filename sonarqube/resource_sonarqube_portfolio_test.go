@@ -21,8 +21,8 @@ func testSweepSonarqubePortfolioSweeper(r string) error {
 	return nil
 }
 func testAccPreCheckPortfolioSupport(t *testing.T) {
-	if err := checkPortfolioSupport(testAccProvider.Meta().(*ProviderConfiguration)); err != nil {
-		t.Skipf("Skipping test of unsupported feature (Portfolio)")
+	if edition := testAccSonarqubeEdition(t); edition != "enterprise" && edition != "datacenter" {
+		t.Skipf("Skipping test of unsupported feature (Portfolio) on %s edition", edition)
 	}
 }
 
@@ -605,6 +605,61 @@ func TestAccSonarqubePortfolioManualImport(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				Check:             checks,
+			},
+		},
+	})
+}
+
+func testAccSonarqubePortfolioApplicationsConfig(rnd string, applications string) string {
+	return fmt.Sprintf(`
+		resource "sonarqube_application" "%[1]s_a" {
+			key  = "%[1]s-app-a"
+			name = "%[1]s-app-a"
+		}
+		resource "sonarqube_application" "%[1]s_b" {
+			key  = "%[1]s-app-b"
+			name = "%[1]s-app-b"
+		}
+		resource "sonarqube_portfolio" "%[1]s" {
+			key            = "%[1]s"
+			name           = "%[1]s"
+			description    = "Portfolio with applications"
+			selection_mode = "NONE"
+			applications   = [%[2]s]
+		}`, rnd, applications)
+}
+
+func TestAccSonarqubePortfolioApplications(t *testing.T) {
+	rnd := generateRandomResourceName()
+	name := "sonarqube_portfolio." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckPortfolioSupport(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSonarqubePortfolioApplicationsConfig(rnd, fmt.Sprintf("sonarqube_application.%[1]s_a.key, sonarqube_application.%[1]s_b.key", rnd)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "applications.#", "2"),
+					resource.TestCheckTypeSetElemAttr(name, "applications.*", rnd+"-app-a"),
+					resource.TestCheckTypeSetElemAttr(name, "applications.*", rnd+"-app-b"),
+				),
+			},
+			{
+				Config: testAccSonarqubePortfolioApplicationsConfig(rnd, fmt.Sprintf("sonarqube_application.%s_b.key", rnd)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "applications.#", "1"),
+					resource.TestCheckTypeSetElemAttr(name, "applications.*", rnd+"-app-b"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSonarqubePortfolioApplicationsConfig(rnd, ""),
+				Check:  resource.TestCheckResourceAttr(name, "applications.#", "0"),
 			},
 		},
 	})
