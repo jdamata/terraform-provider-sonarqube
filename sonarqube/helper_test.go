@@ -36,12 +36,16 @@ func generateHCLMap(m map[string]string) string {
 
 // Asks the server instead of reading testAccProvider.Meta(), which is nil until a test has
 // configured the provider, so the answer does not depend on test order.
-func testAccIsCommunityEdition(t *testing.T) bool {
+func testAccSonarqubeEdition(t *testing.T) string {
 	var global struct {
 		Edition string `json:"edition"`
 	}
 	if err := json.Unmarshal(testAccSonarqubeDirectRequest(t, "GET", "/api/navigation/global", url.Values{}, http.StatusOK), &global); err != nil {
 		t.Fatal(err)
 	}
-	return strings.EqualFold(global.Edition, "community")
+	return strings.ToLower(global.Edition)
+}
+
+func testAccIsCommunityEdition(t *testing.T) bool {
+	return testAccSonarqubeEdition(t) == "community"
 }

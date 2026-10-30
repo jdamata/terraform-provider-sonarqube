@@ -57,6 +57,32 @@ func dataSourceSonarqubePortfolio() *schema.Resource {
 				Computed:    true,
 				Description: "The regular expression used to populate the portfolio. Only active when `selection_mode` is `REGEXP`",
 			},
+			"selected_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"project_key": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The project key of the project in the portfolio",
+						},
+						"selected_branches": {
+							Type:        schema.TypeSet,
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "The branches of the project in the portfolio",
+						},
+					},
+				},
+				Description: "The projects in the portfolio. Only set when `selection_mode` is `MANUAL`",
+			},
+			"applications": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Keys of the applications in the portfolio.",
+			},
 		},
 	}
 }
