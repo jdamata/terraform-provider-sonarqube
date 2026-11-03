@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -51,11 +52,12 @@ type BadgeTokenResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeProject() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.",
-		Create:      resourceSonarqubeProjectCreate,
-		Read:        resourceSonarqubeProjectRead,
-		Update:      resourceSonarqubeProjectUpdate,
-		Delete:      resourceSonarqubeProjectDelete,
+		Description:   "Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.",
+		CustomizeDiff: projectBadgeTokenCustomizeDiff,
+		Create:        resourceSonarqubeProjectCreate,
+		Read:          resourceSonarqubeProjectRead,
+		Update:        resourceSonarqubeProjectUpdate,
+		Delete:        resourceSonarqubeProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectImport,
 		},
@@ -98,7 +100,6 @@ func resourceSonarqubeProject() *schema.Resource {
 			"badge_token": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Sensitive:   badgeTokenSensitive(),
 				Description: "The badge token for the project.",
 			},
 			"setting": {
@@ -455,4 +456,12 @@ func resourceSonarqubeProjectImport(d *schema.ResourceData, m interface{}) ([]*s
 	errProject := d.Set("project", d.Id())
 	errRetrieve := d.Set("retrieve_badge_token", retrieveBadgeToken)
 	return []*schema.ResourceData{d}, errors.Join(errProject, errRetrieve)
+}
+
+// Recompute dependents in the same apply when badge retrieval changes.
+func projectBadgeTokenCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if d.Id() != "" && d.HasChange("retrieve_badge_token") {
+		return d.SetNewComputed("badge_token")
+	}
+	return nil
 }
