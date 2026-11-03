@@ -331,5 +331,10 @@ func preventMetadataOnlyTokenReplacement(_ context.Context, d *schema.ResourceDi
 			return fmt.Errorf("cannot change %s on an existing token when metadata_only is enabled: issue a new token and adopt it at a separate resource address before destroying the old token", field)
 		}
 	}
+	// Invalidate the prior credential in the plan as well as resource state, so
+	// downstream resources and outputs are updated during this same apply.
+	if d.HasChange("metadata_only") {
+		return d.SetNewComputed("token")
+	}
 	return nil
 }

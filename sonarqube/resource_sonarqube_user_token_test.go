@@ -356,20 +356,89 @@ func TestAccSonarqubeUserTokenMetadataOnlyRejectsType(t *testing.T) {
 
 func TestAccSonarqubeUserTokenMetadataOnlyMigration(t *testing.T) {
 	name := "metadata-migration-" + generateRandomResourceName()
+	config := func(metadataOnly bool) string {
+		return fmt.Sprintf(`
+resource "sonarqube_user_token" "test" {
+  name          = %q
+  metadata_only = %t
+}
+resource "terraform_data" "consumer" {
+  input = sonarqube_user_token.test.token
+}
+output "token" {
+  value     = sonarqube_user_token.test.token
+  sensitive = true
+}
+`, name, metadataOnly)
+	}
+	var originalID string
+	check := func(expectCredential bool) resource.TestCheckFunc {
+		return func(state *testingTerraform.State) error {
+			tokenResource := state.RootModule().Resources["sonarqube_user_token.test"]
+			if tokenResource == nil || tokenResource.Primary == nil {
+				return fmt.Errorf("token resource is missing from state")
+			}
+			if originalID == "" {
+				originalID = tokenResource.Primary.ID
+			} else if tokenResource.Primary.ID != originalID {
+				return fmt.Errorf("changing metadata_only replaced the token")
+			}
+			token := tokenResource.Primary.Attributes["token"]
+			if (token != "") != expectCredential {
+				return fmt.Errorf("token credential presence does not match the selected mode")
+			}
+			output, ok := state.RootModule().Outputs["token"]
+			if !ok || output.Value != token {
+				return fmt.Errorf("root output did not receive the token value from this apply")
+			}
+			consumer := state.RootModule().Resources["terraform_data.consumer"]
+			if consumer == nil || consumer.Primary == nil {
+				return fmt.Errorf("dependent resource is missing from state")
+			}
+			if consumer.Primary.Attributes["input"] != token || consumer.Primary.Attributes["output"] != token {
+				return fmt.Errorf("dependent resource retained a credential from the previous mode")
+			}
+			return nil
+		}
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			{Config: fmt.Sprintf(`resource "sonarqube_user_token" "test" { name = %q }`, name),
-				Check: resource.TestCheckResourceAttrSet("sonarqube_user_token.test", "token")},
-			{Config: fmt.Sprintf(`resource "sonarqube_user_token" "test" {
-    name = %q
-    metadata_only = true
-   }`, name),
-				Check: resource.TestCheckResourceAttr("sonarqube_user_token.test", "token", "")},
-			{Config: fmt.Sprintf(`resource "sonarqube_user_token" "test" { name = %q }`, name),
-				Check: resource.TestCheckResourceAttr("sonarqube_user_token.test", "token", "")},
+			{Config: config(false), Check: check(true)},
+			{Config: config(true), Check: check(false)},
+			{Config: config(true), PlanOnly: true},
+			{Config: config(false), Check: check(false)},
+			{Config: config(false), PlanOnly: true},
 		},
 	})
+}
+
+func TestMetadataOnlyModeChangeInvalidatesPlannedToken(t *testing.T) {
+	for _, modes := range []struct{ old, new bool }{{false, true}, {true, false}, {false, false}, {true, true}} {
+		t.Run(fmt.Sprintf("%v-to-%v", modes.old, modes.new), func(t *testing.T) {
+			value := "fixture-issued-value"
+			if modes.old {
+				value = ""
+			}
+			diff, err := resourceSonarqubeUserToken().Diff(context.Background(), &terraform.InstanceState{
+				ID: "owner/issued", Attributes: map[string]string{
+					"name": "issued", "type": "USER_TOKEN", "metadata_only": fmt.Sprint(modes.old), "token": value,
+				},
+			}, terraform.NewResourceConfigRaw(map[string]interface{}{
+				"name": "issued", "metadata_only": modes.new,
+			}), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			unknown := false
+			if diff != nil && diff.Attributes["token"] != nil {
+				unknown = diff.Attributes["token"].NewComputed
+			}
+			if unknown != (modes.old != modes.new) {
+				t.Fatalf("planned token unknown = %v, want %v", unknown, modes.old != modes.new)
+			}
+		})
+	}
 }
 
 // Issue a fixture token outside Terraform and discard its value. Only the token
