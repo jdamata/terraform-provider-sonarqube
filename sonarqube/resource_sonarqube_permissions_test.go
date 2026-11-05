@@ -2,8 +2,15 @@ package sonarqube
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"sort"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -284,4 +291,37 @@ func TestAccSonarqubePermissionTemplateGroupBeyondFirstPage(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestReadTemplatePermissionsDropsUnmanageable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/permissions/template_groups":
+			_, _ = w.Write([]byte(`{"paging":{"total":1},"groups":[{"name":"sre","permissions":["admin","architectureadmin","user"]}]}`))
+		case "/api/permissions/search_templates":
+			_, _ = w.Write([]byte(`{"permissions":[{"key":"admin"},{"key":"codeviewer"},{"key":"issueadmin"},{"key":"securityhotspotadmin"},{"key":"scan"},{"key":"user"}]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	endpoint, _ := url.Parse(server.URL)
+	client := retryablehttp.NewClient()
+	client.Logger = nil
+	m := &ProviderConfiguration{httpClient: client, sonarQubeURL: *endpoint}
+
+	d := schema.TestResourceDataRaw(t, resourceSonarqubePermissions().Schema, map[string]interface{}{
+		"group_name":  "sre",
+		"template_id": "t1",
+		"permissions": []interface{}{"admin", "user"},
+	})
+	d.SetId("group-sre-t_t1-permissions")
+	if err := resourceSonarqubePermissionsRead(d, m); err != nil {
+		t.Fatal(err)
+	}
+	got := expandPermissions(d.Get("permissions"))
+	sort.Strings(got)
+	if strings.Join(got, ",") != "admin,user" {
+		t.Errorf("permissions = %v, want [admin user]", got)
+	}
 }

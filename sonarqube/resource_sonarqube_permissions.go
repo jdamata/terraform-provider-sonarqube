@@ -370,8 +370,12 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 
 		for _, value := range users {
 			if strings.EqualFold(value.Login, loginName.(string)) {
+				permissions, err := withoutUnmanageableTemplatePermissions(d, m, value.Permissions)
+				if err != nil {
+					return err
+				}
 				errName := d.Set("login_name", value.Login)
-				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
+				errPerms := d.Set("permissions", flattenPermissions(&permissions))
 				return errors.Join(errName, errPerms)
 			}
 		}
@@ -411,8 +415,12 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 
 		for _, value := range groups {
 			if strings.EqualFold(value.Name, groupName) {
+				permissions, err := withoutUnmanageableTemplatePermissions(d, m, value.Permissions)
+				if err != nil {
+					return err
+				}
 				errGroup := d.Set("group_name", value.Name)
-				errPerms := d.Set("permissions", flattenPermissions(&value.Permissions))
+				errPerms := d.Set("permissions", flattenPermissions(&permissions))
 				return errors.Join(errGroup, errPerms)
 			}
 		}
@@ -463,6 +471,47 @@ func resourceSonarqubePermissionsRead(d *schema.ResourceData, m interface{}) err
 
 	d.SetId("")
 	return nil
+}
+
+// Community Build 26.9 lists architectureadmin on permission templates but its template API
+// rejects that permission, so keeping it would plan a removal that can never apply. Only
+// permissions that search_templates offers for templates are kept.
+func withoutUnmanageableTemplatePermissions(d *schema.ResourceData, m interface{}, permissions []string) ([]string, error) {
+	_, byID := d.GetOk("template_id")
+	_, byName := d.GetOk("template_name")
+	if !byID && !byName {
+		return permissions, nil
+	}
+
+	conf := m.(*ProviderConfiguration)
+	endpoint := conf.sonarQubeURL
+	endpoint.Path = strings.TrimSuffix(endpoint.Path, "/") + "/api/permissions/search_templates"
+	resp, err := httpRequestHelper(conf.httpClient, "GET", endpoint.String(), http.StatusOK, "resourceSonarqubePermissionsRead")
+	if err != nil {
+		return nil, fmt.Errorf("error reading Sonarqube template permissions: %+v", err)
+	}
+	defer resp.Body.Close()
+	var templates struct {
+		Permissions []PermissionTemplatePermission `json:"permissions"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&templates); err != nil {
+		return nil, fmt.Errorf("resourceSonarqubePermissionsRead: Failed to decode json into struct: %+v", err)
+	}
+	if len(templates.Permissions) == 0 {
+		return permissions, nil
+	}
+
+	manageable := map[string]bool{}
+	for _, p := range templates.Permissions {
+		manageable[p.Key] = true
+	}
+	kept := []string{}
+	for _, p := range permissions {
+		if manageable[p] {
+			kept = append(kept, p)
+		}
+	}
+	return kept, nil
 }
 
 // readPermissionPages requests every page of a permissions listing, passing each page body to
