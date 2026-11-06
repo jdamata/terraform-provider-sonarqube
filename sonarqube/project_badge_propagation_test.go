@@ -12,6 +12,8 @@ import (
 
 // Exercise real Terraform planning and apply with an isolated SonarQube API fixture.
 func TestProjectBadgeTokenPropagation(t *testing.T) {
+	t.Setenv("SONAR_USER", "")
+	t.Setenv("SONAR_PASS", "")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
