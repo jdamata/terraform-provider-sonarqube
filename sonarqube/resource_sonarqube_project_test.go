@@ -2,6 +2,7 @@ package sonarqube
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -456,4 +457,71 @@ func TestProjectSettingsStateSkipsNullSetting(t *testing.T) {
 	if k := got[1].(map[string]interface{})["key"]; k != "sonar.a" {
 		t.Errorf("second setting = %v, want the non-inherited sonar.a", k)
 	}
+}
+
+func TestAccSonarqubeProjectWithoutBadgeToken(t *testing.T) {
+	name := "no-badge-" + generateRandomResourceName()
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{Config: fmt.Sprintf(`resource "sonarqube_project" "test" {
+    name = %q
+    project = %q
+    retrieve_badge_token = false
+   }`, name, name),
+				Check: resource.TestCheckResourceAttr("sonarqube_project.test", "badge_token", "")},
+			{ResourceName: "sonarqube_project.test", ImportState: true, ImportStateVerify: true,
+				ImportStateId: name + "?retrieve_badge_token=false"},
+			{Config: fmt.Sprintf(`resource "sonarqube_project" "test" {
+    name = %q
+    project = %q
+   }`, name, name),
+				Check: resource.TestCheckResourceAttrSet("sonarqube_project.test", "badge_token")},
+			{Config: fmt.Sprintf(`resource "sonarqube_project" "test" {
+    name = %q
+    project = %q
+    retrieve_badge_token = false
+   }`, name, name),
+				Check: resource.TestCheckResourceAttr("sonarqube_project.test", "badge_token", "")},
+		},
+	})
+}
+
+func TestAccSonarqubeProjectBadgeTokenOutputs(t *testing.T) {
+	name := "badge-output-" + generateRandomResourceName()
+	config := fmt.Sprintf(`
+resource "sonarqube_project" "test" {
+  name = %[1]q
+  project = %[1]q
+}
+data "sonarqube_project" "test" {
+  project = sonarqube_project.test.project
+}
+output "resource_badge_url" {
+  value = "https://sonarqube.example/api/project_badges/measure?project=${sonarqube_project.test.project}&token=${sonarqube_project.test.badge_token}"
+  %%s
+}
+output "data_badge_url" {
+  value = "https://sonarqube.example/api/project_badges/measure?project=${data.sonarqube_project.test.project}&token=${data.sonarqube_project.test.badge_token}"
+  %%s
+}
+`, name)
+	unmarked := fmt.Sprintf(config, "", "")
+	steps := []resource.TestStep{}
+	if Provider().ResourcesMap["sonarqube_project"].Schema["badge_token"].Sensitive {
+		steps = append(steps, resource.TestStep{
+			Config: unmarked, ExpectError: regexp.MustCompile("Output refers to sensitive values"),
+		})
+		unmarked = fmt.Sprintf(config, "sensitive = true", "sensitive = true")
+	}
+	steps = append(steps, resource.TestStep{
+		Config: unmarked,
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrSet("sonarqube_project.test", "badge_token"),
+			resource.TestCheckResourceAttrSet("data.sonarqube_project.test", "badge_token"),
+		),
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) }, Providers: testAccProviders, Steps: steps,
+	})
 }
