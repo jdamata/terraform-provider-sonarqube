@@ -30,7 +30,7 @@ func TestAccSonarqubeUsersDataSource(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSonarqubeUsersDataSourceConfig(rnd, "testAccSonarqubeUsersDataSource", "terraform-test@sonarqube.com", "secret-sauce37!"),
+				Config: testAccSonarqubeUsersDataSourceConfig(rnd, "testAccSonarqubeUsersDataSource", "terraform-test@sonarqube.com", "Secret-Sauce37!"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "users.#", "1"),
 					resource.TestCheckResourceAttr(name, "users.0.login_name", "testAccSonarqubeUsersDataSource"),
