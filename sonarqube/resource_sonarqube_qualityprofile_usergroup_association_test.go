@@ -71,7 +71,7 @@ func testAccSonarqubeQualityprofileUserAssociationProfileName(rnd string, name s
 		resource "sonarqube_user" "%[1]s" {
 			login_name = "%[2]s"
 			name       = "%[2]s"
-			password   = "secret-sauce37!"
+			password   = "Secret-Sauce37!"
 		}
 
 		resource "sonarqube_qualityprofile" "%[1]s" {

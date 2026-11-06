@@ -13,7 +13,7 @@ func testAccSonarqubeGroupMembersDataSourceConfig(rnd string, groupName string, 
 			login_name = "%[3]s"
 			name       = "Test User"
 			email      = "terraform-test@sonarqube.com"
-			password   = "secret-Sauce!"
+			password   = "Secret-Sauce37!"
 		}
 
 		resource "sonarqube_group" "%[1]s_group" {
