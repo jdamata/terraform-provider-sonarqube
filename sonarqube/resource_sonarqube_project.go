@@ -1,6 +1,7 @@
 package sonarqube
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -51,11 +52,12 @@ type BadgeTokenResponse struct {
 // Returns the resource represented by this file.
 func resourceSonarqubeProject() *schema.Resource {
 	return &schema.Resource{
-		Description: "Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.",
-		Create:      resourceSonarqubeProjectCreate,
-		Read:        resourceSonarqubeProjectRead,
-		Update:      resourceSonarqubeProjectUpdate,
-		Delete:      resourceSonarqubeProjectDelete,
+		Description:   "Provides a Sonarqube Project resource. This can be used to create and manage Sonarqube Project.",
+		CustomizeDiff: projectBadgeTokenCustomizeDiff,
+		Create:        resourceSonarqubeProjectCreate,
+		Read:          resourceSonarqubeProjectRead,
+		Update:        resourceSonarqubeProjectUpdate,
+		Delete:        resourceSonarqubeProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceSonarqubeProjectImport,
 		},
@@ -88,6 +90,12 @@ func resourceSonarqubeProject() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Description: "A list of tags to put on the project.",
+			},
+			"retrieve_badge_token": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Retrieve and store the project's badge token. Set to false to omit it from state and avoid calling the badge-token endpoint. Existing state history is not changed.",
 			},
 			"badge_token": {
 				Type:        schema.TypeString,
@@ -211,6 +219,15 @@ func resourceSonarqubeProjectCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
+	// Older states and imports may not contain the new boolean. Preserve the
+	// published default while distinguishing an explicitly configured false.
+	retrieveBadgeToken := true
+	if value, exists := d.GetOkExists("retrieve_badge_token"); exists {
+		retrieveBadgeToken = value.(bool)
+	}
+	if err := d.Set("retrieve_badge_token", retrieveBadgeToken); err != nil {
+		return err
+	}
 	sonarQubeURL := m.(*ProviderConfiguration).sonarQubeURL
 	sonarQubeURL.Path = strings.TrimSuffix(sonarQubeURL.Path, "/") + "/api/components/show"
 	sonarQubeURL.RawQuery = url.Values{
@@ -242,40 +259,47 @@ func resourceSonarqubeProjectRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode json into struct: %+v", err)
 	}
 
-	// Get badge token
-	badgeTokenURL := m.(*ProviderConfiguration).sonarQubeURL
-	badgeTokenURL.Path = strings.TrimSuffix(badgeTokenURL.Path, "/") + "/api/project_badges/token"
-	badgeTokenURL.RawQuery = url.Values{
-		"project": []string{d.Get("project").(string)},
-	}.Encode()
+	if retrieveBadgeToken {
+		// Get badge token
+		badgeTokenURL := m.(*ProviderConfiguration).sonarQubeURL
+		badgeTokenURL.Path = strings.TrimSuffix(badgeTokenURL.Path, "/") + "/api/project_badges/token"
+		badgeTokenURL.RawQuery = url.Values{
+			"project": []string{d.Get("project").(string)},
+		}.Encode()
 
-	badgeResp, err := httpRequestHelper(
-		m.(*ProviderConfiguration).httpClient,
-		"GET",
-		badgeTokenURL.String(),
-		http.StatusOK,
-		"resourceSonarqubeProjectRead",
-	)
-	if err != nil {
-		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to get badge token: %+v", err)
+		badgeResp, err := httpRequestHelper(
+			m.(*ProviderConfiguration).httpClient,
+			"GET",
+			badgeTokenURL.String(),
+			http.StatusOK,
+			"resourceSonarqubeProjectRead",
+		)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to get badge token: %+v", err)
+		}
+		defer badgeResp.Body.Close()
+
+		// Decode badge token response
+		badgeTokenResponse := BadgeTokenResponse{}
+		err = json.NewDecoder(badgeResp.Body).Decode(&badgeTokenResponse)
+		if err != nil {
+			return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode badge token json: %+v", err)
+		}
+
+		// Set the token in the project component
+		projectReadResponse.Component.BadgeToken = badgeTokenResponse.Token
+
 	}
-	defer badgeResp.Body.Close()
-
-	// Decode badge token response
-	badgeTokenResponse := BadgeTokenResponse{}
-	err = json.NewDecoder(badgeResp.Body).Decode(&badgeTokenResponse)
-	if err != nil {
-		return fmt.Errorf("resourceSonarqubeProjectRead: Failed to decode badge token json: %+v", err)
-	}
-
-	// Set the token in the project component
-	projectReadResponse.Component.BadgeToken = badgeTokenResponse.Token
 
 	d.SetId(projectReadResponse.Component.Key)
 	errName := d.Set("name", projectReadResponse.Component.Name)
 	errProject := d.Set("project", projectReadResponse.Component.Key)
 	errVisibility := d.Set("visibility", projectReadResponse.Component.Visibility)
-	errToken := d.Set("badge_token", projectReadResponse.Component.BadgeToken)
+	var badgeToken interface{}
+	if retrieveBadgeToken {
+		badgeToken = projectReadResponse.Component.BadgeToken
+	}
+	errToken := d.Set("badge_token", badgeToken)
 	if err := errors.Join(errName, errProject, errVisibility, errToken); err != nil {
 		return err
 	}
@@ -426,7 +450,18 @@ func resourceSonarqubeProjectDelete(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceSonarqubeProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	// As per the docs, use the id to make the read work as intended (https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/import)
-	err := d.Set("project", d.Id())
-	return []*schema.ResourceData{d}, err
+	const metadataOnlySuffix = "?retrieve_badge_token=false"
+	retrieveBadgeToken := !strings.HasSuffix(d.Id(), metadataOnlySuffix)
+	d.SetId(strings.TrimSuffix(d.Id(), metadataOnlySuffix))
+	errProject := d.Set("project", d.Id())
+	errRetrieve := d.Set("retrieve_badge_token", retrieveBadgeToken)
+	return []*schema.ResourceData{d}, errors.Join(errProject, errRetrieve)
+}
+
+// Recompute dependents in the same apply when badge retrieval changes.
+func projectBadgeTokenCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if d.Id() != "" && d.HasChange("retrieve_badge_token") {
+		return d.SetNewComputed("badge_token")
+	}
+	return nil
 }
