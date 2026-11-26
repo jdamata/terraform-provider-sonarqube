@@ -163,7 +163,7 @@ func projectSetTags(d *schema.ResourceData, m interface{}, sonarQubeURL url.URL)
 		"POST",
 		sonarQubeURL.String(),
 		http.StatusNoContent,
-		"resourceSonarqubePortfolioCreate",
+		"resourceSonarqubeProjectSetTags",
 	)
 	if err != nil {
 		return err
@@ -408,7 +408,7 @@ func resourceSonarqubeProjectUpdate(d *schema.ResourceData, m interface{}) error
 	if d.HasChanges("tags") {
 		err := projectSetTags(d, m, m.(*ProviderConfiguration).sonarQubeURL)
 		if err != nil {
-			return fmt.Errorf("error updating Sonarqube selection mode: %+v", err)
+			return fmt.Errorf("error updating Sonarqube project tags: %+v", err)
 		}
 	}
 
